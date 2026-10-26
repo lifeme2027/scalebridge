@@ -210,3 +210,81 @@ openScale 只引用了它的 **wiki 文字页**（逆向笔记），没有看它
 * 历史记录特征 `0x2A2F`（自定义，多条记录）的分帧与确认流程：**未实现**。
 * 日期在「未稳定」时可能无意义：解析器只要字节构成合法日期就返回，调用方应只信 `IsFinal` 的帧。
 * 不同固件对 `0x181D` / `0x181B` 的使用以及型号（XMTZC01HM / 04HM / 05HM）与帧的对应关系：公开资料说法不一，**未核实**；解析器只按服务 UUID + 长度分发。
+
+## Linux 适配器与 D-Bus 库评估（时尚1）
+
+> **实验性（仅按规范/公开资料实现，未真机验证）。** 下面的评估与实现只依据公开资料（NuGet、GitHub、BlueZ 官方文档、Tmds.DBus 文档）和自己的设计；
+> 没有阅读或复制 ble-scale-sync（GPL-3.0）。资料整理于 2026-10-26（Asia/Shanghai）；NuGet 的发布时间是 UTC，GitHub 的时间带 Z 的也是 UTC。
+
+### D-Bus 库评估
+
+| 包 | 最新版（发布时间 UTC） | 许可证 | 目标框架 | 维护 / AOT / 备注 |
+|---|---|---|---|---|
+| **Tmds.DBus.Protocol**（选用） | 0.95.1（2026-09-04） | MIT | netstandard2.0/2.1、net6.0、**net8.0**、net9.0 | 官方定位「现代、低层、NativeAOT 兼容」；net7.0+ 设置了 `IsAotCompatible`，不兼容的成员标了 Obsolete + RequiresUnreferencedCode。依赖 System.IO.Pipelines。我用 `-p:IsAotCompatible=true` 编译 Linux 项目，没有裁剪/AOT 警告（只是编译期分析，没有真的做 NativeAOT 发布）。 |
+| Tmds.DBus | 0.95.1（2026-09-04） | MIT | net6.0、netstandard2.0（没有 net8.0 资产） | 官方文档写「维护模式，不应用于新项目」；基于反射和运行时代码生成，我判断不适合 AOT（推断，没有官方 AOT 声明）。NuGet 上没有 deprecated 标记。 |
+| Tmds.DBus.Generator | 0.95.1（2026-09-04） | NuGet nuspec 没有 license 元素；仓库为 MIT | netstandard2.0 源生成器 | **在 SDK 8 下不可用**，见下。 |
+| Linux.Bluetooth（SuessLabs） | 稳定版 5.67.1（2024-09-08）；预发布 6.0.0-pre3（2026-04-10） | Apache-2.0 | netstandard2.0 | 6.0.0-pre3 依赖旧的 Tmds.DBus 0.92.0；README 写 BlueZ ≥ 5.50、在 Ubuntu 20.04 上测过。仓库 2026-09-05 仍有提交。稳定版 5.67.1 的依赖版本我没核实，但它早于 0.92.0 的安全修复。 |
+| HashtagChris.DotNetBlueZ | 1.3.1（2020-11-02） | Apache-2.0 | netstandard2.0 | 依赖 Tmds.DBus 0.7.0（在漏洞范围内），仓库 2020-11-02 后没有提交，README 自称「quick and dirty」，实质无人维护。 |
+
+* **安全公告**：CVE-2026-39959 / GHSA-xrw6-gwf8-vvr9（高危，2026-04-08 公布）：知名名称所有者造成的信号伪造、fd 耗尽、畸形消息体导致 DoS。
+  Tmds.DBus 0.92.0、Tmds.DBus.Protocol 0.92.0 / 0.21.3 起修复；本项目固定使用 0.95.1，不受影响。
+* **决定**：在 Tmds.DBus.Protocol ≥ 0.95.1 上写一层薄的 BlueZ 代理，藏在 `IBleAdapter` 之后（可替换）。不用 Tmds.DBus、DotNetBlueZ、Linux.Bluetooth。
+* **主要风险**：
+  1. 0.x 版本号且发生过破坏性变更（0.93、0.94），只固定 0.95.1，别信旧样例（仓库 `docs/protocol.md` 还在用旧的 `Connection.Session` API）。
+  2. 基本只有一位维护者。
+  3. Protocol 的 issue #456（同一次读取里无 fd 的消息先于带 fd 的消息时 fd 被关闭，2026-10-25 提出）：只在用 fd 传递（AcquireNotify/AcquireWrite）时相关——我们不用。
+  4. `PropertiesChanged` 的 `Value` 可能只是「失效」而不带值 → 回退 `ReadValue`。
+  5. 文档提到 Protocol 不像旧库那样保证信号顺序（我没有验证到什么程度）→ 所有处理器只写队列，状态以最终快照/最新值为准。
+  6. Generator 的 NuGet 元数据缺 license 元素（仓库是 MIT），合规扫描器可能报。
+  7. BlueZ 版本差异、配对/绑定、适配器的 D-Bus 权限策略；BlueZ 文档读的是 master，不是固定发行版。
+  8. 漏洞版本：必须 Tmds.DBus.Protocol ≥ 0.21.3 / 0.92.0。
+
+### Generator 在 SDK 8 下不可用
+
+Tmds.DBus.Generator 0.95.1 是针对 `Microsoft.CodeAnalysis.CSharp` 4.12.0 编译的；在本机 SDK 8.0.426 的编译器上，加载时出现分析器警告 **CS9057**（分析器引用的编译器版本比当前高），
+**没有生成任何代理代码**。所以 `src/ScaleBridge.Linux/Bluez/TmdsBluezBus.cs` 里的代理是手写的（用 `DBusConnection`、`MessageWriter`、`Reader`、`VariantValue`、`MatchRule`）。
+升级到更新的 SDK 后可以重新评估，但手写层很小（约 400 行），而且被 `IBluezBus` 隔离。
+
+### 选定的 BlueZ 流程（依据 bluez/doc 的 org.bluez.Adapter/Device/GattCharacteristic 文档）
+
+系统总线上的 `org.bluez`：
+
+1. **扫描**：`Adapter1.SetDiscoveryFilter`（`UUIDs`、`Transport=le`、`DuplicateData=true`；被拒绝时退回客户端过滤）→ 先订阅 `ObjectManager.InterfacesAdded/InterfacesRemoved` 与 `Properties.PropertiesChanged`，再 `StartDiscovery`，之后用 `GetManagedObjects` 取现有设备快照；增量属性合并到每台设备的缓存，映射成 `AdvertisedDevice`；结束时 `StopDiscovery`（best-effort）。
+2. **连接**：先订阅设备的 `PropertiesChanged`，再 `Device1.Connect`，等待 `ServicesResolved == true`（超时默认 30 秒，抛 `BleTimeoutException`）；`Connected` 变 false → `DeviceDisconnectedException` / 连接状态 Dropped。
+3. **GATT 查找**：`GetManagedObjects`，按 `GattService1.UUID` + `GattCharacteristic1.Service` + 设备路径前缀按 UUID 找特征。
+4. **读**：`GattCharacteristic1.ReadValue({})`。
+5. **通知**：先订阅特征路径的 `PropertiesChanged`，再 `StartNotify`；从变化里取 `Value`（`ay`），只被失效或类型异常时回退一次 `ReadValue`；释放时 `StopNotify`（best-effort）。**不使用 `AcquireNotify` / fd。**
+6. **错误**：`org.bluez.Error.*` 与 `org.freedesktop.DBus.Error.{ServiceUnknown,NameHasNoOwner,AccessDenied,NoReply,Timeout,NoServer,Disconnected}` 经 `BluezErrorMapper` 映射为 `BleException` 子类；异常消息只含操作名和 D-Bus 错误名。
+
+### 真实总线与假总线各自覆盖了什么
+
+* **`TmdsBluezBus`（真实实现，Tmds.DBus.Protocol）**：`GetManagedObjects` 解析（`a{oa{sa{sv}}}`，含 `ay`、`as`、`a{qv}`、`a{sv}`、`o`、`n`、`q`、`u`、`b`）、`SetDiscoveryFilter`、`StartDiscovery/StopDiscovery`、`Connect/Disconnect`、`ReadValue`、`StartNotify/StopNotify`、
+  三种 `AddMatch` 观察者（`InterfacesAdded`、`InterfacesRemoved`、`PropertiesChanged`，可按路径或 `/org/bluez` 命名空间）、`DBusErrorReplyException` → `BluezDBusException`、连接断开事件 `ConnectionClosed`。
+  **验证方式**：`TmdsBluezBusIntegrationTests` 在私有 `dbus-daemon` 上用 Tmds.DBus.Protocol 自己写的假 `org.bluez` 服务走真实线上编码/解码，另外还有一个经由 `BluezBleAdapter` 的端到端用例（可用性 → 扫描 → 连接 → 读 → 订阅）。
+  这些测试在找不到 `dbus-daemon` 的机器（例如 Windows CI）上标为跳过。
+  **这只证明实现与我们对 D-Bus 规范和 BlueZ 文档签名的理解自洽，没有对真实 BlueZ 验证过。**
+* **`FakeBluezBus`（内存假总线）**：所有业务逻辑——扫描合并与去重、过滤、连接等待与超时、通知与回退、错误映射、取消与释放顺序、竞争（先订阅后调用）——都只在这里测过。
+
+### 没有真机验证的假设
+
+* `ConnectionAttemptFailed` 映射为 `Timeout` 是判断，不是文档规定。
+* `StartDiscovery` / `StartNotify` 返回 `InProgress` 时视为已在进行并容忍。
+* `SetDiscoveryFilter` 返回 `NotSupported` / `InvalidArguments` / `Failed` 时忽略并改为客户端过滤。
+* `Value` 被失效（`PropertiesChanged` 的 invalidated 里有 `Value`）时回退 `ReadValue` 的行为；以及 `PropertiesChanged` 的先后顺序。
+* `ServicesResolved` 的语义（连接后何时变 true、断开后何时回到 false）。
+* 扫描里存在一个已接受的小竞争：在订阅与 `GetManagedObjects` 快照之间到达的增量，可能被稍旧的快照覆盖。
+* 地址脱敏格式（保留前 4 个字节：`AA:BB:CC:DD:**:**`，路径中 `dev_AA_BB_CC_DD_**_**`）是我自己定的。
+* 默认连接超时 30 秒是经验值。
+* 适配器未上电（`Powered=false`）时 `GetAvailabilityAsync` 报 `Unavailable`，而不是 `PermissionDenied`。
+* 只用第一个（或指定名称的）适配器；每次扫描/连接各开一条自己的总线连接；没有做配对/绑定。
+* 系统总线地址只用 `DBUS_SYSTEM_BUS_ADDRESS` 或默认的 `/var/run/dbus/system_bus_socket`。
+* 手写的线上编解码只对我们自己的假服务验证过（见上），真实 BlueZ 的属性类型、可选属性和额外接口可能不同；无法识别类型的属性会被丢弃而不是报错。
+* `/org/bluez` 命名空间的 `PropertiesChanged` 匹配规则以及知名名称 `org.bluez` 的发送方过滤在私有 `dbus-daemon` 上工作，在真实系统总线（带策略、`bluetoothd`）上的行为未验证。
+
+### 来源
+
+* https://www.nuget.org/packages/Tmds.DBus 、/Tmds.DBus.Protocol 、/Tmds.DBus.Tool 、/Tmds.DBus.Generator 、/Linux.Bluetooth 、/HashtagChris.DotNetBlueZ（以及 api.nuget.org 的 registration / nuspec JSON）
+* https://github.com/tmds/Tmds.DBus（含 GitHub API 的 repo / issues / releases，GHSA-xrw6-gwf8-vvr9）
+* https://tmds.github.io/Tmds.DBus/
+* https://github.com/SuessLabs/Linux.Bluetooth ；https://github.com/hashtagchris/DotNet-BlueZ
+* https://github.com/bluez/bluez/tree/master/doc（org.bluez.Adapter.rst、Device.rst、GattCharacteristic.rst）
