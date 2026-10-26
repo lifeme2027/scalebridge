@@ -20,7 +20,7 @@ export function build({ srcDir = join(WEB, 'src'), outDir = join(WEB, 'dist'), c
   if (commit === undefined) {
     commit = process.env.BUILD_COMMIT;
     if (!commit) {
-      try { commit = execFileSync('git', ['rev-parse', '--short=12', 'HEAD'], { cwd: WEB, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim(); } catch { commit = 'unknown'; }
+      try { commit = execFileSync('git', ['log', '-1', '--format=%h', '--abbrev=12', '--', '.'], { cwd: WEB, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim() || 'unknown'; } catch { commit = 'unknown'; }
     }
   }
   rmSync(outDir, { recursive: true, force: true });
