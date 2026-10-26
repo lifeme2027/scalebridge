@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:loc="using:ScaleBridge.App.Localization"
+        xmlns:vm="using:ScaleBridge.App.ViewModels"
         x:Class="ScaleBridge.App.Views.MainWindow"
         Title="{loc:T App.Title}"
         Width="1000" Height="660" MinWidth="720" MinHeight="520">
@@ -48,11 +49,29 @@
                     AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" CanUserResizeColumns="True"
                     HorizontalScrollBarVisibility="Auto">
             <DataGrid.Columns>
-              <DataGridTextColumn Header="{loc:T Col.Name}" Binding="{Binding NameText}" Width="2*" MinWidth="120" />
+              <DataGridTemplateColumn Header="{loc:T Col.Name}" Width="2*" MinWidth="125">
+                <DataTemplate x:DataType="vm:DeviceItem">
+                  <TextBlock Text="{Binding NameText}" TextWrapping="Wrap" VerticalAlignment="Center" Margin="12,4" />
+                </DataTemplate>
+              </DataGridTemplateColumn>
               <DataGridTextColumn Header="{loc:T Col.Rssi}" Binding="{Binding RssiText}" Width="Auto" />
-              <DataGridTextColumn Header="{loc:T Col.Protocol}" Binding="{Binding ProtocolText}" Width="3*" MinWidth="120" />
-              <DataGridTextColumn Header="{loc:T Col.Tags}" Binding="{Binding TagText}" Width="3*" MinWidth="120" />
-              <DataGridTextColumn Header="{loc:T Col.DeviceId}" Binding="{Binding Id}" Width="2*" MinWidth="120" />
+              <!-- 协议 / 标记 / 设备标识：给足最小宽度并允许换行，720×520 下中文也不被截成「Body Composition 0x」「DE:MO:00:00:」。
+                   设备标识（蓝牙地址 / 平台 id）可能无空格地很长，所以用 Wrap + 最小宽度双保险；整表仍可横向滚动。 -->
+              <DataGridTemplateColumn Header="{loc:T Col.Protocol}" Width="*" MinWidth="130">
+                <DataTemplate x:DataType="vm:DeviceItem">
+                  <TextBlock Text="{Binding ProtocolText}" TextWrapping="Wrap" VerticalAlignment="Center" Margin="12,4" />
+                </DataTemplate>
+              </DataGridTemplateColumn>
+              <DataGridTemplateColumn Header="{loc:T Col.Tags}" Width="Auto" MinWidth="150">
+                <DataTemplate x:DataType="vm:DeviceItem">
+                  <TextBlock Text="{Binding TagText}" TextWrapping="Wrap" VerticalAlignment="Center" Margin="12,4" />
+                </DataTemplate>
+              </DataGridTemplateColumn>
+              <DataGridTemplateColumn Header="{loc:T Col.DeviceId}" Width="Auto" MinWidth="165">
+                <DataTemplate x:DataType="vm:DeviceItem">
+                  <TextBlock Text="{Binding Id}" TextWrapping="Wrap" VerticalAlignment="Center" Margin="12,4" />
+                </DataTemplate>
+              </DataGridTemplateColumn>
             </DataGrid.Columns>
           </DataGrid>
         </Grid>
