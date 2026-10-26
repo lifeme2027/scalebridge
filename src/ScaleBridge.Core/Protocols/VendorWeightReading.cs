@@ -7,6 +7,10 @@ public enum VendorProtocol
     XiaomiMiScale,
     /// <summary>小米体脂秤 2 / Mi Body Composition Scale 2，13 字节帧（服务 0x181B）。</summary>
     XiaomiBodyCompositionScale2,
+    /// <summary>Chipsea / OKOK v1.1 广播帧（0xCA 0x11，19 字节）。</summary>
+    ChipseaOkok11,
+    /// <summary>Chipsea / OKOK v2.0 广播帧（0xCA 0x20，15 字节）。</summary>
+    ChipseaOkok20,
 }
 
 /// <summary>帧内原始体重的单位。</summary>
@@ -18,6 +22,11 @@ public enum VendorWeightUnit
     Lb,
     /// <summary>斤（500 g）。raw/100。</summary>
     Jin,
+    /// <summary>
+    /// 英石:磅（stone:pound）。RawWeight 高字节为英石整数，低字节为磅×10；
+    /// <see cref="VendorWeightReading.OriginalWeight"/> 以磅（pounds）表示。
+    /// </summary>
+    StoneLb,
 }
 
 /// <summary>

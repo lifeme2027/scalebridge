@@ -25,6 +25,8 @@ public enum VendorParseWarningCode
     TrailingBytes,
     /// <summary>时间戳字节存在，但不构成合法日期时间，已按「未知」处理。</summary>
     InvalidTimestamp,
+    /// <summary>帧不携带单位，已假定为千克。</summary>
+    UnitAssumed,
 }
 
 /// <summary>厂商帧解析结果：成功带 Value，失败带 ErrorCode + 可读信息。解析器绝不抛异常。</summary>
