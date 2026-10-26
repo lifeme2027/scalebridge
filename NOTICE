@@ -1,0 +1,18 @@
+ScaleBridge
+Copyright (c) 2026 composehk
+Licensed under the MIT License (see LICENSE).
+
+ScaleBridge 是独立实现的软件（净室方式，见 THIRD-PARTY-NOTICES.md 第 3、4 节）。
+它没有复制、改写任何 GPL 项目（包括 ble-scale-sync、openScale）的代码、文件结构或测试；
+那些项目至多作为「有哪些设备/协议存在」的事实性线索。
+
+本产品的二进制构件（Actions 构件 ScaleBridge-<rid>-<sha7>.zip / .tar.gz）包含下列第三方组件，
+各自适用其自己的许可证；名称、版本、许可证与来源见 THIRD-PARTY-NOTICES.md：
+
+  - Avalonia（MIT）及其传递依赖 SkiaSharp / HarfBuzzSharp（MIT，内含 Skia、HarfBuzz、FreeType、libpng 等原生库，
+    声明全文见构件内 licenses/ 目录）、MicroCom.Runtime、Tmds.DBus.Protocol（MIT）
+  - CommunityToolkit.Mvvm（MIT）
+  - Microsoft.Data.Sqlite（MIT）、SQLitePCLRaw（Apache-2.0）、SQLite（公有领域）
+  - 自包含发布内置的 .NET 8 运行时（MIT）；Windows 构建另含 Windows SDK .NET 投影（见 THIRD-PARTY-NOTICES.md 的说明）
+
+未经真机验证的设备与协议一律为「实验性」；本项目不声称支持任何具体型号的体重秤。

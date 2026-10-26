@@ -2,6 +2,14 @@ name: Release 打包
 
 # 打包 win-x64 与 linux-x64 的桌面程序并作为 Actions 构件上传。
 # 本工作流不会创建或发布 GitHub Release：手动触发（workflow_dispatch）或推送 v* 标签时只产出构件。
+#
+# 可追溯性（构件必须能回答「它是哪个提交构建的」）：
+#   * 提交 SHA 通过 -p:SourceRevisionId 注入程序集信息版本（AssemblyInformationalVersion = <Version>+<完整 SHA>）；
+#   * 压缩包与构件名带 7 位短 SHA：ScaleBridge-<rid>-<sha7>.zip / .tar.gz；
+#   * 每个构件旁有 SHA256SUMS.txt 与 BUILD-INFO.txt（提交、运行链接、日期、dotnet 版本、文件与 sha256）；
+#   * 压缩包内另有 BUILD-COMMIT.txt（只含提交信息，不含自身哈希）。
+run-name: Release 打包 @ ${{ github.sha }}
+
 on:
   workflow_dispatch:
   push:
@@ -24,17 +32,38 @@ jobs:
           - os: windows-latest
             rid: win-x64
             tfm: net8.0-windows10.0.19041.0
+    env:
+      RID: ${{ matrix.rid }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-      - name: Publish（自包含单文件，无需另装 .NET 运行时）
+      - name: 记录构建提交与版本号
+        shell: bash
+        run: |
+          # 实际检出的提交（不是 workflow 文件里写的任何假设）
+          HEAD_SHA="$(git rev-parse HEAD)"
+          if [ "$HEAD_SHA" != "$GITHUB_SHA" ]; then
+            echo "检出的 HEAD ($HEAD_SHA) 与 GITHUB_SHA ($GITHUB_SHA) 不一致" >&2
+            exit 1
+          fi
+          VERSION="$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' Directory.Build.props | head -n 1)"
+          if [ -z "$VERSION" ]; then echo "Directory.Build.props 里没有 <Version>" >&2; exit 1; fi
+          {
+            echo "BUILD_SHA=$HEAD_SHA"
+            echo "SHORT_SHA=${HEAD_SHA:0:7}"
+            echo "BASE_VERSION=$VERSION"
+            echo "EXPECTED_INFO_VERSION=$VERSION+$HEAD_SHA"
+          } >> "$GITHUB_ENV"
+          echo "构建提交: $HEAD_SHA"
+          echo "预期信息版本: $VERSION+$HEAD_SHA"
+      - name: Publish（自包含单文件，无需另装 .NET 运行时；注入提交 SHA）
         shell: bash
         run: |
           dotnet publish src/ScaleBridge.App/ScaleBridge.App.csproj -c Release -f ${{ matrix.tfm }} -r ${{ matrix.rid }} \
             --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true \
-            -p:DebugType=none -o publish/${{ matrix.rid }}
+            -p:DebugType=none -p:SourceRevisionId="$BUILD_SHA" -o publish/${{ matrix.rid }}
       - name: Windows：确认单文件里带上了 Windows 适配器（只看体积与产物，不代表可用）
         if: matrix.rid == 'win-x64'
         shell: pwsh
@@ -46,18 +75,56 @@ jobs:
           $text = [System.Text.Encoding]::ASCII.GetString($bytes)
           if (-not $text.Contains("ScaleBridge.Windows")) { throw "ScaleBridge.Windows assembly not found inside the single-file bundle" }
           Write-Host "single-file bundle contains ScaleBridge.Windows"
-      - name: 附带说明文件并打包
+      - name: 确认可执行文件里内嵌了本次提交的版本号
         shell: bash
         run: |
-          cp README.md PRIVACY.md LICENSE publish/${{ matrix.rid }}/
-          mkdir -p dist
-          if [ "${{ matrix.rid }}" = "win-x64" ]; then
-            (cd publish/${{ matrix.rid }} && 7z a -tzip "$GITHUB_WORKSPACE/dist/ScaleBridge-${{ matrix.rid }}.zip" . > /dev/null)
+          # 单文件包默认不压缩程序集，信息版本字符串以原样字节出现在可执行文件里。
+          EXE="publish/$RID/ScaleBridge"
+          if [ "$RID" = "win-x64" ]; then EXE="$EXE.exe"; fi
+          if grep -aqF "$EXPECTED_INFO_VERSION" "$EXE"; then
+            echo "OK：$EXE 内含 $EXPECTED_INFO_VERSION"
           else
-            tar -C publish -czf dist/ScaleBridge-${{ matrix.rid }}.tar.gz ${{ matrix.rid }}
+            echo "$EXE 里找不到 $EXPECTED_INFO_VERSION（SourceRevisionId 没有注入？）" >&2
+            exit 1
           fi
+      - name: 附带说明、许可证与构建提交文件并打包
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="publish/$RID"
+          cp README.md PRIVACY.md LICENSE NOTICE THIRD-PARTY-NOTICES.md "$OUT/"
+          # 本地化的原生组件（SkiaSharp / HarfBuzzSharp / ANGLE）的许可证与第三方声明：取自实际还原到的 NuGet 包
+          NUGET_ROOT="${NUGET_PACKAGES:-$HOME/.nuget/packages}"
+          mkdir -p "$OUT/licenses"
+          for spec in "skiasharp:LICENSE.txt:SkiaSharp-LICENSE.txt" \
+                      "skiasharp:THIRD-PARTY-NOTICES.txt:SkiaSharp-THIRD-PARTY-NOTICES.txt" \
+                      "harfbuzzsharp:LICENSE.txt:HarfBuzzSharp-LICENSE.txt" \
+                      "avalonia.angle.windows.natives:LICENSE:Avalonia.Angle-LICENSE.txt"; do
+            IFS=: read -r pkg file dest <<< "$spec"
+            if [ "$pkg" = "avalonia.angle.windows.natives" ] && [ "$RID" != "win-x64" ]; then continue; fi
+            src="$(ls -d "$NUGET_ROOT/$pkg"/*/"$file" 2>/dev/null | head -n 1 || true)"
+            if [ -z "$src" ]; then echo "找不到 NuGet 包文件 $pkg/$file" >&2; exit 1; fi
+            cp "$src" "$OUT/licenses/$dest"
+          done
+          cat > "$OUT/BUILD-COMMIT.txt" <<EOT
+          ScaleBridge 构件由以下提交构建：
+          commit:      $BUILD_SHA
+          repository:  https://github.com/$GITHUB_REPOSITORY
+          commit URL:  https://github.com/$GITHUB_REPOSITORY/commit/$BUILD_SHA
+          run:         https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
+          version:     $EXPECTED_INFO_VERSION
+          EOT
+          mkdir -p dist
+          if [ "$RID" = "win-x64" ]; then
+            ARCHIVE="ScaleBridge-$RID-$SHORT_SHA.zip"
+            (cd "$OUT" && 7z a -tzip "$GITHUB_WORKSPACE/dist/$ARCHIVE" . > /dev/null)
+          else
+            ARCHIVE="ScaleBridge-$RID-$SHORT_SHA.tar.gz"
+            tar -C publish -czf "dist/$ARCHIVE" "$RID"
+          fi
+          echo "ARCHIVE=$ARCHIVE" >> "$GITHUB_ENV"
           ls -l dist
-      - name: Linux 冒烟（打包产物本身，xvfb 下启动演示场景）
+      - name: Linux 冒烟（打包产物本身，xvfb 下启动演示场景）并记录 --version
         if: matrix.rid == 'linux-x64'
         run: |
           sudo apt-get update
@@ -65,9 +132,57 @@ jobs:
           export SCALEBRIDGE_DATA_DIR="$(mktemp -d)"
           xvfb-run -a publish/linux-x64/ScaleBridge --smoke | tee smoke.log
           grep -q SCALEBRIDGE_SMOKE_OK smoke.log
+          # --version（任务 B 的约定）：必须退出 0，且输出里有「commit: <本次完整 SHA>」；否则这次构建不可信，直接失败。
+          xvfb-run -a publish/linux-x64/ScaleBridge --version > version.log 2>&1 || { cat version.log; echo "--version 失败" >&2; exit 1; }
+          echo "--version 输出："; cat version.log
+          grep -qx "commit: $BUILD_SHA" version.log || { echo "--version 输出里没有 'commit: $BUILD_SHA'" >&2; exit 1; }
+          echo "VERSION_FLAG_RESULT=ok（退出码 0，输出含 commit: 完整提交 SHA）" >> "$GITHUB_ENV"
+      - name: 生成 SHA256SUMS.txt 与 BUILD-INFO.txt
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd dist
+          sha256sum "$ARCHIVE" > SHA256SUMS.txt
+          SIZE="$(wc -c < "$ARCHIVE" | tr -d ' ')"
+          SHA="$(cut -d' ' -f1 SHA256SUMS.txt)"
+          {
+            echo "ScaleBridge 构件构建信息"
+            echo "========================"
+            echo "本构件由提交 $BUILD_SHA 构建（短 SHA $SHORT_SHA）。"
+            echo ""
+            echo "commit:            $BUILD_SHA"
+            echo "commit URL:        https://github.com/$GITHUB_REPOSITORY/commit/$BUILD_SHA"
+            echo "ref:               $GITHUB_REF ($GITHUB_REF_TYPE)"
+            echo "event:             $GITHUB_EVENT_NAME"
+            echo "workflow run:      https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID (attempt $GITHUB_RUN_ATTEMPT)"
+            echo "build date (UTC):  $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "dotnet SDK:        $(dotnet --version)"
+            echo "runner:            $RUNNER_OS / $RUNNER_ARCH"
+            echo "rid / target:      $RID / ${{ matrix.tfm }}"
+            echo "version (内嵌):     $EXPECTED_INFO_VERSION"
+            echo "--version 检查:    ${VERSION_FLAG_RESULT:-未运行（该平台的 runner 上不执行打包后的程序；只核对了可执行文件内嵌的版本字符串）}"
+            echo ""
+            echo "文件:"
+            echo "  $ARCHIVE"
+            echo "    size:   $SIZE bytes"
+            echo "    sha256: $SHA"
+            echo ""
+            echo "校验: 在存放构件的目录运行  sha256sum -c SHA256SUMS.txt  （Windows: Get-FileHash -Algorithm SHA256 <文件>）"
+            echo ""
+            echo "状态: 实验性（仅按规范实现，未真机验证）。没有代码签名。本工作流只产出 Actions 构件，不创建 GitHub Release。"
+          } > BUILD-INFO.txt
+          cat BUILD-INFO.txt
+          {
+            echo "### 构件 $ARCHIVE"
+            echo ""
+            echo "由提交 [\`${BUILD_SHA}\`](https://github.com/$GITHUB_REPOSITORY/commit/$BUILD_SHA) 构建，sha256 \`$SHA\`。详见构件旁的 BUILD-INFO.txt / SHA256SUMS.txt。"
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: 上传构件
         uses: actions/upload-artifact@v4
         with:
-          name: ScaleBridge-${{ matrix.rid }}
-          path: dist/*
+          name: ScaleBridge-${{ matrix.rid }}-${{ env.SHORT_SHA }}
+          path: |
+            dist/ScaleBridge-*
+            dist/SHA256SUMS.txt
+            dist/BUILD-INFO.txt
           if-no-files-found: error

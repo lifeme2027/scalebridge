@@ -79,9 +79,32 @@ BCS 多包重组尚未实现，见 [NOTES.md](NOTES.md)。
 
 * `.github/workflows/ci.yml`：Ubuntu + Windows 构建并跑全部测试；Ubuntu 上另有 xvfb 下的应用启动冒烟（9 个场景各启动一次）。
 * `.github/workflows/release.yml`：手动触发或推送 `v*` 标签时，为 `win-x64`、`linux-x64` 发布**自包含单文件**
-  （内含 .NET 运行时，不需要另装；体积较大）并作为 Actions 构件上传（`ScaleBridge-win-x64.zip`、`ScaleBridge-linux-x64.tar.gz`）。
+  （内含 .NET 运行时，不需要另装；体积较大）并作为 Actions 构件上传。每个构件名与压缩包名都带构建提交的前 7 位 SHA：
+  `ScaleBridge-win-x64-<sha7>.zip`、`ScaleBridge-linux-x64-<sha7>.tar.gz`，旁边附 `SHA256SUMS.txt` 与 `BUILD-INFO.txt`（见下一节）。
   **该工作流只产出构件，不会创建 GitHub Release。**
 * 当前没有代码签名；Windows 可能出现 SmartScreen 提示。
+
+## 构件与版本
+
+每个 release 构件都能追溯到构建它的提交（这是因为早先出现过「构件由 A 提交构建、却被当作 B 提交验收」的错位）：
+
+* 构件文件名里的 `<sha7>` 是构建提交的前 7 位；可执行文件的版本号内嵌为 `0.1.0+<完整 40 位 SHA>`（`Directory.Build.props` 的 `Version` + `-p:SourceRevisionId`）。
+  工作流会在打包前检查检出的 `HEAD` 就是触发它的提交，并检查该字符串确实在可执行文件里，否则失败。
+* 包里有 `BUILD-COMMIT.txt`（提交、运行链接、版本）；构件里压缩包旁边还有：
+  * `SHA256SUMS.txt`：压缩包的 SHA-256；
+  * `BUILD-INFO.txt`：提交、工作流运行链接、构建日期（UTC）、dotnet SDK 版本、文件名、大小与 SHA-256。
+* 校验：从 Actions 页面下载构件（得到一个含压缩包、`SHA256SUMS.txt`、`BUILD-INFO.txt` 的 zip），解压到同一个目录后——
+  ```bash
+  sha256sum -c SHA256SUMS.txt          # Linux / macOS；输出 "…: OK" 才算通过
+  ```
+  ```powershell
+  (Get-FileHash -Algorithm SHA256 .\ScaleBridge-win-x64-<sha7>.zip).Hash   # 与 SHA256SUMS.txt 里的值（不区分大小写）比较
+  ```
+* 看它是哪个提交构建的：`./ScaleBridge --version` 输出 `ScaleBridge 0.1.0` 和 `commit: <SHA>`（设置页也会显示）；
+  Windows 构件可对照 `BUILD-INFO.txt` / `BUILD-COMMIT.txt`。把输出的 SHA 与你要验收的提交比较。
+* 局限（如实说明）：SHA-256 只能证明「你拿到的文件和工作流上传时一致」，**不是代码签名**，也不证明构建环境可信；
+  本项目目前没有代码签名，也没有可复现构建的承诺。Windows 构件在 CI 里只做了构建与内嵌版本检查，没有在 CI 里运行；
+  **所有蓝牙行为仍是「实验性（仅按规范/公开资料实现，未真机验证）」**。
 
 ## 构建与测试
 
@@ -123,7 +146,8 @@ CI 为独立的 `.github/workflows/web.yml`（与 .NET 的 ci.yml 互不影响�
 
 ## 许可证与致谢
 
-MIT，见 [LICENSE](LICENSE)。
+MIT，见 [LICENSE](LICENSE)。第三方依赖及其许可证见 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)，
+版权与分发声明见 [NOTICE](NOTICE)；协议资料来源与净室过程记录在 THIRD-PARTY-NOTICES.md 的第 3、4 节。
 
 感谢 [ble-scale-sync](https://github.com/KristianP26/ble-scale-sync)（GPL-3.0）——它只作为
 **事实性参考**（有哪些设备/协议存在）。**本项目没有复制或改写它的任何代码、文件结构或测试**；
