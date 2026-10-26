@@ -193,6 +193,40 @@ public class MainViewModelStatusTests
         Assert.Single(t.Vm.Devices);
     }
 
+    // ---------- SB1 复测 N3：「扫描结束：找到 N 台」按设备 id 去重 ----------
+
+    [Theory, MemberData(nameof(BothLanguages))]
+    public async Task Scan_Finished_CountsDistinctDevices_NotAdvertisements(LanguageSetting lang)
+    {
+        // 3 台设备，共 9 次广播（交错）
+        var stub = new StubRealAdapter { ScanScript = new[] { "A", "B", "A", "C", "B", "A", "C", "B", "A" } };
+        using var t = new TestApp(adapter: AdapterFactory.WindowsId, lang: lang, windowsFactory: () => stub, scanTimeout: TimeSpan.FromMilliseconds(400));
+        await t.Vm.StartScanAsync();
+        await t.UntilAsync(() => !t.Vm.IsScanning, "timed out");
+        Assert.Equal(3, t.Read(() => t.Vm.Devices.Count));
+        Assert.Equal(t.Loc.Format("Status.ScanFinished", 3), t.Read(() => t.Vm.StatusText));
+        Assert.DoesNotContain("9", t.Read(() => t.Vm.StatusText));
+        Assert.Contains("3", t.Read(() => t.Vm.StatusText));
+        Assert.False(t.Read(() => t.Vm.ScanNoDevice));
+    }
+
+    [Fact]
+    public async Task Scan_Finished_CountIsPerScan_AndSingleDeviceBroadcastingManyTimesIsOne()
+    {
+        var stub = new StubRealAdapter { ScanScript = new[] { "A", "A", "A", "A", "A" } };
+        using var t = new TestApp(adapter: AdapterFactory.WindowsId, windowsFactory: () => stub, scanTimeout: TimeSpan.FromMilliseconds(300));
+        await t.Vm.StartScanAsync();
+        await t.UntilAsync(() => !t.Vm.IsScanning, "first scan");
+        Assert.Equal(t.Loc.Format("Status.ScanFinished", 1), t.Read(() => t.Vm.StatusText));
+
+        // 第二次扫描：设备列表里已有 A、B，本次只见到 B（若干次广播）→ 本次数是 1，而不是列表里的 2 或累计值
+        stub.ScanScript = new[] { "B", "B", "B" };
+        await t.Vm.StartScanAsync();
+        await t.UntilAsync(() => !t.Vm.IsScanning, "second scan");
+        Assert.Equal(t.Loc.Format("Status.ScanFinished", 1), t.Read(() => t.Vm.StatusText));
+        Assert.Equal(2, t.Read(() => t.Vm.Devices.Count));
+    }
+
     [Fact]
     public async Task Scan_AdapterError_DoesNotShowNoDeviceHint()
     {

@@ -42,7 +42,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private (string Key, object?[] Args)? _notice;
     private (string Key, object?[] Args)? _status;
     private int _sessionMeasurements;
-    private int _scanSeen;
+    /// <summary>本次扫描见到的不同设备 id（「扫描结束：找到 N 台」的 N 按设备去重，不是广播次数）。只在 UI 线程访问。</summary>
+    private readonly HashSet<string> _scanSeen = new(StringComparer.Ordinal);
     private (ConnectionState State, string? Reason, BleErrorKind? Kind) _conn = (ConnectionState.Disconnected, null, null);
     // 历史：数据库保留全部记录；界面只持有「最新 N 条 + 用户点“加载更多”追加的更旧记录」（N = AppSettings.HistoryWindow）。
     // 收到新记录时按显示时间增量插入，不重读数据库。_allHistory 始终按显示时间倒序（与仓库一致）。
@@ -389,7 +390,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         var cts = new CancellationTokenSource();
         if (ScanTimeout > TimeSpan.Zero) cts.CancelAfter(ScanTimeout);
         _scanCts = cts;
-        _scanSeen = 0;
+        _scanSeen.Clear();
         SetScanNoDevice(false);
         SetStatus(null);
         IsScanning = true;
@@ -438,12 +439,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     private void OnScanFinished()
     {
-        if (_scanSeen == 0)
+        if (_scanSeen.Count == 0)
         {
             SetScanNoDevice(true);
             SetStatus("Status.NoDeviceFound");
         }
-        else SetStatus("Status.ScanFinished", _scanSeen);
+        else SetStatus("Status.ScanFinished", _scanSeen.Count);
     }
 
     private void SetScanNoDevice(bool value)
@@ -455,7 +456,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     private void OnAdvertised(AdvertisedDevice ad)
     {
-        _scanSeen++;
+        _scanSeen.Add(ad.Id);
         SetScanNoDevice(false);
         var existing = Devices.FirstOrDefault(d => d.Id == ad.Id);
         if (existing is null) Devices.Add(new DeviceItem(ad, L));

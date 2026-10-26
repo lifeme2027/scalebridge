@@ -13,6 +13,8 @@ public sealed class StubRealAdapter : IBleAdapter
     public BleAvailability Availability { get; set; } = BleAvailability.Available;
     public BleException? ScanError { get; set; }
     public int ScanCalls;
+    /// <summary>非空时，每次扫描按顺序产出这些广播（设备 id 可重复，模拟同一设备的多次广播），然后挂起直到取消。</summary>
+    public IReadOnlyList<string>? ScanScript { get; set; }
 
     public string Id => "windows";
     public string DisplayName => "stub";
@@ -24,6 +26,14 @@ public sealed class StubRealAdapter : IBleAdapter
     {
         Interlocked.Increment(ref ScanCalls);
         if (ScanError is not null) throw ScanError;
+        if (ScanScript is not null)
+        {
+            foreach (var id in ScanScript)
+                yield return new AdvertisedDevice(id, "Scale " + id, -60,
+                    new[] { GattUuids.WeightScaleService }, new Dictionary<ushort, byte[]>(), DateTimeOffset.UtcNow, IsDemo: false);
+            try { await Task.Delay(Timeout.Infinite, ct); } catch (OperationCanceledException) { }
+            yield break;
+        }
         yield return new AdvertisedDevice("AA:BB:CC:DD:EE:FF", "Real Scale", -60,
             new[] { GattUuids.WeightScaleService }, new Dictionary<ushort, byte[]>(), DateTimeOffset.UtcNow, IsDemo: false);
         try { await Task.Delay(Timeout.Infinite, ct); } catch (OperationCanceledException) { }
