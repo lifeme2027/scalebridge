@@ -66,3 +66,13 @@ test('openStore：IndexedDB 不可用时降级为内存存储并标记 persisten
   const broken = await openStore({ open() { throw new Error('denied'); } });
   assert.equal(broken.persistent, false);
 });
+
+test('sanitizeSettings：非法/被篡改的设置回落到默认值，合法的保留', async () => {
+  const { sanitizeSettings, DEFAULT_SETTINGS } = await import('../src/core/store.js');
+  assert.deepEqual(sanitizeSettings(null), DEFAULT_SETTINGS);
+  assert.deepEqual(sanitizeSettings({ displayUnit: 'stone', lang: 5, userNotes: [1] }), DEFAULT_SETTINGS);
+  const ok = sanitizeSettings({ displayUnit: 'lb', lang: 'zh', userNotes: { 0: '爸爸', 254: 'x', 255: 'no', '01': 'no', a: 'no', 7: '', 8: 'x'.repeat(41), 9: 3 } });
+  assert.equal(ok.displayUnit, 'lb');
+  assert.equal(ok.lang, 'zh');
+  assert.deepEqual(ok.userNotes, { 0: '爸爸', 254: 'x' });
+});

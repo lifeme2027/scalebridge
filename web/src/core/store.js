@@ -14,6 +14,20 @@ export const DEFAULT_SETTINGS = Object.freeze({
   userNotes: {}, // { "<设备用户编号 0-254>": "备注" }——只是本机备注，不会写入设备
 });
 
+/** 把从存储里读出来的设置规整成已知形状（被篡改或旧版本的值不会让界面崩溃）。 */
+export function sanitizeSettings(raw) {
+  const out = structuredClone(DEFAULT_SETTINGS);
+  const r = raw && typeof raw === 'object' ? raw : {};
+  if (r.displayUnit === 'kg' || r.displayUnit === 'lb') out.displayUnit = r.displayUnit;
+  if (r.lang === 'auto' || r.lang === 'zh' || r.lang === 'en') out.lang = r.lang;
+  if (r.userNotes && typeof r.userNotes === 'object' && !Array.isArray(r.userNotes)) {
+    for (const [k, v] of Object.entries(r.userNotes)) {
+      if (/^(0|[1-9]\d{0,2})$/.test(k) && Number(k) <= 254 && typeof v === 'string' && v.length > 0 && v.length <= 40) out.userNotes[k] = v;
+    }
+  }
+  return out;
+}
+
 const req = (r) => new Promise((resolve, reject) => {
   r.onsuccess = () => resolve(r.result);
   r.onerror = () => reject(r.error);
@@ -105,9 +119,9 @@ export class IdbStore {
 
   async getSettings() {
     const rows = await req(this.db.transaction(S_STORE).objectStore(S_STORE).getAll());
-    const out = structuredClone(DEFAULT_SETTINGS);
-    for (const { key, value } of rows) if (key in DEFAULT_SETTINGS) out[key] = value;
-    return out;
+    const raw = {};
+    for (const { key, value } of rows) if (key in DEFAULT_SETTINGS) raw[key] = value;
+    return sanitizeSettings(raw);
   }
 
   async setSetting(key, value) {
@@ -145,7 +159,7 @@ export class MemoryStore {
     return before - this.rows.length;
   }
   async clearMeasurements() { this.rows = []; }
-  async getSettings() { return structuredClone(this.settings); }
+  async getSettings() { return sanitizeSettings(this.settings); }
   async setSetting(key, value) {
     if (!(key in DEFAULT_SETTINGS)) throw new RangeError('unknown setting ' + key);
     this.settings[key] = structuredClone(value);
