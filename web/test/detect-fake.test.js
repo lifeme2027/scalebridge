@@ -55,3 +55,18 @@ test('演示场景：字节走同一条解析管线，数值与构造一致，�
   assert.equal(lb.weightOriginal, '154.32');
   assert.equal(lb.weightKg, '69.9983745384', 'lb→kg 精确换算（独立 Python Decimal 核对）');
 });
+
+test('SBW-L01：非安全上下文里 navigator.bluetooth 不存在，也要提示「需要 HTTPS」而不是「浏览器不支持」', () => {
+  // 真实情形：http 非 localhost 的 Chrome——isSecureContext=false，且 [SecureContext] 的 navigator.bluetooth 根本不存在
+  const chromeOverHttp = detectSupport({ userAgent: 'Mozilla/5.0 Chrome/156 Safari/537' }, { isSecureContext: false, indexedDB: {} });
+  assert.deepEqual([chromeOverHttp.hasBluetooth, chromeOverHttp.secureContext, chromeOverHttp.secureKnown], [false, false, true]);
+  assert.equal(supportLevel(chromeOverHttp, null), 'insecure');
+  // 非安全上下文优先于是否有 API / 适配器
+  assert.equal(supportLevel({ ...chromeOverHttp, hasBluetooth: true }, false), 'insecure');
+  // 安全上下文但没有 API（Firefox/Safari）仍是 noApi
+  assert.equal(supportLevel(detectSupport({ userAgent: 'Firefox/130.0' }, { isSecureContext: true }), null), 'noApi');
+  // 浏览器没有 isSecureContext（太老，也不会有 Web Bluetooth）：不能断言「不是 HTTPS」，保持 noApi
+  const ancient = detectSupport({ userAgent: 'x' }, {});
+  assert.equal(ancient.secureKnown, false);
+  assert.equal(supportLevel(ancient, null), 'noApi');
+});
