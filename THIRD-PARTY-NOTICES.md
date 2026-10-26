@@ -22,7 +22,9 @@ ScaleBridge 自身以 MIT 许可证发布（见 [LICENSE](LICENSE)、[NOTICE](NO
 * 原生库的归属另外用 `dotnet publish -r linux-x64 --self-contained`（`-f net8.0`）实际发布后列出输出目录核对：
   确有 `libSkiaSharp.so`、`libHarfBuzzSharp.so`、`libe_sqlite3.so`、`Tmds.DBus.Protocol.dll` 等。
   Windows 构件的原生部分（`libSkiaSharp.dll`、`libHarfBuzzSharp.dll`、`e_sqlite3.dll`、ANGLE）按包内 `runtimes/win-x64/native`
-  与 `.nuspec` 推断，**本地没有做 Windows 发布，未逐文件核对**（CI 的 win-x64 构件是实际产物，可自行核对）。
+  与 `.nuspec` 推断，本地没有做 Windows 发布；用 CI 产出的 win-x64 构件（run 40259164930，提交 1ba1805）的 `ScaleBridge.exe` 做了字符串核对：
+  文件里确有 `libSkiaSharp`、`libHarfBuzzSharp`、`e_sqlite3`、`libEGL`（ANGLE）、`Microsoft.Windows.SDK.NET`、`WinRT.Runtime`、`Tmds.DBus` 的字样
+  （单文件包未压缩，字符串可直接搜到）；这只能说明「这些组件在包里」，没有逐个解包核对版本。
 * 用到的版本固定写在：`src/ScaleBridge.App/ScaleBridge.App.csproj`、`src/ScaleBridge.Data/ScaleBridge.Data.csproj`。
 
 ### 1.2 直接依赖（`*.csproj` 里的 `PackageReference`）
@@ -64,6 +66,7 @@ ScaleBridge 自身以 MIT 许可证发布（见 [LICENSE](LICENSE)、[NOTICE](NO
 * **Windows SDK .NET 投影（仅 win-x64 构件）**：`net8.0-windows10.0.19041.0` 目标框架使用 `Microsoft.Windows.SDK.NET.Ref` 10.0.19041.56
   （含 `Microsoft.Windows.SDK.NET.dll`、`WinRT.Runtime.dll`），它的 `.nuspec` 只写了 `licenseUrl=https://aka.ms/WinSDKLicenseURL`，
   指向的是「Microsoft Windows SDK for Windows 10」软件许可条款（Microsoft 专有许可，**不是开源许可证**）。
+  win-x64 构件（`ScaleBridge.exe`）里确实带有 `Microsoft.Windows.SDK.NET` 与 `WinRT.Runtime`（按上面的字符串核对）；`WinRT.Runtime` 来自 CsWinRT，其许可证本次**没有单独核实**。
   我读过这份条款里有「Distributable Code（可分发代码）」条款，但**没有核实这些投影程序集是否属于其中允许再分发的范围**，
   也没有请法务确认——这是一个**未决项**，影响 win-x64 构件的再分发；发布到公开 Release 之前应先确认。
 * **Tmds.DBus.Protocol 0.21.2 的已知漏洞**：Avalonia.FreeDesktop 11.3.13 传递引入的 `Tmds.DBus.Protocol` 是 0.21.2，
