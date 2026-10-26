@@ -53,6 +53,7 @@ function renderSupport() {
   const { t, support: s } = S;
   const level = supportLevel(s, S.availability);
   $('support-msg').textContent = t(`support.${level}`);
+  $('support-msg').dataset.level = level; // ok | noApi | insecure | noAdapter，供自动化测试读取
   const yn = (b) => t(b ? 'support.yes' : 'support.no');
   const avail = S.availability === null ? t('support.unknown') : t(`support.avail.${S.availability}`);
   const list = $('support-detail');

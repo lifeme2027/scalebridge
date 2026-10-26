@@ -106,6 +106,7 @@ node tools/parse-cli.mjs --file their-vectors.json > actual.json
 | --- | --- | --- |
 | 连接 / 重连 / 断开 | `btn-connect` / `btn-reconnect` / `btn-disconnect` | 选择器只由 `btn-connect` 的真实点击触发 |
 | 连接状态 | `conn-state` | `data-state`：`idle` / `requesting` / `connecting` / `connected` / `reconnecting` / `disconnected` |
+| 浏览器支持提示 | `support-msg` | `data-level`：`ok` / `noApi` / `insecure` / `noAdapter` |
 | 错误提示 | `conn-error` | `data-code`：如 `timeout`、`cancelled`、`noDevice` |
 | 最新体重 | `latest-weight` | `data-kg`、`data-demo` |
 | 历史 | `history-table`、`history-rows`、行 `history-row`、`history-weight`、`history-delete` | 行上有 `data-id`、`data-kg`、`data-demo` |
