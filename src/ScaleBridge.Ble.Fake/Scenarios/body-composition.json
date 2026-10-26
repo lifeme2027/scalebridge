@@ -1,0 +1,49 @@
+{
+  "schema": "scalebridge-scenario/1",
+  "id": "body-composition",
+  "demo": true,
+  "title": {
+    "zh": "体成分(0x181B)",
+    "en": "Body composition (0x181B)"
+  },
+  "description": {
+    "zh": "Body Composition 服务：体脂、肌肉、水分、基础代谢、阻抗、体重、身高。",
+    "en": "Body Composition service: body fat, muscle, water, basal metabolism, impedance, weight, height."
+  },
+  "devices": [
+    {
+      "id": "DE:MO:00:00:00:04",
+      "name": "演示体脂秤 D",
+      "rssi": -55,
+      "appearAfterMs": 0,
+      "services": [
+        "181B"
+      ],
+      "manufacturerData": {},
+      "features": {
+        "2A9B": "FFBF0100"
+      },
+      "connections": [
+        {
+          "connectDelayMs": 400,
+          "events": [
+            {
+              "delayMs": 800,
+              "type": "indicate",
+              "characteristic": "2A9C",
+              "hex": "7E0FB900EA070A1A072D0C01201C9C01401FC02B08200314B036D606",
+              "expect": "ok"
+            },
+            {
+              "delayMs": 1500,
+              "type": "indicate",
+              "characteristic": "2A9C",
+              "hex": "060CC900EA070A1A073203012837D606",
+              "expect": "ok"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

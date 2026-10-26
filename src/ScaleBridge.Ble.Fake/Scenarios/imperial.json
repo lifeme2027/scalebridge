@@ -1,0 +1,56 @@
+{
+  "schema": "scalebridge-scenario/1",
+  "id": "imperial",
+  "demo": true,
+  "title": {
+    "zh": "英制体重(lb)",
+    "en": "Imperial weight (lb)"
+  },
+  "description": {
+    "zh": "设备以磅(lb)上报，0.01 lb 分辨率。",
+    "en": "Device reports in pounds at 0.01 lb resolution."
+  },
+  "devices": [
+    {
+      "id": "DE:MO:00:00:00:02",
+      "name": "演示体重秤 B",
+      "rssi": -58,
+      "appearAfterMs": 0,
+      "services": [
+        "181D"
+      ],
+      "manufacturerData": {},
+      "features": {
+        "2A9E": "BF010000"
+      },
+      "connections": [
+        {
+          "connectDelayMs": 400,
+          "events": [
+            {
+              "delayMs": 800,
+              "type": "indicate",
+              "characteristic": "2A9D",
+              "hex": "01483C",
+              "expect": "ok"
+            },
+            {
+              "delayMs": 1500,
+              "type": "indicate",
+              "characteristic": "2A9D",
+              "hex": "018C3C",
+              "expect": "ok"
+            },
+            {
+              "delayMs": 1500,
+              "type": "indicate",
+              "characteristic": "2A9D",
+              "hex": "01143C",
+              "expect": "ok"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

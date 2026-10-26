@@ -1,0 +1,56 @@
+{
+  "schema": "scalebridge-scenario/1",
+  "id": "normal-si",
+  "demo": true,
+  "title": {
+    "zh": "标准公制体重",
+    "en": "Normal weight (SI)"
+  },
+  "description": {
+    "zh": "一台体重秤，依次推送 3 条公制(kg)体重。",
+    "en": "One scale pushing three plain SI (kg) weights."
+  },
+  "devices": [
+    {
+      "id": "DE:MO:00:00:00:01",
+      "name": "演示体重秤 A",
+      "rssi": -52,
+      "appearAfterMs": 0,
+      "services": [
+        "181D"
+      ],
+      "manufacturerData": {},
+      "features": {
+        "2A9E": "BF010000"
+      },
+      "connections": [
+        {
+          "connectDelayMs": 400,
+          "events": [
+            {
+              "delayMs": 800,
+              "type": "indicate",
+              "characteristic": "2A9D",
+              "hex": "00B036",
+              "expect": "ok"
+            },
+            {
+              "delayMs": 1500,
+              "type": "indicate",
+              "characteristic": "2A9D",
+              "hex": "00F636",
+              "expect": "ok"
+            },
+            {
+              "delayMs": 1500,
+              "type": "indicate",
+              "characteristic": "2A9D",
+              "hex": "009C36",
+              "expect": "ok"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

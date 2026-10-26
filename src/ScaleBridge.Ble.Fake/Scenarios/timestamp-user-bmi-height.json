@@ -1,0 +1,49 @@
+{
+  "schema": "scalebridge-scenario/1",
+  "id": "timestamp-user-bmi-height",
+  "demo": true,
+  "title": {
+    "zh": "时间戳+用户+BMI+身高",
+    "en": "Timestamp + user + BMI + height"
+  },
+  "description": {
+    "zh": "带设备时间戳、用户 ID、BMI 和身高的体重测量。",
+    "en": "Weight with device timestamp, user ID, BMI and height."
+  },
+  "devices": [
+    {
+      "id": "DE:MO:00:00:00:03",
+      "name": "演示体重秤 C",
+      "rssi": -49,
+      "appearAfterMs": 0,
+      "services": [
+        "181D"
+      ],
+      "manufacturerData": {},
+      "features": {
+        "2A9E": "BF010000"
+      },
+      "connections": [
+        {
+          "connectDelayMs": 400,
+          "events": [
+            {
+              "delayMs": 800,
+              "type": "indicate",
+              "characteristic": "2A9D",
+              "hex": "0E9434EA070A1A072D0C01DC00D606",
+              "expect": "ok"
+            },
+            {
+              "delayMs": 1500,
+              "type": "indicate",
+              "characteristic": "2A9D",
+              "hex": "0E483FEA070A1A073203020801D606",
+              "expect": "ok"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
