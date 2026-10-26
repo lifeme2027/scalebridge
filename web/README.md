@@ -34,6 +34,7 @@
 * 数据只保存在本浏览器的 IndexedDB 里，**不会上传**；页面不向任何地方发 `fetch` / XHR / `sendBeacon`（CSP 里 `connect-src 'self'` 也只允许本站，且代码里没有任何数据接口调用）。
 * 普通的服务器访问日志会记录对本页面的请求（时间、路径、浏览器标识等），其中**没有任何体重数据**。
 * 没有云同步、没有账号、没有统计。完整说明见页面里的「隐私」页（`/box/privacy.html`）。
+* **与主站同源**：`/box` 与主站（`life.kastop.com`）是同一个源（协议+域名+端口）。浏览器的 Web Storage 与 IndexedDB 按**源**隔离，不按路径：`/box` 只用名为 `scalebridge` 的 IndexedDB 库，主站本地模式用 `life-local` 库和自己的本地存储键，两边的代码互不读取对方数据。但这只是代码层面的约定，**不是浏览器在两者之间设的隔离墙**（同源脚本技术上能访问同一源的存储）；同源还共享存储配额，浏览器的「清除站点数据」按源清除，会同时清掉两边的本地数据。隐私页（中英）有同样的说明。
 
 ## 目录
 
@@ -113,6 +114,15 @@ node tools/parse-cli.mjs --file their-vectors.json > actual.json
 | 演示按钮 | `demo-<场景>`（容器 `demo-buttons`） | 场景：`si-basic` / `si-full` / `imperial` / `body-composition` |
 
 超时看门狗：`requestDevice` 之后的每一步 GATT 操作（`connect`、`getPrimaryService`、`getCharacteristic`、`startNotifications` 等）各有 9 秒超时（读 Feature 等可选步骤 3 秒），
-超时后显示友好提示（`data-code="timeout"`）并允许重试；重连最多 3 次，之后提示「连接已丢失」。对应单测在 `test/ble.test.js`。
+超时后显示友好提示（`data-code="timeout"`）并允许重试。对应单测在 `test/ble.test.js`。
+
+### 断线与重连（实际行为，页面与隐私页的说明与此一致）
+
+* 只有**已经连接成功**的会话掉线才会自动重连：对用户刚在选择器里授权的**同一个设备对象**重试 `gatt.connect()`，最多 **3 次**，间隔约 1 / 2 / 4 秒，界面显示「第 n/3 次」（`conn-state` 的 `data-state="reconnecting"`）。Web Bluetooth 重连同一设备不需要再弹选择器，也不会去连没选过的设备。
+* 3 次都失败后停止，显示「连接已丢失」（`data-code="connectionLost"`，文案已提示再点「重新连接上次的设备」），之后由用户点击 `btn-reconnect`（仍不弹选择器，只试一次）或 `btn-connect`（重新选择）。
+* 用户点「断开」不会自动重连；连接阶段（尚未成功）超时也不自动重试。刷新/关闭页面后设备对象丢失（页面不使用 `getDevices`），必须重新点击连接并重新选择。
+* 验收报告里「需再次点击」的说法不准确：掉线后先自动重连，**耗尽 3 次之后**才需要再次点击；代码与文案本来一致，这里只是把行为写清楚。
+* 与桌面版的差异：桌面版第一阶段**不做自动重连**（见仓库 `NOTES.md`「取舍」：掉线后由用户或上层再次 `ConnectAsync`），Web 版有最多 3 次的自动重连。这是两端当前的真实差异，Web 版并非行为对齐的移植；桌面代码本轮未改。
+* 所有蓝牙路径（含重连）均为 **实验性（仅按规范实现，未真机验证）**；重连逻辑只有桩/模拟测试（`test/ble.test.js`，ctw 的 e2e）。
 
 Chrome 蓝牙模拟（CDP `BluetoothEmulation`）的已知坑见内部测试报告：GATT 错误码会让调用一直挂起（所以要看门狗）、每个特征要有 CCCD 描述符、同一选择器不要选两次。
