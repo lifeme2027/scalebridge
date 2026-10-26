@@ -46,6 +46,7 @@ textarea { width: 100%; font-family: ui-monospace, Menlo, Consolas, monospace; }
 table { border-collapse: collapse; width: 100%; font-size: .95rem; }
 th, td { text-align: left; padding: .4rem .5rem; border-bottom: 1px solid var(--line); vertical-align: top; }
 td.demo-row-tag, .tag-demo { color: var(--demo-fg); background: var(--demo-bg); font-weight: 600; border-radius: .3rem; padding: 0 .3rem; }
+.tag-warn { color: var(--warn-fg); background: var(--warn-bg); font-weight: 600; border-radius: .3rem; padding: 0 .3rem; }
 dl.fields { display: grid; grid-template-columns: max-content 1fr; gap: .15rem 1rem; margin: .5rem 0 0; }
 dl.fields dt { color: var(--muted); }
 dl.fields dd { margin: 0; }

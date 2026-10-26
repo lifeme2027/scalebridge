@@ -103,6 +103,10 @@ export default {
   'u.ohm': 'Ω',
   'tag.demo': '演示数据',
   'tag.real': '蓝牙（实验性）',
+  'tag.abnormal': '体重异常（< 2 kg 或 > 200 kg）',
+  'tag.clockSuspect': '设备时钟可疑',
+  'ingest.zero': '秤报告的体重为 0，按策略不自动保存。',
+  'ingest.duplicate': '与已保存的记录完全相同（同一设备时间戳与数值），未重复保存。',
   'src.weight-scale': '体重秤 0x2A9D',
   'src.body-composition': '体成分 0x2A9C',
 

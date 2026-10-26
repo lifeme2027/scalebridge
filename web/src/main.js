@@ -12,6 +12,7 @@ import { importAuto, readFileText } from './core/import.js';
 import { parseHex } from './core/bytes.js';
 import { parseCharacteristic } from './core/protocol.js';
 import { detailRows, tagFor, timeText, weightText } from './core/view.js';
+import { decideIngest, isAbnormal, isDeviceClockSuspect } from './core/policy.js';
 import { BUILD } from './build-info.js';
 
 const $ = (id) => document.getElementById(id);
@@ -102,6 +103,9 @@ function renderLatest() {
   const head = el('p', { class: 'big', id: 'latest-weight', 'data-testid': 'latest-weight', 'data-kg': rec.weightKg ?? '', 'data-demo': rec.demo ? '1' : '0', text: weightText(rec, S.settings.displayUnit, t) });
   body.append(head);
   if (rec.demo) body.append(el('p', {}, el('span', { class: 'tag-demo', text: demoLabel() })));
+  for (const [on, key] of [[isAbnormal(rec), 'tag.abnormal'], [isDeviceClockSuspect(rec), 'tag.clockSuspect']]) {
+    if (on) body.append(el('p', {}, el('span', { class: 'tag-warn', 'data-testid': key, text: t(key) })));
+  }
   const dl = el('dl', { class: 'fields' });
   for (const [k, v] of detailRows(rec, S.settings.displayUnit, t, S.settings.userNotes)) {
     dl.append(el('dt', { text: t(k) }), el('dd', { text: v }));
@@ -125,6 +129,9 @@ function renderHistory() {
     const time = timeText(r);
     const tag = el('span', { class: r.demo ? 'tag-demo' : '', text: t(tagFor(r)) });
     const src = el('td', {}, tag, ` ${t(`src.${r.source}`)}`);
+    for (const [on, key] of [[isAbnormal(r), 'tag.abnormal'], [isDeviceClockSuspect(r), 'tag.clockSuspect']]) {
+      if (on) src.append(' ', el('span', { class: 'tag-warn', 'data-testid': key, text: t(key) }));
+    }
     const del = el('button', { type: 'button', 'data-testid': 'history-delete', 'data-id': String(r.id), 'aria-label': t('history.deleteAria', { time }), text: t('history.delete') });
     rows.append(el('tr', { 'data-testid': 'history-row', 'data-id': String(r.id), 'data-kg': r.weightKg ?? '', 'data-demo': r.demo ? '1' : '0' },
       el('td', { text: time }),
@@ -189,6 +196,13 @@ async function reload() {
   renderHistory();
 }
 
+/** 实时来源（蓝牙 / 演示）的入库策略：体重 0 不入库、去重（NOTES Q13/Q16）。返回 'save'|'zero'|'duplicate'|'failed'。 */
+async function ingestLive(rec) {
+  const decision = decideIngest(rec, S.records);
+  if (decision !== 'save') return decision;
+  return (await addRecords([rec])) ? 'save' : 'failed';
+}
+
 async function addRecords(recs) {
   try {
     await S.store.add(recs);
@@ -235,7 +249,8 @@ function wireBluetooth() {
     renderConnection();
   });
   ctl.on('record', async ({ record }) => {
-    if (await addRecords([record])) { S.connInfo = [{ key: 'connect.saved', params: {} }]; renderConnection(); }
+    const r = await ingestLive(record);
+    if (r !== 'failed') { S.connInfo = [{ key: r === 'save' ? 'connect.saved' : `ingest.${r}`, params: {} }]; renderConnection(); }
   });
   ctl.on('unsuccessful', () => { S.connInfo = [{ key: 'connect.unsuccessful', params: {} }]; renderConnection(); });
   ctl.on('parseError', ({ errorCode, hex }) => { S.connInfo = [{ key: 'connect.parseError', params: { code: errorCode, hex } }]; renderConnection(); });
@@ -309,7 +324,7 @@ function debugParse(save) {
   if (!save) return;
   const res = processValue(service, ch, h.bytes, { deviceId: 'DEMO:debug-panel', deviceName: 'Debug panel', isDemo: true });
   if (res.kind !== 'record') { out.textContent += '\n\n' + S.t('debug.noRecord'); return; }
-  addRecords([res.record]).then((ok) => { if (ok) out.textContent += '\n\n' + S.t('debug.saved'); });
+  ingestLive(res.record).then((r) => { if (r !== 'failed') out.textContent += '\n\n' + S.t(r === 'save' ? 'debug.saved' : `ingest.${r}`); });
 }
 
 /* ---------- 事件 ---------- */
@@ -329,7 +344,8 @@ function wireEvents() {
     if (!sc) return;
     const res = processValue(sc.service, sc.characteristic, sc.build(new Date()), DEMO_DEVICE);
     if (res.kind !== 'record') { $('export-msg').textContent = S.t('demo.error', { code: res.errorCode ?? res.kind }); return; }
-    if (await addRecords([res.record])) $('export-msg').textContent = S.t('demo.added');
+    const r = await ingestLive(res.record);
+    if (r !== 'failed') $('export-msg').textContent = S.t(r === 'save' ? 'demo.added' : `ingest.${r}`);
   });
 
   $('history-rows').addEventListener('click', async (e) => {

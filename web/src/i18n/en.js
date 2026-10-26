@@ -103,6 +103,10 @@ export default {
   'u.ohm': 'Ω',
   'tag.demo': 'Demo data',
   'tag.real': 'Bluetooth (experimental)',
+  'tag.abnormal': 'Weight out of range (< 2 kg or > 200 kg)',
+  'tag.clockSuspect': 'Device clock looks wrong',
+  'ingest.zero': 'The scale reported a weight of 0; not saved automatically (by policy).',
+  'ingest.duplicate': 'Identical to a saved record (same device timestamp and values); not saved again.',
   'src.weight-scale': 'Weight scale 0x2A9D',
   'src.body-composition': 'Body composition 0x2A9C',
 

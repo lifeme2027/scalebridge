@@ -49,6 +49,7 @@ function usedKeys() {
   const bleCodes = new Set([...bleSrc.matchAll(/(?:return|code =|code:) '([a-zA-Z]+)'/g)].map((m) => m[1]));
   for (const c of ['noSupportedService', 'reconnectFailed', 'connectionLost', 'notSupported', 'cancelled', 'noDevice']) bleCodes.add(c);
   dyn('err.', [...bleCodes]);
+  dyn('ingest.', ['zero', 'duplicate']);
   dyn('support.', ['ok', 'noApi', 'insecure', 'noAdapter']);
   dyn('support.avail.', ['true', 'false']);
   dyn('demo.s.', DEMO_SCENARIOS.map((s) => s.id));
