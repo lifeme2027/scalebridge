@@ -140,6 +140,83 @@ public class ParseCliTests
     }
 
     [Fact]
+    public void Default_output_has_no_details_key()
+    {
+        var (_, output, _) = Run(null, "--service", "181D", "--char", "2A9D", "--hex", "00 59 36", "--compact");
+        Assert.Null(JsonNode.Parse(output)!["details"]);
+    }
+
+    [Theory]
+    [InlineData("181D", "2A9D", "06 59 36 EA 07 0A 1A 08 1E 0F 05", 0x06, null)]   // 测量：flags 1 字节
+    [InlineData("181B", "2A9C", "06 02 B9 00 EA 07 0A 1A 08 1E 0F 05 E8 03", 0x0206, null)]   // 测量：flags 2 字节小端
+    [InlineData("181D", "2A9E", "07 02 00 00", null, "519")]                          // Feature：32 位 Raw
+    [InlineData("181B", "2A9B", "FF 03 00 00", null, "1023")]
+    public void Details_flag_adds_raw_bit_fields_outside_expect(string svc, string ch, string hex, int? flags, string? raw)
+    {
+        var (code, output, _) = Run(null, "--service", svc, "--char", ch, "--hex", hex, "--compact", "--details");
+        Assert.Equal(0, code);
+        var j = JsonNode.Parse(output)!;
+        Assert.False(j["reject"]!.GetValue<bool>());
+        var d = j["details"]!.AsObject();
+        if (flags is not null) Assert.Equal(flags, d["flags"]!.GetValue<int>());
+        if (raw is not null) Assert.Equal(raw, d["raw"]!.GetValue<string>());
+        Assert.Null(j["expect"]!["flags"]);
+        Assert.Null(j["expect"]!["details"]);
+    }
+
+    [Fact]
+    public void Details_never_appear_on_rejections_and_compare_ignores_them()
+    {
+        var (_, rej, _) = Run(null, "--service", "181D", "--char", "2A9D", "--hex", "0E E2 36", "--compact", "--details");
+        Assert.Null(JsonNode.Parse(rej)!["details"]);
+
+        var dir = VectorsDir();
+        var (code, output, _) = Run(null, "--vectors", Path.Combine(dir, "weight-scale.json"),
+            "--vectors", Path.Combine(dir, "body-composition.json"), "--compare", "--details", "--compact");
+        Assert.Equal(0, code);
+        Assert.Equal(235, JsonNode.Parse(output)!["matched"]!.GetValue<int>());
+    }
+
+    [Fact]
+    public void Details_flags_match_the_leading_bytes_of_every_successful_shared_vector()
+    {
+        var dir = VectorsDir();
+        var (code, output, _) = Run(null, "--vectors", Path.Combine(dir, "weight-scale.json"),
+            "--vectors", Path.Combine(dir, "body-composition.json"), "--details", "--compact");
+        Assert.Equal(0, code);
+        var checkedCount = 0;
+        foreach (var v in JsonNode.Parse(output)!.AsArray().SelectMany(doc => doc!["vectors"]!.AsArray()))
+        {
+            var d = v!["details"];
+            if (v["reject"]!.GetValue<bool>()) { Assert.Null(d); continue; }
+            Assert.NotNull(d);
+            var bytes = ScaleBridge.ParseCli.Parsing.ParseHex(v["hex"]!.GetValue<string>());
+            var ch = v["characteristic"]!.GetValue<string>();
+            if (ch is "2A9D") Assert.Equal(bytes[0], d!["flags"]!.GetValue<int>());
+            else if (ch is "2A9C") Assert.Equal(bytes[0] | (bytes[1] << 8), d!["flags"]!.GetValue<int>());
+            else Assert.Equal(BitConverter.ToUInt32(bytes, 0).ToString(), d!["raw"]!.GetValue<string>());
+            checkedCount++;
+        }
+        Assert.True(checkedCount > 100);
+    }
+
+    [Fact]
+    public void Vendor_vectors_are_skipped_not_errors()
+    {
+        var path = Path.Combine(VectorsDir(), "vendor", "xiaomi.json");
+        var (code, output, _) = Run(null, "--vectors", path, "--compare", "--compact");
+        Assert.Equal(0, code);
+        var j = JsonNode.Parse(output)!;
+        Assert.Equal(0, j["total"]!.GetValue<int>());
+        Assert.True(j["skipped"]!.GetValue<int>() > 0);
+        Assert.Empty(j["mismatches"]!.AsArray());
+
+        var (code2, output2, _) = Run(null, "--vectors", path, "--compact");
+        Assert.Equal(0, code2);
+        Assert.All(JsonNode.Parse(output2)!["vectors"]!.AsArray(), v => Assert.True(v!["unsupported"]!.GetValue<bool>()));
+    }
+
+    [Fact]
     public void Compare_reports_differences_and_exits_1()
     {
         var path = Path.Combine(Path.GetTempPath(), "sb-parsecli-" + Guid.NewGuid().ToString("N") + ".json");

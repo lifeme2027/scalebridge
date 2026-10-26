@@ -30,12 +30,14 @@ public static class Cli
           --hex <字节>      十六进制，字节间可用空格 : - , 分隔，也可连写
           --stdin           从标准输入逐行读取；输出 JSON Lines（每行一个紧凑 JSON）
           --vectors <文件>  读 scalebridge-vectors/1 文件，可重复
-          --compare         与向量里的期望比较（仅配合 --vectors）；输出 {"total","matched","mismatches":[…]}
+          --compare         与向量里的期望比较（仅配合 --vectors）；输出 {"total","matched","skipped","mismatches":[…]}
+          --details         成功的解析额外输出顶层 "details"：测量的 Flags 原始值、Feature 的 32 位 Raw（shared-vectors 的 expect 里没有这些；
+                            默认输出不含，与 Web 版逐字节一致；--compare 时忽略 details）
           --compact         单条/向量文档输出紧凑 JSON（默认缩进）
           -h, --help        显示本帮助
 
         输出字段与 shared-vectors 的向量同形：reject、errorCode（拒绝时，另附 errorMessage）、warnings 与 expect（成功时）。
-        十进制数一律输出为字符串。支持的特征：181D/2A9E 181D/2A9D 181B/2A9B 181B/2A9C。退出码：0 成功，1 比较有差异，2 用法或输入错误。
+        带 frameType（厂商广播类）的向量不解析：输出 {"unsupported":true,…}，--compare 里计入 "skipped"。十进制数一律输出为字符串。支持的特征：181D/2A9E 181D/2A9D 181B/2A9B 181B/2A9C。退出码：0 成功，1 比较有差异，2 用法或输入错误。
         """;
 
     public static int Run(string[] args, TextReader stdin, TextWriter stdout, TextWriter stderr)
@@ -44,6 +46,7 @@ public static class Cli
         var useStdin = false;
         var compare = false;
         var compact = false;
+        var details = false;
         var files = new List<string>();
 
         try
@@ -61,6 +64,7 @@ public static class Cli
                     case "--vectors": files.Add(Next()); break;
                     case "--compare": compare = true; break;
                     case "--compact": compact = true; break;
+                    case "--details": details = true; break;
                     default: throw new ArgumentException($"unknown argument '{args[i]}'");
                 }
             }
@@ -84,11 +88,11 @@ public static class Cli
                 if (service is null || characteristic is null) throw new ArgumentException("--hex needs --service and --char");
                 var data = Parsing.ParseHex(hex);
                 var o = Parsing.Parse(service, characteristic, data);
-                stdout.WriteLine(Parsing.ToVectorJson(null, service, characteristic, data, o).ToJsonString(opts));
+                stdout.WriteLine(Parsing.ToVectorJson(null, service, characteristic, data, o, details).ToJsonString(opts));
                 return 0;
             }
-            if (useStdin) return RunStdin(stdin, stdout, stderr, service, characteristic);
-            return RunFiles(files, compare, opts, stdout, stderr);
+            if (useStdin) return RunStdin(stdin, stdout, stderr, service, characteristic, details);
+            return RunFiles(files, compare, details, opts, stdout, stderr);
         }
         catch (Exception e) when (e is ArgumentException or FormatException or NotSupportedException or IOException or JsonException)
         {
@@ -97,7 +101,7 @@ public static class Cli
         }
     }
 
-    private static int RunStdin(TextReader stdin, TextWriter stdout, TextWriter stderr, string? defService, string? defChar)
+    private static int RunStdin(TextReader stdin, TextWriter stdout, TextWriter stderr, string? defService, string? defChar, bool details)
     {
         var status = 0;
         string? line;
@@ -122,7 +126,7 @@ public static class Cli
                 if (service is null || characteristic is null) throw new ArgumentException("no service/characteristic (use --service/--char or 'SERVICE/CHAR hex' per line)");
                 var data = Parsing.ParseHex(hexPart);
                 var o = Parsing.Parse(service, characteristic, data);
-                stdout.WriteLine(Parsing.ToVectorJson(null, service, characteristic, data, o).ToJsonString(Compact));
+                stdout.WriteLine(Parsing.ToVectorJson(null, service, characteristic, data, o, details).ToJsonString(Compact));
             }
             catch (Exception e) when (e is ArgumentException or FormatException or NotSupportedException)
             {
@@ -135,10 +139,11 @@ public static class Cli
         return status;
     }
 
-    private static int RunFiles(List<string> files, bool compare, JsonSerializerOptions opts, TextWriter stdout, TextWriter stderr)
+    private static int RunFiles(List<string> files, bool compare, bool details, JsonSerializerOptions opts, TextWriter stdout, TextWriter stderr)
     {
         var total = 0;
         var matched = 0;
+        var skipped = 0;
         var mismatches = new JsonArray();
         var docs = new List<JsonObject>();
 
@@ -152,11 +157,18 @@ public static class Cli
             {
                 var v = node!.AsObject();
                 var name = v["name"]?.GetValue<string>();
+                if (Parsing.IsVendorVector(v))
+                {
+                    // 与 Web 版一致：厂商广播类向量不解析，输出 unsupported 并计入 skipped（不是错误）。
+                    outVectors.Add(Parsing.UnsupportedVendor(name));
+                    skipped++;
+                    continue;
+                }
                 var service = v["service"]?.GetValue<string>() ?? throw new FormatException($"{file}: vector {name} has no service");
                 var characteristic = v["characteristic"]?.GetValue<string>() ?? throw new FormatException($"{file}: vector {name} has no characteristic");
                 var data = Parsing.ParseHex(v["hex"]?.GetValue<string>() ?? "");
                 var o = Parsing.Parse(service, characteristic, data);
-                outVectors.Add(Parsing.ToVectorJson(name, service, characteristic, data, o));
+                outVectors.Add(Parsing.ToVectorJson(name, service, characteristic, data, o, details));
                 total++;
                 if (!compare) continue;
                 var diff = Parsing.Compare(v, o);
@@ -174,7 +186,7 @@ public static class Cli
 
         if (compare)
         {
-            stdout.WriteLine(new JsonObject { ["total"] = total, ["matched"] = matched, ["mismatches"] = mismatches }.ToJsonString(opts));
+            stdout.WriteLine(new JsonObject { ["total"] = total, ["matched"] = matched, ["skipped"] = skipped, ["mismatches"] = mismatches }.ToJsonString(opts));
             return mismatches.Count == 0 ? 0 : 1;
         }
         if (docs.Count == 1) stdout.WriteLine(docs[0].ToJsonString(opts));

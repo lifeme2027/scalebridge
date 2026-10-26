@@ -9,7 +9,8 @@ public sealed record ParseOutcome(
     string? ErrorCode,
     string? ErrorMessage,
     IReadOnlyList<string> Warnings,
-    JsonObject? Expect);
+    JsonObject? Expect,
+    JsonObject? Details = null);
 
 public static class Parsing
 {
@@ -44,21 +45,21 @@ public static class Parsing
     public static ParseOutcome Parse(string service, string characteristic, ReadOnlySpan<byte> data) =>
         (Normalize(service), Normalize(characteristic)) switch
         {
-            ("181D", "2A9E") => From(WeightScaleParser.ParseFeature(data), VectorProjection.Project),
-            ("181D", "2A9D") => From(WeightScaleParser.ParseMeasurement(data), VectorProjection.Project),
-            ("181B", "2A9B") => From(BodyCompositionParser.ParseFeature(data), VectorProjection.Project),
-            ("181B", "2A9C") => From(BodyCompositionParser.ParseMeasurement(data), VectorProjection.Project),
+            ("181D", "2A9E") => From(WeightScaleParser.ParseFeature(data), VectorProjection.Project, VectorProjection.Details),
+            ("181D", "2A9D") => From(WeightScaleParser.ParseMeasurement(data), VectorProjection.Project, VectorProjection.Details),
+            ("181B", "2A9B") => From(BodyCompositionParser.ParseFeature(data), VectorProjection.Project, VectorProjection.Details),
+            ("181B", "2A9C") => From(BodyCompositionParser.ParseMeasurement(data), VectorProjection.Project, VectorProjection.Details),
             var other => throw new NotSupportedException(
                 $"unsupported service/characteristic {other.Item1}/{other.Item2}; supported: 181D/2A9E 181D/2A9D 181B/2A9B 181B/2A9C"),
         };
 
-    private static ParseOutcome From<T>(ParseResult<T> r, Func<T, JsonObject> project) where T : class =>
+    private static ParseOutcome From<T>(ParseResult<T> r, Func<T, JsonObject> project, Func<T, JsonObject> details) where T : class =>
         r.IsSuccess
-            ? new ParseOutcome(false, null, null, r.Warnings.Select(w => w.ToString()).ToList(), project(r.Value!))
+            ? new ParseOutcome(false, null, null, r.Warnings.Select(w => w.ToString()).ToList(), project(r.Value!), details(r.Value!))
             : new ParseOutcome(true, r.ErrorCode.ToString(), r.ErrorMessage, Array.Empty<string>(), null);
 
     /// <summary>与 scalebridge-vectors/1 里一条向量同形：reject / errorCode | warnings + expect（另附 errorMessage 便于阅读，比较时忽略）。</summary>
-    public static JsonObject ToVectorJson(string? name, string service, string characteristic, byte[] data, ParseOutcome o)
+    public static JsonObject ToVectorJson(string? name, string service, string characteristic, byte[] data, ParseOutcome o, bool details = false)
     {
         var obj = new JsonObject();
         if (name is not null) obj["name"] = name;
@@ -77,9 +78,17 @@ public static class Parsing
             foreach (var x in o.Warnings) w.Add(x);
             obj["warnings"] = w;
             obj["expect"] = o.Expect!.DeepClone();
+            // 默认输出与 shared-vectors / Web 版逐字段一致；--details 才追加解析器模型里有、但向量 expect 里没有的原始位字段。
+            if (details && o.Details is not null) obj["details"] = o.Details.DeepClone();
         }
         return obj;
     }
+
+    /// <summary>厂商（广播类）向量：带 frameType、或没有 characteristic。ParseCli 只解析标准 GATT 特征，与 Web 版一样跳过它们。</summary>
+    public static bool IsVendorVector(JsonObject v) => v["frameType"] is not null || v["characteristic"] is null;
+
+    public static JsonObject UnsupportedVendor(string? name) =>
+        new() { ["name"] = name, ["unsupported"] = true, ["reason"] = "vendor protocol not implemented in ParseCli (GATT 181D/181B only)" };
 
     /// <summary>
     /// 把「期望的向量」与「实际解析结果」比较，返回差异描述（null = 一致）。

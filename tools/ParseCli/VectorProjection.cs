@@ -63,6 +63,14 @@ public static class VectorProjection
         ["impedanceOhm"] = Dec(m.ImpedanceOhm), ["weight"] = Mass(m.Weight), ["height"] = Length(m.Height),
     };
 
+    // --details：Core 数据模型里有、但 shared-vectors 的 expect 不含的原始位字段。
+    // 测量：Flags 原始值（Weight Scale 1 字节 / Body Composition 2 字节）；Feature：32 位 Raw。
+
+    public static JsonObject Details(WeightScaleMeasurementData m) => new() { ["flags"] = (int)m.Flags };
+    public static JsonObject Details(BodyCompositionMeasurementData m) => new() { ["flags"] = (int)m.Flags };
+    public static JsonObject Details(WeightScaleFeature f) => new() { ["raw"] = f.Raw.ToString(CultureInfo.InvariantCulture) };
+    public static JsonObject Details(BodyCompositionFeature f) => new() { ["raw"] = f.Raw.ToString(CultureInfo.InvariantCulture) };
+
     /// <summary>深度比较：字符串两边都能解析成 decimal 时按数值比较（"70.005" == "70.0050"），其它按值比较。返回差异描述或 null。</summary>
     public static string? Diff(JsonNode? expected, JsonNode? actual, string path = "$")
     {
