@@ -12,7 +12,6 @@ export const DEFAULT_SETTINGS = Object.freeze({
   displayUnit: 'kg', // 'kg' | 'lb'
   lang: 'auto', // 'auto' | 'zh' | 'en'
   userNotes: {}, // { "<设备用户编号 0-254>": "备注" }——只是本机备注，不会写入设备
-  deviceAliases: {}, // { "<deviceId>": "别名" }
 });
 
 const req = (r) => new Promise((resolve, reject) => {
