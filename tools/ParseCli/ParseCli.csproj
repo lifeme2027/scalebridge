@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>ScaleBridge.ParseCli</RootNamespace>
+    <AssemblyName>scalebridge-parse</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ScaleBridge.Core\ScaleBridge.Core.csproj" />
+  </ItemGroup>
+</Project>
