@@ -1,4 +1,4 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
@@ -30,6 +30,14 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScaleBridge.App", "src\ScaleBridge.App\ScaleBridge.App.csproj", "{FCBA93BC-DEEA-4273-863B-A80A18C7E644}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScaleBridge.App.Tests", "tests\ScaleBridge.App.Tests\ScaleBridge.App.Tests.csproj", "{C8ADD12F-2EA7-490F-ABA5-A6D587569CA8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScaleBridge.Windows.Core", "src\ScaleBridge.Windows.Core\ScaleBridge.Windows.Core.csproj", "{49D08F3F-E905-4923-9EC9-DC8FE6358056}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScaleBridge.Windows.Core.Tests", "tests\ScaleBridge.Windows.Core.Tests\ScaleBridge.Windows.Core.Tests.csproj", "{B19C9B17-647C-4C0E-A764-46100ED5B1CF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScaleBridge.Windows.Tests", "tests\ScaleBridge.Windows.Tests\ScaleBridge.Windows.Tests.csproj", "{D4B82A06-3139-49E0-BC54-43998CFE6C3F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScaleBridge.Windows", "src\ScaleBridge.Windows\ScaleBridge.Windows.csproj", "{A8EB7315-B6B0-43DC-A052-A15B8E609AC3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -84,6 +92,22 @@ Global
 		{C8ADD12F-2EA7-490F-ABA5-A6D587569CA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C8ADD12F-2EA7-490F-ABA5-A6D587569CA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C8ADD12F-2EA7-490F-ABA5-A6D587569CA8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49D08F3F-E905-4923-9EC9-DC8FE6358056}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49D08F3F-E905-4923-9EC9-DC8FE6358056}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49D08F3F-E905-4923-9EC9-DC8FE6358056}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49D08F3F-E905-4923-9EC9-DC8FE6358056}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B19C9B17-647C-4C0E-A764-46100ED5B1CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B19C9B17-647C-4C0E-A764-46100ED5B1CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B19C9B17-647C-4C0E-A764-46100ED5B1CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B19C9B17-647C-4C0E-A764-46100ED5B1CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D4B82A06-3139-49E0-BC54-43998CFE6C3F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D4B82A06-3139-49E0-BC54-43998CFE6C3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D4B82A06-3139-49E0-BC54-43998CFE6C3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D4B82A06-3139-49E0-BC54-43998CFE6C3F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A8EB7315-B6B0-43DC-A052-A15B8E609AC3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A8EB7315-B6B0-43DC-A052-A15B8E609AC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A8EB7315-B6B0-43DC-A052-A15B8E609AC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A8EB7315-B6B0-43DC-A052-A15B8E609AC3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{FCE2832D-D338-4DC3-B7C6-30C4E45B07FA} = {22A03731-217A-40C2-8F93-8E1684A62B1C}
@@ -97,5 +121,9 @@ Global
 		{E0ACF06F-2276-4353-9442-3012379D3CC1} = {4EF5E472-CD64-49CA-A45B-4907034C5403}
 		{FCBA93BC-DEEA-4273-863B-A80A18C7E644} = {22A03731-217A-40C2-8F93-8E1684A62B1C}
 		{C8ADD12F-2EA7-490F-ABA5-A6D587569CA8} = {4EF5E472-CD64-49CA-A45B-4907034C5403}
+		{49D08F3F-E905-4923-9EC9-DC8FE6358056} = {22A03731-217A-40C2-8F93-8E1684A62B1C}
+		{B19C9B17-647C-4C0E-A764-46100ED5B1CF} = {4EF5E472-CD64-49CA-A45B-4907034C5403}
+		{D4B82A06-3139-49E0-BC54-43998CFE6C3F} = {4EF5E472-CD64-49CA-A45B-4907034C5403}
+		{A8EB7315-B6B0-43DC-A052-A15B8E609AC3} = {22A03731-217A-40C2-8F93-8E1684A62B1C}
 	EndGlobalSection
 EndGlobal
