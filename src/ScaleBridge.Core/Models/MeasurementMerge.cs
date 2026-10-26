@@ -35,8 +35,11 @@ public static class MeasurementMerge
         var bothTs = tsA is not null && tsB is not null;
         var neitherTs = tsA is null && tsB is null;
         var tsEqual = bothTs && tsA == tsB;
+        // 两边都带设备时间戳且到秒不同：时间戳已经证明是两次称重（含「昨天 vs 今天的设备历史回放」），无论体重是否相同、接收时间多近，
+        // 都不合并也不标注（SB1 复测 N1）。「可能重复」只用于时间戳相同，或一边/两边缺时间戳的情况。
+        if (bothTs && !tsEqual) return MergeDecision.Unrelated;
         var recvClose = (existing.ReceivedAt - incoming.ReceivedAt).Duration() <= NoTimestampWindow;
-        // 既没有相同的设备时间戳、接收时间也不相近：不相关。
+        // 既没有相同的设备时间戳、接收时间也不相近：不相关。（此处至少一边缺时间戳。）
         if (!tsEqual && !recvClose) return MergeDecision.Unrelated;
 
         var weightsEqual = existing.WeightKg is not null && incoming.WeightKg is not null &&
@@ -54,7 +57,7 @@ public static class MeasurementMerge
         var mergeable = !userOneSided && !fieldConflict && weightOk && timeOk;
         if (mergeable) return MergeDecision.Merge;
 
-        // 没到合并的程度，但值得提醒：体重相同 / 有一边缺体重 / 时间戳相同。
+        // 没到合并的程度，但值得提醒：体重相同 / 有一边缺体重 / 时间戳相同（走到这里时时间戳必然相同，或至少一边缺失）。
         // 例外：接收时间相近但体重明确不同且时间戳不能证明同一次 → 更像两次连续称重，不标注。
         if (bothWeightsDiffer && !tsEqual) return MergeDecision.Unrelated;
         return MergeDecision.PossibleSame;

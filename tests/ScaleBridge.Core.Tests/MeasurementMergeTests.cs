@@ -199,6 +199,59 @@ public class MeasurementMergeTests
         Assert.NotNull(b.Measurement.PossibleSameAsId);
     }
 
+    // ---- SB1 复测 N1：时间戳明确不同 → 不标；相同或缺失 → 才可能标 ----
+
+    [Theory]
+    [InlineData(600)]      // 相差 10 分钟
+    [InlineData(86400)]    // 相差 1 天（如设备历史回放）
+    [InlineData(1)]        // 仅差 1 秒也算明确不同
+    public void Explicitly_different_timestamps_with_equal_weight_and_close_receive_times_are_neither_merged_nor_marked(int diffSeconds)
+    {
+        var (ing, repo) = New();
+        ing.Ingest(Wss(ts: Stamp));
+        var b = ing.Ingest(Bcs(ts: Stamp.AddSeconds(diffSeconds), recvSec: 0.2));
+        Assert.Equal(IngestOutcome.Saved, b.Outcome);
+        Assert.Equal(2, repo.Count());
+        Assert.Null(b.Measurement.PossibleSameAsId);
+        Assert.All(repo.List(), r => Assert.NotEqual(MeasurementSource.Both, r.Source));
+    }
+
+    [Fact]
+    public void Explicitly_different_timestamps_are_unrelated_in_both_arrival_orders_and_for_missing_or_different_weights()
+    {
+        var older = Stamp.AddDays(-1);
+        Assert.Equal(MergeDecision.Unrelated, MeasurementMerge.Evaluate(Bcs(ts: Stamp), Wss(ts: older, recvSec: 0.1)));
+        Assert.Equal(MergeDecision.Unrelated, MeasurementMerge.Evaluate(Wss(ts: Stamp), Bcs(ts: older, recvSec: 0.1)));
+        Assert.Equal(MergeDecision.Unrelated, MeasurementMerge.Evaluate(Wss(ts: Stamp), Bcs(kg: null, ts: older, recvSec: 0.1)));
+        Assert.Equal(MergeDecision.Unrelated, MeasurementMerge.Evaluate(Wss(kg: 70m, ts: Stamp), Bcs(kg: 70.5m, ts: older, recvSec: 0.1)));
+        // 一边缺用户也不改变：时间戳已证明是两次
+        Assert.Equal(MergeDecision.Unrelated, MeasurementMerge.Evaluate(Wss(ts: Stamp, user: 1), Bcs(ts: older, user: null, recvSec: 0.1)));
+        // BMI 冲突 + 时间戳不同：仍不标
+        Assert.Equal(MergeDecision.Unrelated, MeasurementMerge.Evaluate(Wss(ts: Stamp, bmi: 22m), Bcs(ts: older, bmi: 23m, recvSec: 0.1)));
+    }
+
+    [Fact]
+    public void Equal_or_missing_timestamps_are_still_marked_when_uncertain()
+    {
+        // 相同时间戳 + 体重不同 → 标
+        Assert.Equal(MergeDecision.PossibleSame, MeasurementMerge.Evaluate(Wss(kg: 70m, ts: Stamp), Bcs(kg: 70.5m, ts: Stamp, recvSec: 5)));
+        // 一边有时间戳、一边没有，体重相同、接收时间相近 → 标
+        Assert.Equal(MergeDecision.PossibleSame, MeasurementMerge.Evaluate(Wss(ts: Stamp), Bcs(ts: null, recvSec: 0.3)));
+        Assert.Equal(MergeDecision.PossibleSame, MeasurementMerge.Evaluate(Wss(ts: null), Bcs(ts: Stamp, recvSec: 0.3)));
+        // 两边都没有时间戳、一边缺体重、接收时间相近 → 标
+        Assert.Equal(MergeDecision.PossibleSame, MeasurementMerge.Evaluate(Wss(), Bcs(kg: null, recvSec: 0.3)));
+        // 一边有时间戳一边没有，但接收时间相隔很久 → 不相关
+        Assert.Equal(MergeDecision.Unrelated, MeasurementMerge.Evaluate(Wss(ts: Stamp), Bcs(ts: null, recvSec: 60)));
+    }
+
+    [Fact]
+    public void Merge_rules_are_unchanged_for_equal_timestamps_and_for_two_missing_timestamps()
+    {
+        Assert.Equal(MergeDecision.Merge, MeasurementMerge.Evaluate(Wss(ts: Stamp), Bcs(ts: Stamp, recvSec: 30)));   // 相同时间戳：与接收时间无关
+        Assert.Equal(MergeDecision.Merge, MeasurementMerge.Evaluate(Wss(), Bcs(recvSec: 1.9)));
+        Assert.Equal(MergeDecision.Unrelated, MeasurementMerge.Evaluate(Wss(), Bcs(recvSec: 2.5)));
+    }
+
     // ---- 乱序 / 设备时钟 ----
 
     [Fact]
