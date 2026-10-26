@@ -20,6 +20,9 @@
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.13" />
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.13" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <!-- Avalonia.FreeDesktop 11.3.13 传递引入的是 0.21.2，受 GHSA-xrw6-gwf8-vvr9 / CVE-2026-39959 影响（< 0.21.3）。
+         直接引用 0.21.3（同一 0.21 线上的官方回移修复，MIT）把它抬上去；等 Avalonia 自己升级后可以去掉这一行。 -->
+    <PackageReference Include="Tmds.DBus.Protocol" Version="0.21.3" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ScaleBridge.Core\ScaleBridge.Core.csproj" />

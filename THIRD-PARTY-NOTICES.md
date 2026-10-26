@@ -37,7 +37,7 @@ ScaleBridge 自身以 MIT 许可证发布（见 [LICENSE](LICENSE)、[NOTICE](NO
 | Avalonia.Controls.DataGrid | 11.3.13 | MIT | 历史记录表格 | 同上 |
 | CommunityToolkit.Mvvm | 8.4.2 | MIT | MVVM 辅助（源生成器 + 运行库） | <https://github.com/CommunityToolkit/dotnet> |
 | Microsoft.Data.Sqlite | 8.0.32 | MIT | 本地历史/设置的 SQLite 访问（`ScaleBridge.Data`） | <https://github.com/dotnet/efcore> |
-| Tmds.DBus.Protocol | 0.95.1 | MIT | BlueZ 适配器的 D-Bus 访问（`src/ScaleBridge.Linux`）；**`ScaleBridge.App.csproj` 目前没有 `ProjectReference` 指向 `ScaleBridge.Linux`，所以 0.95.1 这个版本不在构件里**，构件里的是下面 1.3 的 0.21.2（见 1.4 的安全提示） | <https://github.com/tmds/Tmds.DBus> |
+| Tmds.DBus.Protocol | 0.95.1 | MIT | BlueZ 适配器的 D-Bus 访问（`src/ScaleBridge.Linux`）；**`ScaleBridge.App.csproj` 目前没有 `ProjectReference` 指向 `ScaleBridge.Linux`，所以 0.95.1 这个版本不在构件里**，构件里的是下面 1.3 的 0.21.3（见 1.4 的安全提示） | <https://github.com/tmds/Tmds.DBus> |
 | Microsoft.NET.ILLink.Tasks | 8.0.32 | MIT | 构建期（单文件发布的裁剪工具链），不进入运行时输出；<https://github.com/dotnet/runtime> |
 
 ### 1.3 传递依赖（随 App 构件分发的部分）
@@ -52,7 +52,7 @@ ScaleBridge 自身以 MIT 许可证发布（见 [LICENSE](LICENSE)、[NOTICE](NO
 | HarfBuzzSharp | 8.3.1.1 | MIT | 文字排版（HarfBuzz，「Old MIT」许可证）的 .NET 绑定；<https://github.com/mono/SkiaSharp> |
 | HarfBuzzSharp.NativeAssets.Linux / .Win32 | 8.3.1.1 | MIT | 原生 `libHarfBuzzSharp`；声明同上 |
 | MicroCom.Runtime | 0.11.0 | MIT | Avalonia 的 COM 互操作；<https://github.com/kekekeks/MicroCom> |
-| Tmds.DBus.Protocol | **0.21.2**（经 Avalonia.FreeDesktop 传递引入） | MIT | Avalonia 的 Linux 后端使用；<https://github.com/tmds/Tmds.DBus>。**见 1.4 的安全提示** |
+| Tmds.DBus.Protocol | **0.21.3**（`ScaleBridge.App.csproj` 直接引用，抬高 Avalonia.FreeDesktop 传递引入的 0.21.2） | MIT（nuspec `license type="expression"` = MIT） | Avalonia 的 Linux 后端使用；<https://github.com/tmds/Tmds.DBus>。**见 1.4 的安全提示** |
 | System.IO.Pipelines | 8.0.0 | MIT | <https://github.com/dotnet/runtime> |
 | Microsoft.Data.Sqlite.Core | 8.0.32 | MIT | `Microsoft.Data.Sqlite` 的核心；<https://github.com/dotnet/efcore> |
 | SQLitePCLRaw.core / .provider.e_sqlite3 / .lib.e_sqlite3 / .bundle_e_sqlite3 | 2.1.13 | Apache-2.0 | SQLite 的 .NET 原生绑定与捆绑的原生库 `libe_sqlite3`（linux-x64）/ `e_sqlite3.dll`（win-x64）；作者 Eric Sink，<https://github.com/ericsink/SQLitePCL.raw> |
@@ -69,10 +69,13 @@ ScaleBridge 自身以 MIT 许可证发布（见 [LICENSE](LICENSE)、[NOTICE](NO
   win-x64 构件（`ScaleBridge.exe`）里确实带有 `Microsoft.Windows.SDK.NET` 与 `WinRT.Runtime`（按上面的字符串核对）；`WinRT.Runtime` 来自 CsWinRT，其许可证本次**没有单独核实**。
   我读过这份条款里有「Distributable Code（可分发代码）」条款，但**没有核实这些投影程序集是否属于其中允许再分发的范围**，
   也没有请法务确认——这是一个**未决项**，影响 win-x64 构件的再分发；发布到公开 Release 之前应先确认。
-* **Tmds.DBus.Protocol 0.21.2 的已知漏洞**：Avalonia.FreeDesktop 11.3.13 传递引入的 `Tmds.DBus.Protocol` 是 0.21.2，
+* **Tmds.DBus.Protocol 0.21.2 的已知漏洞（已处理）**：Avalonia.FreeDesktop 11.3.13 传递引入的 `Tmds.DBus.Protocol` 是 0.21.2，
   而 GitHub 安全公告 GHSA-xrw6-gwf8-vvr9（CVE-2026-39959，严重度 high，2026-04-08）写明 `Tmds.DBus.Protocol < 0.21.3` 受影响
-  （0.21.3、0.92.0 起修复）。已核对公告内容，并确认 `dotnet publish -r linux-x64` 的发布输出里带的 `Tmds.DBus.Protocol.dll`（200 KB，2024-11-22 的文件时间）来自 0.21.2 这个旧版本包（还原图里只有 0.21.2）。
-  处理方式（升级为直接引用 0.95.1 等）属于 `src/`，不在本次范围，已在验收修复报告里单列。
+  （0.21.3、0.92.0 起修复；0.21.3 是同一 0.21 线上的回移修复）。处理：`ScaleBridge.App.csproj` 直接引用 `Tmds.DBus.Protocol` 0.21.3
+  （选 0.21.3 而不是 0.92+，是为了和 Avalonia.FreeDesktop 11.3.13 编译时所用的 0.21 线保持二进制兼容）。
+  核对：`dotnet list package --include-transitive` 对 net8.0 与 net8.0-windows 两个目标都解析为 0.21.3；`dotnet publish -r linux-x64` 输出里的
+  `Tmds.DBus.Protocol.dll`（200 KB）程序集信息版本为 `0.21.3+8cb04f66…`（升级前是 2024-11-22 的 0.21.2 文件）。
+  这只是依赖版本修复；没有在真实 D-Bus 总线上验证 Avalonia 的 Linux 后端（只验证了 xvfb 下的启动冒烟）。
 
 ### 1.5 原生库里的 libmicrohttpd（LGPL）说明
 
