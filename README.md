@@ -2,8 +2,9 @@
 
 跨平台桌面蓝牙体重秤接收器：**不需要手机 App**，在 Windows 和 Linux 上直接发现体重秤、连接、实时接收体重并在本机显示，可导出 CSV / JSON。
 
-> **状态：阶段 1。** 已有 Core 协议解析、演示用的 Fake 适配器、Avalonia 界面、SQLite 历史、CSV/JSON 导出与 CI/打包；
-> **还没有真实蓝牙适配器**（Windows / Linux 适配器属于阶段 2），所以现在**不能连接真实体重秤**。
+> **状态：阶段 2（进行中）。** 已有 Core 协议解析、演示用的 Fake 适配器、Avalonia 界面、SQLite 历史、CSV/JSON 导出与 CI/打包；
+> Windows 版额外带一个 WinRT 真实蓝牙适配器，**实验性（仅按规范实现，未真机验证）**：默认仍是「演示数据」，需要在设置里手动切换。
+> Linux 版仍然只有「演示数据」（BlueZ 适配器尚未接入界面）。**没有任何真实体重秤验证过。**
 
 ## 诚实声明
 
@@ -28,12 +29,15 @@ src/ScaleBridge.Core          纯 C#（net8.0）：协议解析、数据模型�
 src/ScaleBridge.Ble.Fake      演示数据适配器（9 个脚本场景回放，供界面演示与无硬件的 CI 端到端测试）
 src/ScaleBridge.Data          SQLite 历史与设置（本地文件，无网络）
 src/ScaleBridge.App           Avalonia 桌面界面（程序集名 ScaleBridge；中/英文运行时切换）
-src/ScaleBridge.Ble.Windows   阶段 2 占位说明（WinRT 适配器尚未实现，见其 README）
+src/ScaleBridge.Windows.Core  Windows 适配器的平台无关逻辑（看门狗、状态机、错误映射、广播缓存；在 Linux 上也能跑单元测试）
+src/ScaleBridge.Windows       WinRT 外壳（net8.0-windows10.0.19041.0）：只做 WinRT 调用与映射，实验性（仅按规范实现，未真机验证）
 src/ScaleBridge.Linux         BlueZ 适配器的探索性脚手架（他人加入，阶段 2；未接入界面，实验性）
 tests/ScaleBridge.Core.Tests  xUnit：协议字节向量、导出、诚实标注守卫
 tests/ScaleBridge.Data.Tests  xUnit：SQLite 仓库
 tests/ScaleBridge.Fake.Tests  xUnit：9 个演示场景的回放
-tests/ScaleBridge.App.Tests   xUnit：本地化与 ViewModel 全流程（扫描→连接→接收→历史→导出，使用 Fake）
+tests/ScaleBridge.App.Tests   xUnit：本地化与 ViewModel 全流程（扫描→连接→接收→历史→导出，使用 Fake）与适配器选择/持久化
+tests/ScaleBridge.Windows.Core.Tests  xUnit：Windows 适配器的纯逻辑（用内存替身，Linux 上也跑）
+tests/ScaleBridge.Windows.Tests       xUnit：WinRT 外壳（只在 Windows 上运行；不需要蓝牙硬件）
 tools/ParseCli                命令行解析工具（引用 Core；不参与发布打包）
 shared-vectors/               与语言无关的 GATT 字节向量 JSON（见其 README）
 ```
@@ -63,9 +67,11 @@ Windows（PowerShell）与 Linux 用法相同；发布包里直接运行 `ScaleB
 
 键盘：`F5` 开始扫描，`Esc` 停止扫描，`Ctrl+1..4` 切换页签；按钮与表格也可以用 Tab 与方向键操作。
 导出：CSV 为 UTF-8（带 BOM）+ CRLF，以 `=` `+` `-` `@` 开头的文本前面补 `'` 防公式注入；JSON 带 `format` 与 `version` 字段。
-「设置」里选 Windows / Linux 适配器会显示「此适配器属于阶段 2，尚未实现」，不会扫描。
+适配器选择：Linux 构建只有「演示数据（Fake）」；Windows 构建多一个「真实蓝牙」选项，默认仍是「演示数据」，
+选择会保存在设置里。真实蓝牙标注为 **实验性（仅按规范实现，未真机验证）**，蓝牙缺失或未打开时会给出提示而不是崩溃；
+`--smoke` 一律强制使用演示数据。详见 [NOTES.md](NOTES.md) 的「Windows 适配器」。
 
-已知限制（阶段 1）：Weight Scale 与 Body Composition 的记录**不会合并**成一条；没有历史条数上限或接收节流；
+已知限制：Weight Scale 与 Body Composition 的记录**不会合并**成一条；没有历史条数上限或接收节流；
 BCS 多包重组尚未实现，见 [NOTES.md](NOTES.md)。
 
 ## 打包与 CI

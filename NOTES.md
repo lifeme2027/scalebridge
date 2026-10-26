@@ -152,7 +152,7 @@
 
 ## 路线图（仅规划，阶段 1 不实现）
 
-* **阶段 2 — Windows**：WinRT 蓝牙适配器，目标框架 `net8.0-windows10.0.19041`（只有占位说明 `src/ScaleBridge.Ble.Windows/README.md`，没有代码）。
+* **阶段 2 — Windows**：WinRT 蓝牙适配器已按规范实现（实验性，见文末「Windows 适配器」）。
 * **阶段 2 — Linux**：基于 D-Bus 的 BlueZ 适配器（评估 Tmds.DBus 等库，见下）。仓库里已有他人加入的探索性脚手架 `src/ScaleBridge.Linux`，未接入界面、未真机验证，不算阶段 1 交付。
 * **阶段 3**：小米 / Renpho / 芯海（Chipsea/OKOK）等私有协议的解析器，一律先标「实验性」。
 
@@ -288,3 +288,104 @@ Tmds.DBus.Generator 0.95.1 是针对 `Microsoft.CodeAnalysis.CSharp` 4.12.0 编�
 * https://tmds.github.io/Tmds.DBus/
 * https://github.com/SuessLabs/Linux.Bluetooth ；https://github.com/hashtagchris/DotNet-BlueZ
 * https://github.com/bluez/bluez/tree/master/doc（org.bluez.Adapter.rst、Device.rst、GattCharacteristic.rst）
+
+## Windows 适配器
+
+> **实验性（仅按规范实现，未真机验证）。** 作者没有蓝牙硬件，也没有可运行 Windows 图形界面的机器；
+> 这里的一切只按微软官方文档与 Bluetooth SIG 规范编写，**从未在真实的 Windows 电脑、真实蓝牙适配器或真实体重秤上运行过**。
+> 默认选项仍是「演示数据」（Fake）；真实蓝牙需要用户在设置里手动切换。
+
+### 结构（为什么拆成两个项目）
+
+* `src/ScaleBridge.Windows.Core`（`net8.0`）：不引用任何 WinRT 的纯逻辑——`WindowsBleAdapter` / `WindowsBleConnection`（实现 Core 的 `IBleAdapter` / `IBleConnection`）、
+  看门狗 `WinWatchdog`、连接状态机、广播缓存、地址转换、错误映射，以及一小组 `IWin*` 接口（平台替身点）。
+  这一层可以在 Linux 上直接做单元测试（`tests/ScaleBridge.Windows.Core.Tests`，用内存替身，含时间由 `TimeProvider` 驱动的看门狗测试）。
+* `src/ScaleBridge.Windows`（`net8.0-windows10.0.19041.0`）：薄薄一层 WinRT 外壳，只负责调用 WinRT API 并把结果换成上面的接口类型。
+  用 .NET 内置的 WinRT 投影（C#/WinRT，由 Windows TFM 提供），**没有任何第三方 NuGet 包**。
+  `tests/ScaleBridge.Windows.Tests` 只在 Windows 上运行（Linux 上 `IsTestProject=false`，只编译）；这些测试同样不需要蓝牙硬件。
+* `EnableWindowsTargeting=true`：Linux CI 也能还原并编译 Windows 项目；运行 WinRT 代码只能在 Windows 上。
+* App 对 `net8.0` 与 `net8.0-windows10.0.19041.0` 双目标；只有 Windows 目标引用 `ScaleBridge.Windows`（条件 `ProjectReference` + `#if WINDOWS`），
+  Linux 构建里根本没有这个适配器，界面只会出现「演示数据」。
+
+### API 选择
+
+| 需求 | 用到的 API | 取舍 |
+|---|---|---|
+| 可用性 | `BluetoothAdapter.GetDefaultAsync`、`IsLowEnergySupported`、`GetRadioAsync` + `Radio.State` | 没有适配器 / 不支持 LE / 无线电关闭或被策略禁用 → `BleAvailability.Unavailable`。**刻意不调用 `Radio.RequestAccessAsync`**，避免在后台弹出系统授权对话框。`Radio.State=Unknown` 视为可用（由随后的操作报真实错误）。 |
+| 扫描 | `BluetoothLEAdvertisementWatcher`，`ScanningMode = Active` | Active 才会发出 scan request，拿到完整名称和扫描响应。回调里只做拷贝入队（有界通道，满时丢最旧），不在 WinRT 回调线程里做重活。 |
+| 广播内容 | `LocalName`、`ServiceUuids`、`ManufacturerData`、`RawSignalStrengthInDBm` | 广播包与扫描响应是**两个独立事件**，所以按地址做缓存合并（名称、服务、厂商数据取并集；有容量上限）。RSSI 的 127 在规范里是「不可用」，映射成 `null`。 |
+| 连接 | `BluetoothLEDevice.FromBluetoothAddressAsync` + `GattSession.FromDeviceIdAsync`（`MaintainConnection = true`） | `MaintainConnection` 失败不致命（只记录原因，继续走普通 GATT 流程）。文档说明系统会无限期等待连接，真正的连接发生在第一次 GATT 操作，所以必须有我们自己的看门狗。 |
+| 服务发现 | `GetGattServicesForUuidAsync(uuid, BluetoothCacheMode.Uncached)`、`GetCharacteristicsAsync(Uncached)` | 见下「Windows 行为差异」。只查询 Core 关心的 0x181D / 0x181B 两个服务，不枚举全部服务。 |
+| 读 | `GattCharacteristic.ReadValueAsync(Uncached)` | 状态码与 ATT 错误码都映射。 |
+| 订阅 | 特征支持 Indicate 就用 Indicate，否则 Notify：`WriteClientCharacteristicConfigurationDescriptorWithResultAsync` + `ValueChanged` | 0x2A9D / 0x2A9C 按规范是 Indicate。用 `…WithResultAsync` 才能拿到 `ProtocolError` 里的 ATT 错误码。同一特征重复订阅：复用已有的 CCCD 写入，不重复写；最后一个订阅者退出时才写 `None`。 |
+| 通知字节 | `CryptographicBuffer.CopyToByteArray` | **必须在 `ValueChanged` 回调内拷贝**，`IBuffer` 在回调返回后可能被复用；测试里专门有「缓冲区被复用」用例。 |
+| 超时 | 每个异步步骤包一层看门狗（连接默认 10 s，单步 9 s，可用性 5 s） | WinRT 的异步操作可能长期不完成；到点就取消并抛 `BleTimeoutException`，同时 `Cancel()` 底层操作。 |
+| 状态事件 | `BluetoothLEDevice.ConnectionStatusChanged` | 首次连接建立之前收到的 `Disconnected` 视为噪声，不算掉线；建立之后的断开才变成 `Dropped`，订阅流抛 `DeviceDisconnectedException`。 |
+
+错误映射（`WinErrorMapper`）：无线电/适配器问题 → `BluetoothUnavailable`；`AccessDenied` 与「需要认证/加密」类 ATT 错误（0x05、0x08、0x0C、0x0F）→ `PermissionDenied`（附「请先在 Windows 设置里配对」的提示）；
+`Unreachable` 与「设备未连接」类 HRESULT → `DeviceDisconnected`；看门狗到期 → `Timeout`；其余 → `Other`。异常消息只含操作名与错误码，不含设备地址。
+
+### Windows 行为差异（按文档整理；**均未真机验证**）
+
+* **已配对/已缓存的 GATT 数据**：Windows 会缓存已配对设备的服务与特征。默认 `Cached` 可能返回过期的结果（甚至设备不在身边也「成功」），所以服务发现、特征发现、读取一律用 `Uncached`。代价是每次都真正访问设备，更慢。
+* **有的设备要先在系统里配对**：对需要加密/认证的特征，未配对时读写会以 `AccessDenied` 或 ATT 认证类错误失败。本适配器**不会**自己发起配对（避免在没有人看着的时候弹出系统配对 UI），只给出「先在 设置 → 蓝牙和设备 里配对」的提示。常见的体重秤广播式/开放式 GATT 不需要，但是否如此取决于具体型号，**未核实**。
+* **写 CCCD 失败的常见原因**：设备不在范围内或已断开（`Unreachable`）；特征不支持 Notify/Indicate（`ProtocolError`，ATT 0x0A/0x03 一类）；需要加密但没有配对（0x05/0x0F）；另一个应用占用同一连接；订阅过程中系统回收了特征对象。
+* **对象必须持有引用**：`GattCharacteristic` 被 GC 回收后 `ValueChanged` 会静默停止。适配器在订阅期间持有特征、服务与设备对象，直到取消订阅。
+* **`ValueChanged` 在 WinRT 线程池线程上触发**：不能在回调里阻塞，所以只拷贝字节并写入有界通道。
+* **扫描**：Windows 对同一设备会反复触发 `Received`；扫描响应与广播分开到达（见缓存）；同一设备的 RSSI 会抖动。
+
+### 取舍
+
+* 连接成功只代表「找到了设备并完成了服务发现」；是否持续连接依赖 Windows 的 `MaintainConnection`，并不保证长时间在线。
+* 不做自动重连：掉线后由上层（用户或 `ConnectAsync` 再次调用）发起新连接；适配器保证旧连接对象被完整释放后新连接才不会串线（有「掉线后重连」的单元测试，用替身）。
+* 释放（`DisposeAsync`）幂等，等待进行中的操作最多 2 秒，之后强制清理；与订阅、读取并发释放有专门的竞态测试（替身）。
+* 不采用任何第三方蓝牙库；也没有照抄或参考其他项目（尤其 GPL 项目）的代码或结构，实现只来自下面列出的官方文档。
+
+### 未真机验证清单
+
+1. Windows 上 `BluetoothLEAdvertisementWatcher` 的 Active 扫描是否能拿到体重秤的名称与服务（含扫描响应的合并行为）。
+2. `GetGattServicesForUuidAsync(Uncached)` 在已配对与未配对设备上的结果；是否需要先配对。
+3. 对 0x2A9D / 0x2A9C 的 Indicate 订阅（CCCD 写入）的成功与失败路径，及失败时 Windows 返回的真实状态码与 HRESULT（`WinErrorMapper` 里的 HRESULT 表是按文档整理的，没有在真实栈里确认出现）。
+4. 看门狗数值（10 s / 9 s / 5 s）是否合适；`MaintainConnection` 在真实设备上的效果。
+5. 「首次连接前的 `Disconnected` 是噪声」这个判断在真实设备上是否成立；掉线后能否重连。
+6. 进程退出、休眠/唤醒、蓝牙开关被切换时 WinRT 对象的行为。
+7. 打包后的自包含单文件版本能否正常加载 WinRT 投影（CI 只验证能构建与打包，且 `--smoke` 只启动演示数据，不碰蓝牙）。
+8. 适配器在真实 Windows 版本（Windows 10 19041 起）上的兼容性。
+9. Windows 上 App 界面本身（CI 只做 `--smoke` 无头冒烟，没有人看过界面）。
+
+### Core 抽象与 Linux 适配器之间的摩擦（仅记录，没有改动 Linux 与 Core 的既有行为）
+
+* Core 的 `BleErrorKind` 没有「找不到设备」与「需要配对」；这里分别落到 `Other` 与 `PermissionDenied`。
+* `BleAvailability` 区分不了「蓝牙没打开」和「没有适配器」，只能靠异常消息文字区分。
+* `IBleConnection.SubscribeAsync` 的文档要求掉线时抛 `DeviceDisconnectedException`，Linux 适配器的订阅流在掉线时是安静结束；本适配器按文档抛异常。
+* 释放之后再调用 `DisconnectAsync`：Linux 抛异常，本适配器幂等返回。
+* Core 的 `GattCharacteristicProperties` 数值与 WinRT 的枚举值不同，所以映射只能按名称，不能强制转换。
+* `IBleAdapter` 的注释仍写着「阶段 1 只有 Fake」。
+* 我开始本任务时 Linux 适配器的构造函数是 `internal`、也没有真实的 `IBluezBus`；其后另一条工作线加入了基于 Tmds.DBus.Protocol 的真实总线并公开了构造函数。
+  它**尚未接进界面**（本任务按约定没有碰 `src/ScaleBridge.Linux`，Linux 构建的界面仍只有「演示数据」）。
+
+### 来源（只用了微软官方文档与 Bluetooth SIG 规范）
+
+* BluetoothLEAdvertisementWatcher：https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.advertisement.bluetoothleadvertisementwatcher
+* BluetoothLEScanningMode：https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.advertisement.bluetoothlescanningmode
+* RawSignalStrengthInDBm：https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.advertisement.bluetoothleadvertisementreceivedeventargs.rawsignalstrengthindbm
+* BluetoothLEDevice.FromBluetoothAddressAsync：https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.bluetoothledevice.frombluetoothaddressasync
+* BluetoothLEDevice.GetGattServicesForUuidAsync：https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.bluetoothledevice.getgattservicesforuuidasync
+* BluetoothLEDevice.ConnectionStatusChanged：https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.bluetoothledevice.connectionstatuschanged
+* BluetoothCacheMode：https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.bluetoothcachemode
+* GattSession.MaintainConnection：https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.genericattributeprofile.gattsession.maintainconnection
+* GattCharacteristic.ReadValueAsync：https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.genericattributeprofile.gattcharacteristic.readvalueasync
+* GattCharacteristic.WriteClientCharacteristicConfigurationDescriptorWithResultAsync：https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.genericattributeprofile.gattcharacteristic.writeclientcharacteristicconfigurationdescriptorwithresultasync
+* GattCharacteristic.ValueChanged：https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.genericattributeprofile.gattcharacteristic.valuechanged
+* GattCharacteristicProperties：https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.genericattributeprofile.gattcharacteristicproperties
+* GattCommunicationStatus：https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.genericattributeprofile.gattcommunicationstatus
+* BluetoothError：https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.bluetootherror
+* BluetoothAdapter.GetDefaultAsync：https://learn.microsoft.com/en-us/uwp/api/windows.devices.bluetooth.bluetoothadapter.getdefaultasync
+* RadioState：https://learn.microsoft.com/en-us/uwp/api/windows.devices.radios.radiostate
+* CryptographicBuffer.CopyToByteArray：https://learn.microsoft.com/en-us/uwp/api/windows.security.cryptography.cryptographicbuffer.copytobytearray
+* GATT 客户端指南：https://learn.microsoft.com/en-us/windows/uwp/devices-sensors/gatt-client
+* 设备配对：https://learn.microsoft.com/en-us/windows/uwp/devices-sensors/pair-devices
+* Win32 系统错误码（HRESULT 对照）：https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--0-499-
+* C#/WinRT 与 .NET 的 WinRT 投影：https://learn.microsoft.com/en-us/windows/apps/develop/platform/csharp-winrt/
+* Bluetooth Core Specification Vol 3 Part F §3.4.1.1（ATT Error Response 与错误码）：https://www.bluetooth.com/specifications/specs/core-specification/
+* Bluetooth Core Specification Vol 4 Part E §7.5.4（Read RSSI：无法读取时为 127）：同上。
