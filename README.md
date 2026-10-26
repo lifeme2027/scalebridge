@@ -27,6 +27,7 @@ src/ScaleBridge.Core          纯 C#（net8.0）：协议解析、数据模型�
 src/ScaleBridge.Ble.Fake      演示数据适配器（脚本回放，供界面演示与无硬件的 CI 端到端测试）
 src/ScaleBridge.App           Avalonia 桌面界面
 tests/ScaleBridge.Core.Tests  xUnit
+tools/ParseCli                命令行解析工具（引用 Core；不参与发布打包）
 shared-vectors/               与语言无关的 GATT 字节向量 JSON（见其 README）
 ```
 
@@ -40,6 +41,28 @@ dotnet test
 ```
 
 需要 .NET 8 SDK（`global.json` 固定 8.0.100，允许 latestFeature 滚动）。
+
+## 命令行解析工具 `tools/ParseCli`
+
+把一段 GATT 字节交给 Core 的解析器，输出与 `shared-vectors` 同形的 JSON（`reject` / `errorCode` / `warnings` / `expect`，十进制值一律是字符串）。
+**用途：让别的实现（独立写的向量、Web 版、第三方脚本）直接对照 C# 解析器；它不是产品功能，不进发布包。** 同样是「实验性（仅按规范实现，未真机验证）」。
+
+```bash
+# 单条
+dotnet run --project tools/ParseCli -- --service 181D --char 2A9D --hex "00 59 36"
+
+# stdin：每行一条；行首可写 "服务/特征 字节"，否则用 --service/--char 的默认值；空行和 # 开头的行忽略；输出 JSON Lines
+printf '181D/2A9D 00 FF FF\n181B/2A9C 00 00 EA 00\n' | dotnet run --project tools/ParseCli -- --stdin
+
+# 向量文件（scalebridge-vectors/1）：输出同格式文档，里面是「实际」解析结果
+dotnet run --project tools/ParseCli -- --vectors shared-vectors/weight-scale.json
+# 与文件里写的期望比较：列出每条差异，有差异退出码 1（可喂别人写的向量文件）
+dotnet run --project tools/ParseCli -- --vectors their-vectors.json --compare
+```
+
+支持 `181D/2A9E`、`181D/2A9D`、`181B/2A9B`、`181B/2A9C`。字节可写成 `00 59 36`、`005936`、`00:59:36`；UUID 可带 `0x`。
+退出码：`0` 成功，`1` `--compare` 有差异，`2` 用法或输入错误（stdin 模式下坏行输出 `{"line":N,"cliError":…}` 并继续）。
+比较规则与 `SharedVectorsTests` 一致：`reject`/`errorCode` 相同，成功时警告集合相同、`expect` 逐键相同（十进制串按数值比较）。
 
 ## 许可证与致谢
 
