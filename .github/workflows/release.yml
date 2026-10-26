@@ -20,8 +20,10 @@ jobs:
         include:
           - os: ubuntu-latest
             rid: linux-x64
+            tfm: net8.0
           - os: windows-latest
             rid: win-x64
+            tfm: net8.0-windows10.0.19041.0
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -30,9 +32,20 @@ jobs:
       - name: Publish（自包含单文件，无需另装 .NET 运行时）
         shell: bash
         run: |
-          dotnet publish src/ScaleBridge.App/ScaleBridge.App.csproj -c Release -r ${{ matrix.rid }} \
+          dotnet publish src/ScaleBridge.App/ScaleBridge.App.csproj -c Release -f ${{ matrix.tfm }} -r ${{ matrix.rid }} \
             --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true \
             -p:DebugType=none -o publish/${{ matrix.rid }}
+      - name: Windows：确认单文件里带上了 Windows 适配器（只看体积与产物，不代表可用）
+        if: matrix.rid == 'win-x64'
+        shell: pwsh
+        run: |
+          Get-ChildItem publish/win-x64 | Format-Table Name, Length
+          $exe = "publish/win-x64/ScaleBridge.exe"
+          if (-not (Test-Path $exe)) { throw "missing ScaleBridge.exe" }
+          $bytes = [System.IO.File]::ReadAllBytes($exe)
+          $text = [System.Text.Encoding]::ASCII.GetString($bytes)
+          if (-not $text.Contains("ScaleBridge.Windows")) { throw "ScaleBridge.Windows assembly not found inside the single-file bundle" }
+          Write-Host "single-file bundle contains ScaleBridge.Windows"
       - name: 附带说明文件并打包
         shell: bash
         run: |

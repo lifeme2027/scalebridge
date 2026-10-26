@@ -27,6 +27,27 @@ jobs:
         run: dotnet build ScaleBridge.sln -c Release --no-restore
       - name: Test（含 shared-vectors 字节向量与 Fake 端到端，无需任何蓝牙硬件）
         run: dotnet test ScaleBridge.sln -c Release --no-build --logger "trx;LogFileName=test-results.trx"
+      - name: Windows：确认 Windows 适配器项目与 Windows 目标的应用确实被编译
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $app = "src/ScaleBridge.App/bin/Release/net8.0-windows10.0.19041.0"
+          foreach ($f in @("src/ScaleBridge.Windows/bin/Release/net8.0-windows10.0.19041.0/ScaleBridge.Windows.dll",
+                           "$app/ScaleBridge.Windows.dll", "$app/ScaleBridge.Windows.Core.dll", "$app/ScaleBridge.exe")) {
+            if (-not (Test-Path $f)) { throw "missing build output: $f" }
+            Write-Host "ok  $f"
+          }
+      - name: Windows：无硬件启动冒烟（Fake 演示数据；exe 无控制台，靠退出码与 SCALEBRIDGE_SMOKE_FILE 判定）
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $exe = Resolve-Path "src/ScaleBridge.App/bin/Release/net8.0-windows10.0.19041.0/ScaleBridge.exe"
+          $env:SCALEBRIDGE_DATA_DIR = Join-Path $env:RUNNER_TEMP "sb-data"
+          $env:SCALEBRIDGE_SMOKE_FILE = Join-Path $env:RUNNER_TEMP "smoke.log"
+          $p = Start-Process -FilePath $exe -ArgumentList "--smoke" -PassThru -Wait
+          if (Test-Path $env:SCALEBRIDGE_SMOKE_FILE) { Get-Content $env:SCALEBRIDGE_SMOKE_FILE }
+          if ($p.ExitCode -ne 0) { throw "smoke exit code $($p.ExitCode)" }
+          if (-not (Select-String -Path $env:SCALEBRIDGE_SMOKE_FILE -Pattern "SCALEBRIDGE_SMOKE_OK" -Quiet)) { throw "no SCALEBRIDGE_SMOKE_OK" }
       - name: 上传测试结果
         if: always()
         uses: actions/upload-artifact@v4
@@ -49,7 +70,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y xvfb libfontconfig1 fonts-noto-cjk
       - name: Build 应用
-        run: dotnet build src/ScaleBridge.App/ScaleBridge.App.csproj -c Release
+        run: dotnet build src/ScaleBridge.App/ScaleBridge.App.csproj -c Release -f net8.0
       - name: 无头启动：扫描 → 连接 → 收到数据 → 写入历史（全程是演示数据）
         run: |
           export SCALEBRIDGE_DATA_DIR="$(mktemp -d)"
