@@ -82,3 +82,51 @@
   最近一次推送 2026-09-04，约 367 star。是否与 BlueZ 5.x 的 GATT 接口配合良好、NuGet 包的发布节奏与目标框架：**未核实**。
 * 其它 .NET BlueZ 封装库（如 `Linux.Bluetooth` 等）的维护状态与许可证：**未核实**。
 * BlueZ 版本差异、权限（bluetoothd 与用户会话总线）、发现过滤行为：**未核实**，需在真机/真实 BlueZ 上验证。
+
+## 厂商协议来源（时尚1）
+
+> **实验性（仅按规范/公开资料实现，未真机验证）**——本节所有厂商协议均如此。
+> 解析器位于 `src/ScaleBridge.Core/Protocols/`，向量位于 `shared-vectors/vendor/`（格式扩展见 `shared-vectors/vendor/VENDOR.md`）。
+
+**净室规则**：只使用 Bluetooth SIG 规范、厂商公开文档、以及对字节布局的**文字性**公开描述（博客、wiki、论坛、协议笔记）。
+不阅读、不复制、不改写 GPL 项目（ble-scale-sync、openScale 等）的源码或结构；代码结构为本项目独立设计。
+向量是按下面记录的布局**手工构造**的（用独立 Python `Decimal` 脚本算期望值），**不是**从真机抓取。
+布局里无法从公开文字描述确认的字段，下面明确标「未确认」，代码里跳过或只给原始值。
+
+**检索卫生说明（诚实记录）**：网络检索的结果摘要里偶然出现过 ble-scale-sync 的 issue/PR 文本，以及 custom-components/ble_monitor（MIT）的解析代码片段。
+前者未打开、未采用（其中控制位的描述还与下面的公开文字资料互相矛盾）；后者只用来核对「控制位在第几字节第几位」这类事实，没有借用其结构或代码。
+openScale 只引用了它的 **wiki 文字页**（逆向笔记），没有看它的源码。`smartscale_reader` 只读了它 README 的字节/控制位表（该包本身是 GPL-3.0，没有看其代码）。
+
+### 小米体重秤（Mi Scale / Mi Body Composition Scale 2）——实验性
+
+实现：`XiaomiScaleParser`（`ParseMiScaleFrame` / `ParseBodyCompositionScale2Frame` / `ParseServiceData`）。输入是广播 Service Data（或 notify）的**负载**（不含 2 字节 UUID 前缀）。
+
+使用的页面与取到的事实：
+
+| 来源 | 取到的事实 |
+|---|---|
+| openScale wiki「Xiaomi Bluetooth Mi Scale」（文字逆向笔记）`https://github.com/oliexdev/openScale/wiki/Xiaomi-Bluetooth-Mi-Scale` | 一代 Mi Scale 10 字节帧：byte0 状态（bit0=磅，bit4=斤，bit5=稳定，bit7=已离秤，bit1–3/6 未知）；byte1–2 体重小端；byte3–4 年（小端）；byte5–9 月日时分秒；磅/斤除以 100、否则除以 200；日期仅在「稳定且未离秤」时有效；体重通知需要打开 notify（文字里隐含是 Weight 服务 0x181D 的体重特征，**未明确写 0x2A9D**）。 |
+| freenetwork/ble-in-xiaomi 文档 `doc/devices/huami.health.scale2.md`（`https://github.com/freenetwork/ble-in-xiaomi/blob/master/doc/devices/huami.health.scale2.md`） | 体脂秤 2：广播 Service Data（adType 0x16）UUID 后 13 字节载荷：控制字节 2 个、年（小端）、月日时分秒、阻抗（小端）、体重（小端）；千克 ×200（即 raw/200）、磅与斤 ×100。控制位表给了「磅 / 空载 / 斤 / 稳定 / 有阻抗」的位号，但**位号编号方向有歧义**（按 16 位字的高位在前编号），需与下一行交叉核对。 |
+| cezaris13/MiCompositionScale2 README `https://github.com/cezaris13/MiCompositionScale2` | 同一份 13 字节布局与控制位表（相同的位号编号），确认体重 raw/200 为 kg、raw/100 为磅/斤。 |
+| smartscale_reader（Dart）API 文档 `https://pub.dev/documentation/smartscale_reader/latest/` | 明确按「第几字节第几位」给出：byte0 bit0 = 磅；byte1 bit6 = 斤；byte1 bit1 = 有阻抗；byte1 bit5 = 稳定；byte1 bit7 = 已离秤；13 字节包结构。用它消除了上面位号编号的歧义（与高位在前编号的换算一致）。 |
+| Mi Scale 2 / 0x181D 广播示例 gist `https://gist.github.com/passcod/2132f8d1ca33232108f00e86f6147e47` | 10 字节 0x181D 广播帧（第二代 Mi Smart Scale 的广播）与一代同布局；时间戳字段布局相同。它给的单位位（bit1=kg，bit2=磅）与 wiki（bit0=磅）**冲突**，本项目**不采用** gist 的单位位，只采用 wiki 的位（bit0=磅、bit4=斤、都没有=kg）。 |
+| Bluetooth SIG GATT Specification Supplement「Date Time」 | 时间戳 7 字节格式，与现有 `GattDateTime` 相同（年小端 + 月日时分秒）。 |
+
+采用的字节布局（负载，小端）：
+
+* **Frame A（0x181D，10 字节）**：`status(1) | weight(2) | year(2) month day hour minute second`。
+  kg = raw/200（0.005 kg/LSB）；磅 = raw/100 lb；斤 = raw/100 斤。
+* **Frame B（0x181B，13 字节）**：`ctrl0(1) | ctrl1(1) | year(2) month day hour minute second | impedance(2) | weight(2)`。
+  磅 = ctrl0 bit0；斤 = ctrl1 bit6；有阻抗 = ctrl1 bit1；稳定 = ctrl1 bit5；已离秤（资料里也叫「空载」）= ctrl1 bit7。
+* 换算：磅→kg 乘 0.45359237（定义值）；1 斤 = 500 g，所以斤→kg 乘 0.5。全部 `decimal`。
+* 没有校验和（公开资料里没有）；只做长度检查：短于固定长度 → `TooShort`；更长 → 解析前 N 字节并给 `TrailingBytes` 警告。
+* 磅位与斤位同时置位 → 无法判定单位 → `AmbiguousUnit` 错误（资料没说同时置位意味着什么）。
+
+**未确认 / 刻意不做**：
+
+* **阻抗单位与量纲**：公开文字资料只说「阻抗（小端 uint16）」，没有确认单位或比例，所以只暴露 `ImpedanceRaw`（原始整数），不映射成欧姆；也不根据阻抗计算体脂等（公式来自逆向实现，不在本次范围）。
+* byte0 的 bit1–3/6（一代）、ctrl0 bit1、ctrl1 bit2 等「观测恒为 1 / 未知」位：忽略，不报警告。
+* 一代帧「体重通知」具体走哪个特征（文字里隐含 0x2A9D，未明确）；向量里那条 notification 向量只代表「同一 10 字节负载」。
+* 历史记录特征 `0x2A2F`（自定义，多条记录）的分帧与确认流程：**未实现**。
+* 日期在「未稳定」时可能无意义：解析器只要字节构成合法日期就返回，调用方应只信 `IsFinal` 的帧。
+* 不同固件对 `0x181D` / `0x181B` 的使用以及型号（XMTZC01HM / 04HM / 05HM）与帧的对应关系：公开资料说法不一，**未核实**；解析器只按服务 UUID + 长度分发。

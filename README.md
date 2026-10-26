@@ -48,3 +48,13 @@ MIT，见 [LICENSE](LICENSE)。
 感谢 [ble-scale-sync](https://github.com/KristianP26/ble-scale-sync)（GPL-3.0）——它只作为
 **事实性参考**（有哪些设备/协议存在）。**本项目没有复制或改写它的任何代码、文件结构或测试**；
 所有解析器都按公开的 Bluetooth SIG 规范独立实现。
+
+## 厂商协议（实验性）
+
+`src/ScaleBridge.Core/Protocols/` 里有按**公开文字资料**独立实现的厂商私有协议解析器。它们**一律是「实验性（仅按规范/公开资料实现，未真机验证）」**：
+只有手工构造的字节向量（`shared-vectors/vendor/`）和单元测试，**没有任何真机验证**，界面与文档不得写成「支持」。
+字节布局的来源页面、取到的事实以及未确认项见 [NOTES.md](NOTES.md) 的「厂商协议来源（时尚1）」；实现遵守净室规则（不使用 GPL 项目的代码或结构）。
+
+| 厂商 | 状态 |
+|---|---|
+| 小米 Mi Scale / Mi Body Composition Scale 2（广播 Service Data 0x181D / 0x181B） | 实验性：已有解析器与向量；阻抗只给原始值 |
