@@ -65,6 +65,13 @@ dotnet run --project tools/ParseCli -- --vectors their-vectors.json --compare
 退出码：`0` 成功，`1` `--compare` 有差异，`2` 用法或输入错误（stdin 模式下坏行输出 `{"line":N,"cliError":…}` 并继续）。
 比较规则与 `SharedVectorsTests` 一致：`reject`/`errorCode` 相同，成功时警告集合相同、`expect` 逐键相同（十进制串按数值比较）。
 
+## Web 版（`web/`）
+
+静态单页，用浏览器的 Web Bluetooth 接收标准体重秤数据，数据只存在本浏览器的 IndexedDB 里，不上传；目标部署位置 `https://life.kastop.com/box`。
+真实蓝牙路径同样是 **「实验性（仅按规范实现，未真机验证）」**；不支持 Web Bluetooth 的浏览器可用 **「演示数据」** 模式与 CSV/JSON 导入导出。
+厂商广播类私有协议在 Web 版暂未支持。浏览器限制（仅 Chromium、需 HTTPS 与用户点击、只能访问声明的服务等）、`web/tools/parse-cli.mjs` 的用法和部署同步方式见 [web/README.md](web/README.md)。
+CI 为独立的 `.github/workflows/web.yml`（与 .NET 的 ci.yml 互不影响）。
+
 ## 许可证与致谢
 
 MIT，见 [LICENSE](LICENSE)。
