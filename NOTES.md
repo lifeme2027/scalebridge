@@ -96,6 +96,7 @@
 **检索卫生说明（诚实记录）**：网络检索的结果摘要里偶然出现过 ble-scale-sync 的 issue/PR 文本，以及 custom-components/ble_monitor（MIT）的解析代码片段。
 前者未打开、未采用（其中控制位的描述还与下面的公开文字资料互相矛盾）；后者只用来核对「控制位在第几字节第几位」这类事实，没有借用其结构或代码。
 openScale 只引用了它的 **wiki 文字页**（逆向笔记），没有看它的源码。`smartscale_reader` 只读了它 README 的字节/控制位表（该包本身是 GPL-3.0，没有看其代码）。
+检索中还看到过 openScale 的 issue / 提交说明文字。其中 issue #496 的**文字描述**（含厂商 PDF 附件）用于 Chipsea/OKOK；Renpho 检索时出现的 openScale 提交说明与 ble-scale-sync 文本**没有采用**。一条 Gadgetbridge 的 Lua 片段看到过但未采用。
 
 ### 小米体重秤（Mi Scale / Mi Body Composition Scale 2）——实验性
 
@@ -130,3 +131,40 @@ openScale 只引用了它的 **wiki 文字页**（逆向笔记），没有看它
 * 历史记录特征 `0x2A2F`（自定义，多条记录）的分帧与确认流程：**未实现**。
 * 日期在「未稳定」时可能无意义：解析器只要字节构成合法日期就返回，调用方应只信 `IsFinal` 的帧。
 * 不同固件对 `0x181D` / `0x181B` 的使用以及型号（XMTZC01HM / 04HM / 05HM）与帧的对应关系：公开资料说法不一，**未核实**；解析器只按服务 UUID + 长度分发。
+
+### Renpho——**跳过（未实现）**
+
+没有找到可以合规使用的来源：Renpho 没有公开的厂商协议文档，也没有 Bluetooth SIG 规范覆盖其私有帧；
+网络上能找到的字节布局只出现在 GPL 项目的源码/提交说明/文档里（ble-scale-sync、openScale 等），或来自对 App 的反编译，而且存在多个互不兼容的型号/固件变体。
+按净室规则这些都不能用，也不能「凭记忆」补布局，所以**本次不提供 Renpho 解析器、向量或测试**。
+检索卫生说明：检索结果摘要里出现了 openScale 的提交说明与 ble-scale-sync 的提交/文档文本；这些页面**没有打开、没有采用**。
+补齐条件：出现厂商发布的协议文档，或非代码的、可交叉验证的文字性字节布局说明，再单独立项。
+
+### Chipsea / OKOK 风格广播体重帧——实验性
+
+实现：`ChipseaOkokParser`（`ParseV11Broadcast` / `ParseV20Broadcast` / `ParseManufacturerData`）。输入是 manufacturer-specific data，**从 0xCA 字节起**（Android 上即「公司 ID」两字节 `CA 11` / `CA 20` 起）。多字节字段大端。只实现广播里的体重帧。
+
+使用的页面与取到的事实：
+
+| 来源 | 取到的事实 |
+|---|---|
+| 厂商文档「Protocol of OKOK APP」PDF（v1.1 系列；文件本身来自 openScale issue 的附件，但它是厂商文档，不是代码）`https://github.com/oliexdev/openScale/files/5224454/OKOK.Protocol.pdf` | 帧结构 `0xCA｜版本｜数据域长度｜数据域｜校验和`；v1.1 广播 19 字节：锁定标志（idx3）、设备类型（idx4）、体重（idx5–6，大端）、产品 ID（idx7–10）、「消息体属性」（idx11，表 1）、保留；表 1：bit4–3 单位（00 kg / 01 斤 / 10 lb / 11 st:lb），bit2–1 小数位（00 一位 / 01 零位 / 10 两位），其余保留；示例 50 kg = 0x01F4、50 lb = 0x01F4 且属性 0x10；st:lb 示例 4:13 = 0x0482（高字节英石、低字节磅×10）；校验和为 XOR，文档称「从版本字节到数据域末尾」。 |
+| openScale issue #496 的文字描述 `https://github.com/oliexdev/openScale/issues/496`（只读 issue 正文与评论里的文字，不看代码） | v2.0 广播以 `CA 20` 开头，15 字节；体重为 raw/10、阻抗原始值（一位用户的解码日志里阻抗显示为 raw/10 Ω，本项目只暴露原始整数）；末尾可带 6 字节设备地址；一份抓包里 v1.1 校验和与 XOR(idx0..17) 吻合；v2.0 帧里「最终」标志位与序号的位置；帧里不含单位。 |
+| 一个 Gadgetbridge issue 的文字讨论（URL 未记录；其中的 Lua 片段看到过但**未采用**） | 只用来交叉印证「v2.0 帧没有单位字节」与最终标志的位置。 |
+
+采用的字节布局：见上面 `ChipseaOkokParser` 类注释与 `shared-vectors/vendor/VENDOR.md`。要点：
+
+* **v1.1（19 字节）**：见上表。锁定 == 1 才算稳定（实机可能一直为 0，见下）；st:lb 时 `OriginalWeight` 是**总磅数**（英石×14 + 磅），`RawUnit = StoneLb`；斤→kg ×0.5，磅→kg ×0.45359237。
+* **v2.0（15 字节）**：`CA 20 0B | 未知(4) | 未知(1) | 最终标志(1) | 序号(1) | 体重×10(2) | 阻抗原始值(2) | XOR(idx1..13)`。**帧不含单位**：`assumedUnit` 缺省按 kg 并给 `UnitAssumed` 警告；调用方给 Kg/Lb/Jin 则无警告；`StoneLb` → `InvalidValue`。
+* 校验和之后的字节（6 字节设备地址）静默忽略；时间戳为 `null`；v1.1 无阻抗，v2.0 的阻抗只给 `ImpedanceRaw`。
+* 错误顺序：`TooShort` → `BadHeader`（魔数/版本/长度字节）→ `BadChecksum` → `InvalidValue`。分发入口：不足 2 字节 `TooShort`，非 0xCA 或未知版本 `BadHeader`。
+
+**未确认 / 冲突 / 刻意不做**：
+
+* **v1.1 校验和规则冲突**：厂商文档说 XOR(idx1..17)，一份公开抓包吻合 XOR(idx0..17)。无法裁决，所以两种都接受（向量里两种都有）。
+* **文档内部不一致**：PDF 里「4:13 ST:LB」示例写的属性字节是 0x00，而按表 1 应为 0x18；本项目按表 1，向量用 0x18。
+* 锁定字节：公开资料称实机即使重量稳定也可能一直为 0——所以 `Stabilized` 在这类设备上可能永远为 false，调用方需自行处理（例如用「读数不再变化」判定）。
+* 一条检索摘要称属性字节 bit7 表示「稳定/最终」（示例 0x25）——与厂商文档表 1（bit7–5 保留）冲突，**未采用**。
+* v2.0 的字节 3–7（可能含产品 ID / 设备属性）含义未知，忽略；序号不暴露；阻抗的单位未经确认（只有一位用户的 raw/10 Ω 说法），只给原始值。
+* **没有实现**：未命名 Yoda0 秤上的 `C0` 变体（公开描述互相矛盾）、连接后 0x10–0x15 指令帧与 0x12/0x13 通知帧（体脂、历史、时间字节序/偏移无法从 PDF 文本确认）、任何体成分计算。
+* v1.1 里「设备类型」不校验；st:lb 在 v2.0 中的编码未知，因此拒绝。

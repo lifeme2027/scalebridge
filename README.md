@@ -81,3 +81,5 @@ MIT，见 [LICENSE](LICENSE)。
 | 厂商 | 状态 |
 |---|---|
 | 小米 Mi Scale / Mi Body Composition Scale 2（广播 Service Data 0x181D / 0x181B） | 实验性：已有解析器与向量；阻抗只给原始值 |
+| Renpho | **跳过**：没有可合规使用的公开文档（只有 GPL 项目源码 / 反编译来源），不提供解析器 |
+| Chipsea / OKOK 风格广播体重帧（manufacturer data，`0xCA 0x11` 19 字节 / `0xCA 0x20` 15 字节） | 实验性：已有解析器与向量；v2.0 帧不含单位（调用方给定或按 kg 并告警）；C0 变体与连接后帧未实现 |
