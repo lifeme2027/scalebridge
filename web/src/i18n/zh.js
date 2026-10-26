@@ -59,6 +59,7 @@ export default {
   'err.notSupported': '此浏览器或设备不支持所需的蓝牙操作。',
   'err.aborted': '操作被中止。',
   'err.badRequest': '蓝牙请求参数被浏览器拒绝。',
+  'err.timeout': '连接超时：设备在 {sec} 秒内没有响应（步骤：{step}）。请让秤保持唤醒并靠近电脑，然后点“重新连接”重试。',
   'err.unknown': '发生未知错误。',
   'err.noSupportedService': '该设备没有可订阅的体重秤（0x181D）或体成分（0x181B）测量特征。很多厂商秤使用私有广播协议，本页暂未支持。',
   'err.reconnectFailed': '重连第 {attempt} 次失败。',
@@ -204,6 +205,7 @@ export default {
   'limits.item6': '真实蓝牙路径为实验性（仅按规范实现，未真机验证）：本页的解析逻辑用 Bluetooth SIG 规范的字节向量测试过，但没有在任何真实体重秤上测试过。',
   'limits.item7': '演示数据、导入、调试面板不依赖蓝牙，在所有现代浏览器里都能用。',
   'limits.item8': '记录只存在本浏览器的 IndexedDB 里：换浏览器、换设备、清除站点数据都会丢失；请定期导出备份。',
+  'limits.item9': 'Linux 版 Chrome 目前需要手动在 chrome://flags 里启用 Web Bluetooth（我们在 Linux 版 Chrome 156 上实测：默认没有 navigator.bluetooth）；此时控制台可能出现无害的提示“Unrecognized feature: \'bluetooth\'”，页面会自动退回演示数据/导入模式。',
 
   'privacy.title': '隐私说明',
   'privacy.local.h': '数据保存在哪里',

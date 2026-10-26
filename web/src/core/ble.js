@@ -20,6 +20,19 @@ export const SERVICE_PLAN = Object.freeze([
 
 export const OPTIONAL_SERVICES = Object.freeze([SERVICE_WEIGHT_SCALE, SERVICE_BODY_COMPOSITION, SERVICE_DEVICE_INFORMATION]);
 export const RECONNECT_DELAYS_MS = Object.freeze([1000, 2000, 4000]);
+/** 看门狗：GATT 连接 / 服务发现 / 订阅的每一步最长等待（Chromium 在某些故障下会让这些 Promise 永远不 settle）。 */
+export const GATT_TIMEOUT_MS = 9000;
+/** 可选步骤（Feature 读取、设备信息）的等待上限，超时即跳过。 */
+export const OPTIONAL_TIMEOUT_MS = 3000;
+
+/** Promise 加超时：超时抛 {name:'TimeoutError', code:'timeout'}。原 Promise 之后无论成败都被吞掉（不会产生未处理拒绝）。 */
+export function withTimeout(promise, ms, label) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(Object.assign(new Error(`${label} timed out after ${ms} ms`), { name: 'TimeoutError', code: 'timeout', step: label, ms })), ms);
+  });
+  return Promise.race([Promise.resolve(promise), timeout]).finally(() => clearTimeout(timer));
+}
 
 /** 把 DOMException / 其它错误映射为稳定的错误码（界面按码取文案）。 */
 export function mapError(err) {
@@ -33,6 +46,7 @@ export function mapError(err) {
     case 'InvalidStateError': return 'invalidState';
     case 'NotSupportedError': return 'notSupported';
     case 'AbortError': return 'aborted';
+    case 'TimeoutError': return 'timeout';
     case 'TypeError': return 'badRequest';
     default: return 'unknown';
   }
@@ -56,7 +70,9 @@ const text = (dv) => { try { return new TextDecoder('utf-8', { fatal: true }).de
  *       record{record,warnings,hex}、unsuccessful{hex}、parseError{errorCode,hex,message}、error{code,detail}。
  */
 export class ConnectionController {
-  constructor({ bluetooth, now = () => new Date(), wait = (ms) => new Promise((r) => setTimeout(r, ms)), delays = RECONNECT_DELAYS_MS } = {}) {
+  constructor({ bluetooth, now = () => new Date(), wait = (ms) => new Promise((r) => setTimeout(r, ms)), delays = RECONNECT_DELAYS_MS, timeoutMs = GATT_TIMEOUT_MS, optionalTimeoutMs = OPTIONAL_TIMEOUT_MS } = {}) {
+    this.timeoutMs = timeoutMs;
+    this.optionalTimeoutMs = optionalTimeoutMs;
     this.bluetooth = bluetooth;
     this.now = now;
     this.wait = wait;
@@ -87,9 +103,13 @@ export class ConnectionController {
     this.#emit('state', { state, ...extra });
   }
 
+  #guard(promise, label) { return withTimeout(promise, this.timeoutMs, label); }
+  #guardOptional(promise, label) { return withTimeout(promise, this.optionalTimeoutMs, label); }
+
   #fail(err, extra = {}) {
     const code = err?.code && typeof err.code === 'string' ? err.code : mapError(err);
-    this.#emit('error', { code, detail: String(err?.message ?? err ?? ''), ...extra });
+    const timing = code === 'timeout' ? { step: err.step ?? null, timeoutMs: err.ms ?? null } : {};
+    this.#emit('error', { code, detail: String(err?.message ?? err ?? ''), ...timing, ...extra });
     return code;
   }
 
@@ -151,7 +171,7 @@ export class ConnectionController {
     device.removeEventListener('gattserverdisconnected', this.onGattDisconnected);
     device.addEventListener('gattserverdisconnected', this.onGattDisconnected);
     try {
-      const server = await device.gatt.connect();
+      const server = await this.#guard(device.gatt.connect(), 'gatt.connect');
       if (session !== this.session) return false;
       const subscribed = await this.#setup(server, session);
       if (session !== this.session) return false;
@@ -177,30 +197,30 @@ export class ConnectionController {
     let subscribed = 0;
     for (const plan of SERVICE_PLAN) {
       let svc;
-      try { svc = await server.getPrimaryService(plan.service); } catch (e) {
+      try { svc = await this.#guard(server.getPrimaryService(plan.service), `getPrimaryService(0x${plan.service.toString(16)})`); } catch (e) {
         if (e?.name === 'NotFoundError') continue; // 设备没有这个服务
         throw e;
       }
       try {
-        const fch = await svc.getCharacteristic(plan.feature);
-        const dv = await fch.readValue();
+        const fch = await this.#guardOptional(svc.getCharacteristic(plan.feature), 'getCharacteristic(feature)');
+        const dv = await this.#guardOptional(fch.readValue(), 'readValue(feature)');
         this.#dispatch(plan.service, plan.feature, bytesOf(dv));
       } catch { /* Feature 是可选的；读不到不影响订阅 */ }
       if (session !== this.session) return subscribed;
       let mch;
-      try { mch = await svc.getCharacteristic(plan.measurement); } catch (e) {
+      try { mch = await this.#guard(svc.getCharacteristic(plan.measurement), 'getCharacteristic(measurement)'); } catch (e) {
         if (e?.name === 'NotFoundError') continue;
         throw e;
       }
       const handler = (ev) => this.#dispatch(plan.service, plan.measurement, bytesOf(ev.target.value));
       mch.addEventListener('characteristicvaluechanged', handler);
       this.subscriptions.push({ ch: mch, handler });
-      await mch.startNotifications(); // Web Bluetooth 的 startNotifications 对 notify 与 indicate 都适用
+      await this.#guard(mch.startNotifications(), 'startNotifications'); // Web Bluetooth 的 startNotifications 对 notify 与 indicate 都适用
       subscribed++;
     }
     try {
-      const info = await server.getPrimaryService(SERVICE_DEVICE_INFORMATION);
-      const read = async (c) => { try { return text(await (await info.getCharacteristic(c)).readValue()); } catch { return null; } };
+      const info = await this.#guardOptional(server.getPrimaryService(SERVICE_DEVICE_INFORMATION), 'getPrimaryService(0x180a)');
+      const read = async (c) => { try { return text(await this.#guardOptional((async () => (await info.getCharacteristic(c)).readValue())(), 'readValue(info)')); } catch { return null; } };
       const manufacturer = await read(CHAR_MANUFACTURER_NAME);
       const model = await read(CHAR_MODEL_NUMBER);
       if (manufacturer !== null || model !== null) this.#emit('info', { manufacturer, model });
@@ -227,7 +247,7 @@ export class ConnectionController {
       await this.wait(this.delays[attempt - 1]);
       if (session !== this.session || this.userDisconnect) return;
       try {
-        const server = await this.device.gatt.connect();
+        const server = await this.#guard(this.device.gatt.connect(), 'gatt.connect');
         if (session !== this.session) return;
         const n = await this.#setup(server, session);
         if (session !== this.session) return;

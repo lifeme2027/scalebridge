@@ -59,6 +59,7 @@ export default {
   'err.notSupported': 'This browser or device does not support the required Bluetooth operation.',
   'err.aborted': 'The operation was aborted.',
   'err.badRequest': 'The browser rejected the Bluetooth request parameters.',
+  'err.timeout': 'Timed out: the device did not respond within {sec} seconds (step: {step}). Keep the scale awake and close to the computer, then press “Reconnect” to retry.',
   'err.unknown': 'An unknown error occurred.',
   'err.noSupportedService': 'This device has no subscribable Weight Scale (0x181D) or Body Composition (0x181B) measurement characteristic. Many vendor scales use private advertisement protocols, which this page does not support yet.',
   'err.reconnectFailed': 'Reconnect attempt {attempt} failed.',
@@ -204,6 +205,7 @@ export default {
   'limits.item6': 'The real Bluetooth path is experimental (implemented from the spec only, not verified on real hardware): the parsing logic is tested with byte vectors derived from the Bluetooth SIG specification, but it has not been tried on any real scale.',
   'limits.item7': 'Demo data, import and the debug panel do not need Bluetooth and work in every modern browser.',
   'limits.item8': 'Records live only in this browser\'s IndexedDB: switching browser or device, or clearing site data, loses them; export a backup regularly.',
+  'limits.item9': 'Chrome on Linux currently needs Web Bluetooth to be switched on manually in chrome://flags (we measured it: Chrome 156 on Linux has no navigator.bluetooth by default). In that case the console may show the harmless message “Unrecognized feature: \'bluetooth\'”, and the page falls back to demo data / import mode.',
 
   'privacy.title': 'Privacy',
   'privacy.local.h': 'Where your data is stored',

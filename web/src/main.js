@@ -69,6 +69,7 @@ function renderConnection() {
   const { t, conn } = S;
   const st = conn.state;
   $('conn-state').textContent = t(`connect.state.${st}`, conn.params);
+  $('conn-state').dataset.state = st; // 稳定的状态值，供自动化测试读取（与界面语言无关）
   const busy = ['requesting', 'connecting', 'connected', 'reconnecting'].includes(st);
   const usable = S.support.hasBluetooth && S.support.secureContext && S.availability !== false;
   $('btn-connect').disabled = busy || !usable;
@@ -81,6 +82,7 @@ function renderConnection() {
   $('conn-error').textContent = e
     ? t(`err.${e.code}`, e.params) + (e.detail && ['unknown', 'network', 'notAllowed'].includes(e.code) ? ' ' + t('err.detail', { detail: e.detail }) : '')
     : '';
+  if (e) $('conn-error').dataset.code = e.code; else delete $('conn-error').dataset.code;
   const info = $('conn-info');
   clear(info);
   const lines = [];
@@ -97,7 +99,7 @@ function renderLatest() {
   clear(body);
   if (S.records.length === 0) { body.append(el('p', { class: 'muted', text: t('latest.empty') })); return; }
   const rec = [...S.records].sort(compareRecords).at(-1);
-  const head = el('p', { class: 'big', text: weightText(rec, S.settings.displayUnit, t) });
+  const head = el('p', { class: 'big', id: 'latest-weight', 'data-testid': 'latest-weight', 'data-kg': rec.weightKg ?? '', 'data-demo': rec.demo ? '1' : '0', text: weightText(rec, S.settings.displayUnit, t) });
   body.append(head);
   if (rec.demo) body.append(el('p', {}, el('span', { class: 'tag-demo', text: demoLabel() })));
   const dl = el('dl', { class: 'fields' });
@@ -123,10 +125,10 @@ function renderHistory() {
     const time = timeText(r);
     const tag = el('span', { class: r.demo ? 'tag-demo' : '', text: t(tagFor(r)) });
     const src = el('td', {}, tag, ` ${t(`src.${r.source}`)}`);
-    const del = el('button', { type: 'button', 'data-id': String(r.id), 'aria-label': t('history.deleteAria', { time }), text: t('history.delete') });
-    rows.append(el('tr', { 'data-demo': r.demo ? '1' : '0' },
+    const del = el('button', { type: 'button', 'data-testid': 'history-delete', 'data-id': String(r.id), 'aria-label': t('history.deleteAria', { time }), text: t('history.delete') });
+    rows.append(el('tr', { 'data-testid': 'history-row', 'data-id': String(r.id), 'data-kg': r.weightKg ?? '', 'data-demo': r.demo ? '1' : '0' },
       el('td', { text: time }),
-      el('td', { text: weightText(r, S.settings.displayUnit, t) }),
+      el('td', { 'data-testid': 'history-weight', text: weightText(r, S.settings.displayUnit, t) }),
       el('td', { text: r.bmi ?? '—' }),
       el('td', { text: r.bodyFatPercent === null ? '—' : `${r.bodyFatPercent} ${t('u.percent')}` }),
       src,
@@ -142,14 +144,14 @@ function renderDemoButtons() {
   const box = $('demo-buttons');
   clear(box);
   for (const sc of DEMO_SCENARIOS) {
-    box.append(el('button', { type: 'button', 'data-scenario': sc.id, text: S.t('demo.add', { name: S.t(`demo.s.${sc.id}`) }) }));
+    box.append(el('button', { type: 'button', 'data-testid': `demo-${sc.id}`, 'data-scenario': sc.id, text: S.t('demo.add', { name: S.t(`demo.s.${sc.id}`) }) }));
   }
 }
 
 function renderLimits() {
   const ul = $('limits-list');
   clear(ul);
-  for (let i = 1; i <= 8; i++) ul.append(el('li', { text: S.t(`limits.item${i}`) }));
+  for (let i = 1; i <= 9; i++) ul.append(el('li', { text: S.t(`limits.item${i}`) }));
 }
 
 function renderNotes() {
@@ -221,8 +223,8 @@ function wireBluetooth() {
     if (state === 'connecting' || state === 'connected') S.connError = null;
     renderConnection();
   });
-  ctl.on('error', ({ code, detail, attempt }) => {
-    S.connError = { code, detail, params: { attempt } };
+  ctl.on('error', ({ code, detail, attempt, step, timeoutMs }) => {
+    S.connError = { code, detail, params: { attempt, step: step ?? '', sec: timeoutMs ? Math.round(timeoutMs / 1000) : '' } };
     renderConnection();
   });
   ctl.on('device', () => { S.info = null; S.connInfo = []; renderConnection(); });

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ConnectionController, mapError, requestOptions, OPTIONAL_SERVICES } from '../src/core/ble.js';
+import { ConnectionController, mapError, requestOptions, OPTIONAL_SERVICES, withTimeout, GATT_TIMEOUT_MS } from '../src/core/ble.js';
 import { FakeBluetooth, FakeDevice, FakeService, FakeCharacteristic, domErr } from '../testlib/fake-gatt.js';
 
 const NOW = new Date(2026, 9, 26, 8, 30, 15);
@@ -151,4 +151,132 @@ test('mapError 覆盖常见 DOMException', () => {
   assert.equal(m('InvalidStateError'), 'invalidState');
   assert.equal(m('Whatever'), 'unknown');
   assert.equal(mapError(null), 'unknown');
+});
+
+/* ---------- 看门狗：Chromium 的连接/服务发现可能永远不 settle ---------- */
+const never = () => new Promise(() => {});
+const fast = { timeoutMs: 30, optionalTimeoutMs: 20 };
+
+test('看门狗默认值在 8–10 秒之间', () => {
+  assert.ok(GATT_TIMEOUT_MS >= 8000 && GATT_TIMEOUT_MS <= 10000);
+});
+
+test('withTimeout：按时完成原样返回；超时抛 TimeoutError(code=timeout)；原 Promise 迟到失败不产生未处理拒绝', async () => {
+  assert.equal(await withTimeout(Promise.resolve(7), 50, 'x'), 7);
+  await assert.rejects(withTimeout(never(), 15, 'step-a'), (e) => e.name === 'TimeoutError' && e.code === 'timeout' && e.step === 'step-a' && e.ms === 15);
+  let rejectLate;
+  const late = new Promise((_, rej) => { rejectLate = rej; });
+  await assert.rejects(withTimeout(late, 10, 'late'), /timed out/);
+  const unhandled = [];
+  const h = (e) => unhandled.push(e);
+  process.on('unhandledRejection', h);
+  rejectLate(new Error('too late'));
+  await new Promise((r) => setTimeout(r, 20));
+  process.off('unhandledRejection', h);
+  assert.deepEqual(unhandled, []);
+});
+
+test('gatt.connect() 挂起 → 超时 → timeout 错误 + 状态 disconnected + 可重试成功', async () => {
+  const { dev } = mkScale();
+  const realConnect = dev.gatt.connect;
+  let first = true;
+  dev.gatt.connect = function () { if (first) { first = false; return never(); } return realConnect.call(this); };
+  const c = ctl(new FakeBluetooth(dev), fast);
+  const log = collect(c, 'error', 'state');
+  const t0 = Date.now();
+  assert.equal(await c.requestAndConnect(), false);
+  assert.ok(Date.now() - t0 < 1000);
+  const err = log.find(([e]) => e === 'error')[1];
+  assert.equal(err.code, 'timeout');
+  assert.equal(err.step, 'gatt.connect');
+  assert.equal(err.timeoutMs, 30);
+  assert.equal(c.state, 'disconnected');
+  assert.equal(await c.reconnect(), true, '超时后无需重新弹选择器即可重试');
+  assert.equal(c.state, 'connected');
+});
+
+test('getPrimaryService 挂起 → 超时（步骤名带 UUID）→ 可重试', async () => {
+  const { dev } = mkScale();
+  const realConnect = dev.gatt.connect;
+  let hang = true;
+  dev.gatt.connect = async function () {
+    const server = await realConnect.call(this);
+    return { getPrimaryService: (u) => (hang ? never() : server.getPrimaryService(u)) };
+  };
+  const c = ctl(new FakeBluetooth(dev), fast);
+  const log = collect(c, 'error');
+  assert.equal(await c.requestAndConnect(), false);
+  assert.equal(log[0][1].code, 'timeout');
+  assert.equal(log[0][1].step, 'getPrimaryService(0x181d)');
+  assert.equal(c.state, 'disconnected');
+  assert.equal(dev.connected, false, '超时后主动断开 GATT');
+  hang = false;
+  assert.equal(await c.reconnect(), true);
+});
+
+test('startNotifications 挂起 → 超时，且已注册的监听被清理', async () => {
+  const { dev, meas } = mkScale();
+  meas.startNotifications = never;
+  const c = ctl(new FakeBluetooth(dev), fast);
+  const log = collect(c, 'error');
+  assert.equal(await c.requestAndConnect(), false);
+  assert.equal(log[0][1].code, 'timeout');
+  assert.equal(log[0][1].step, 'startNotifications');
+  assert.equal(meas.listenerCount('characteristicvaluechanged'), 0);
+});
+
+test('可选步骤（读 Feature / 读设备信息）挂起只被跳过，不影响连接成功', async () => {
+  const { dev, feat } = mkScale();
+  feat.readValue = never;
+  dev.services[0x180a].getCharacteristic = never;
+  const c = ctl(new FakeBluetooth(dev), fast);
+  const log = collect(c, 'error', 'feature', 'info');
+  assert.equal(await c.requestAndConnect(), true);
+  assert.equal(c.state, 'connected');
+  assert.deepEqual(log, []);
+});
+
+test('重连途中 gatt.connect 挂起：每次尝试都会超时，最后 connectionLost，不会永远卡在 reconnecting', async () => {
+  const { dev } = mkScale();
+  const c = ctl(new FakeBluetooth(dev), { ...fast, delays: [1, 1] });
+  const log = collect(c, 'error', 'state');
+  assert.equal(await c.requestAndConnect(), true);
+  dev.gatt.connect = never;
+  dev.drop();
+  await new Promise((r) => setTimeout(r, 300));
+  const codes = log.filter(([e]) => e === 'error').map(([, p]) => p.code);
+  assert.deepEqual(codes, ['reconnectFailed', 'reconnectFailed', 'connectionLost']);
+  assert.equal(c.state, 'disconnected');
+});
+
+test('超时期间用户点断开：迟到的结果被丢弃，状态保持 disconnected', async () => {
+  const { dev } = mkScale();
+  let release;
+  dev.gatt.connect = () => new Promise((r) => { release = r; });
+  const c = ctl(new FakeBluetooth(dev), { timeoutMs: 200, optionalTimeoutMs: 50 });
+  const p = c.requestAndConnect();
+  await new Promise((r) => setTimeout(r, 10));
+  await c.disconnect();
+  release({ getPrimaryService: async () => { throw domErr('NotFoundError'); } });
+  assert.equal(await p, false);
+  assert.equal(c.state, 'disconnected');
+});
+
+test('mapError：TimeoutError → timeout', () => {
+  assert.equal(mapError({ name: 'TimeoutError' }), 'timeout');
+});
+
+test('requestDevice 只在 requestAndConnect 里被调用：构造控制器/重连/断开都不会弹选择器', async () => {
+  const { dev } = mkScale();
+  const bt = new FakeBluetooth(dev);
+  const c = ctl(bt);
+  assert.equal(bt.requests.length, 0);
+  assert.equal(await c.reconnect(), false);
+  await c.disconnect();
+  assert.equal(bt.requests.length, 0);
+  await c.requestAndConnect();
+  assert.equal(bt.requests.length, 1);
+  dev.drop();
+  await new Promise((r) => setTimeout(r, 20));
+  assert.equal(bt.requests.length, 1, '自动重连不再请求选择器');
 });

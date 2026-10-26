@@ -53,7 +53,7 @@ function usedKeys() {
   dyn('support.avail.', ['true', 'false']);
   dyn('demo.s.', DEMO_SCENARIOS.map((s) => s.id));
   dyn('src.', ['weight-scale', 'body-composition']);
-  for (let i = 1; i <= 8; i++) used.add(`limits.item${i}`);
+  for (let i = 1; i <= 9; i++) used.add(`limits.item${i}`);
   const imp = src('core/import.js');
   for (const m of imp.matchAll(/error: '([a-zA-Z]+)'/g)) { used.add(`io.fatal.${m[1]}`); used.add(`io.row.${m[1]}`); }
   for (const c of ['storeFailed']) used.add(`io.fatal.${c}`);
