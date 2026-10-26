@@ -1,0 +1,2827 @@
+{
+ "format": "scalebridge-vectors/1",
+ "suite": "body-composition",
+ "description": "Body Composition Service (0x181B): Body Composition Feature 0x2A9B and Body Composition Measurement 0x2A9C. Hand-built byte vectors, expected values computed independently with Python Decimal. Not captured from real hardware.",
+ "vectors": [
+  {
+   "name": "bcf-zero",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "00 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "basalMetabolismSupported": false,
+    "musclePercentageSupported": false,
+    "muscleMassSupported": false,
+    "fatFreeMassSupported": false,
+    "softLeanMassSupported": false,
+    "bodyWaterMassSupported": false,
+    "impedanceSupported": false,
+    "weightSupported": false,
+    "heightSupported": false,
+    "massResolutionCode": 0,
+    "heightResolutionCode": 0,
+    "massResolutionKg": null,
+    "massResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "bcf-support-bit-0-timestamp",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "01 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": true,
+    "multipleUsersSupported": false,
+    "basalMetabolismSupported": false,
+    "musclePercentageSupported": false,
+    "muscleMassSupported": false,
+    "fatFreeMassSupported": false,
+    "softLeanMassSupported": false,
+    "bodyWaterMassSupported": false,
+    "impedanceSupported": false,
+    "weightSupported": false,
+    "heightSupported": false,
+    "massResolutionCode": 0,
+    "heightResolutionCode": 0,
+    "massResolutionKg": null,
+    "massResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "bcf-support-bit-1-multiuser",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "02 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": true,
+    "basalMetabolismSupported": false,
+    "musclePercentageSupported": false,
+    "muscleMassSupported": false,
+    "fatFreeMassSupported": false,
+    "softLeanMassSupported": false,
+    "bodyWaterMassSupported": false,
+    "impedanceSupported": false,
+    "weightSupported": false,
+    "heightSupported": false,
+    "massResolutionCode": 0,
+    "heightResolutionCode": 0,
+    "massResolutionKg": null,
+    "massResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "bcf-support-bit-2-basal-metabolism",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "04 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "basalMetabolismSupported": true,
+    "musclePercentageSupported": false,
+    "muscleMassSupported": false,
+    "fatFreeMassSupported": false,
+    "softLeanMassSupported": false,
+    "bodyWaterMassSupported": false,
+    "impedanceSupported": false,
+    "weightSupported": false,
+    "heightSupported": false,
+    "massResolutionCode": 0,
+    "heightResolutionCode": 0,
+    "massResolutionKg": null,
+    "massResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "bcf-support-bit-3-muscle-percentage",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "08 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "basalMetabolismSupported": false,
+    "musclePercentageSupported": true,
+    "muscleMassSupported": false,
+    "fatFreeMassSupported": false,
+    "softLeanMassSupported": false,
+    "bodyWaterMassSupported": false,
+    "impedanceSupported": false,
+    "weightSupported": false,
+    "heightSupported": false,
+    "massResolutionCode": 0,
+    "heightResolutionCode": 0,
+    "massResolutionKg": null,
+    "massResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "bcf-support-bit-4-muscle-mass",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "10 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "basalMetabolismSupported": false,
+    "musclePercentageSupported": false,
+    "muscleMassSupported": true,
+    "fatFreeMassSupported": false,
+    "softLeanMassSupported": false,
+    "bodyWaterMassSupported": false,
+    "impedanceSupported": false,
+    "weightSupported": false,
+    "heightSupported": false,
+    "massResolutionCode": 0,
+    "heightResolutionCode": 0,
+    "massResolutionKg": null,
+    "massResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "bcf-support-bit-5-fat-free-mass",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "20 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "basalMetabolismSupported": false,
+    "musclePercentageSupported": false,
+    "muscleMassSupported": false,
+    "fatFreeMassSupported": true,
+    "softLeanMassSupported": false,
+    "bodyWaterMassSupported": false,
+    "impedanceSupported": false,
+    "weightSupported": false,
+    "heightSupported": false,
+    "massResolutionCode": 0,
+    "heightResolutionCode": 0,
+    "massResolutionKg": null,
+    "massResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "bcf-support-bit-6-soft-lean-mass",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "40 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "basalMetabolismSupported": false,
+    "musclePercentageSupported": false,
+    "muscleMassSupported": false,
+    "fatFreeMassSupported": false,
+    "softLeanMassSupported": true,
+    "bodyWaterMassSupported": false,
+    "impedanceSupported": false,
+    "weightSupported": false,
+    "heightSupported": false,
+    "massResolutionCode": 0,
+    "heightResolutionCode": 0,
+    "massResolutionKg": null,
+    "massResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "bcf-support-bit-7-body-water-mass",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "80 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "basalMetabolismSupported": false,
+    "musclePercentageSupported": false,
+    "muscleMassSupported": false,
+    "fatFreeMassSupported": false,
+    "softLeanMassSupported": false,
+    "bodyWaterMassSupported": true,
+    "impedanceSupported": false,
+    "weightSupported": false,
+    "heightSupported": false,
+    "massResolutionCode": 0,
+    "heightResolutionCode": 0,
+    "massResolutionKg": null,
+    "massResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "bcf-support-bit-8-impedance",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "00 01 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "basalMetabolismSupported": false,
+    "musclePercentageSupported": false,
+    "muscleMassSupported": false,
+    "fatFreeMassSupported": false,
+    "softLeanMassSupported": false,
+    "bodyWaterMassSupported": false,
+    "impedanceSupported": true,
+    "weightSupported": false,
+    "heightSupported": false,
+    "massResolutionCode": 0,
+    "heightResolutionCode": 0,
+    "massResolutionKg": null,
+    "massResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "bcf-support-bit-9-weight",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "00 02 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "basalMetabolismSupported": false,
+    "musclePercentageSupported": false,
+    "muscleMassSupported": false,
+    "fatFreeMassSupported": false,
+    "softLeanMassSupported": false,
+    "bodyWaterMassSupported": false,
+    "impedanceSupported": false,
+    "weightSupported": true,
+    "heightSupported": false,
+    "massResolutionCode": 0,
+    "heightResolutionCode": 0,
+    "massResolutionKg": null,
+    "massResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "bcf-support-bit-10-height",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "00 04 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "basalMetabolismSupported": false,
+    "musclePercentageSupported": false,
+    "muscleMassSupported": false,
+    "fatFreeMassSupported": false,
+    "softLeanMassSupported": false,
+    "bodyWaterMassSupported": false,
+    "impedanceSupported": false,
+    "weightSupported": false,
+    "heightSupported": true,
+    "massResolutionCode": 0,
+    "heightResolutionCode": 0,
+    "massResolutionKg": null,
+    "massResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "bcf-all-support-bits-max-res",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "FF BF 01 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": true,
+    "multipleUsersSupported": true,
+    "basalMetabolismSupported": true,
+    "musclePercentageSupported": true,
+    "muscleMassSupported": true,
+    "fatFreeMassSupported": true,
+    "softLeanMassSupported": true,
+    "bodyWaterMassSupported": true,
+    "impedanceSupported": true,
+    "weightSupported": true,
+    "heightSupported": true,
+    "massResolutionCode": 7,
+    "heightResolutionCode": 3,
+    "massResolutionKg": "0.005",
+    "massResolutionLb": "0.01",
+    "heightResolutionMeters": "0.001",
+    "heightResolutionInches": "0.1"
+   }
+  },
+  {
+   "name": "bcf-mass-res-code-0",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "00 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "basalMetabolismSupported": false,
+    "musclePercentageSupported": false,
+    "muscleMassSupported": false,
+    "fatFreeMassSupported": false,
+    "softLeanMassSupported": false,
+    "bodyWaterMassSupported": false,
+    "impedanceSupported": false,
+    "weightSupported": false,
+    "heightSupported": false,
+    "massResolutionCode": 0,
+    "heightResolutionCode": 0,
+    "massResolutionKg": null,
+    "massResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "bcf-mass-res-code-1",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "00 08 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "basalMetabolismSupported": false,
+    "musclePercentageSupported": false,
+    "muscleMassSupported": false,
+    "fatFreeMassSupported": false,
+    "softLeanMassSupported": false,
+    "bodyWaterMassSupported": false,
+    "impedanceSupported": false,
+    "weightSupported": false,
+    "heightSupported": false,
+    "massResolutionCode": 1,
+    "heightResolutionCode": 0,
+    "massResolutionKg": "0.5",
+    "massResolutionLb": "1",
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "bcf-mass-res-code-2",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "00 10 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "basalMetabolismSupported": false,
+    "musclePercentageSupported": false,
+    "muscleMassSupported": false,
+    "fatFreeMassSupported": false,
+    "softLeanMassSupported": false,
+    "bodyWaterMassSupported": false,
+    "impedanceSupported": false,
+    "weightSupported": false,
+    "heightSupported": false,
+    "massResolutionCode": 2,
+    "heightResolutionCode": 0,
+    "massResolutionKg": "0.2",
+    "massResolutionLb": "0.5",
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "bcf-mass-res-code-3",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "00 18 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "basalMetabolismSupported": false,
+    "musclePercentageSupported": false,
+    "muscleMassSupported": false,
+    "fatFreeMassSupported": false,
+    "softLeanMassSupported": false,
+    "bodyWaterMassSupported": false,
+    "impedanceSupported": false,
+    "weightSupported": false,
+    "heightSupported": false,
+    "massResolutionCode": 3,
+    "heightResolutionCode": 0,
+    "massResolutionKg": "0.1",
+    "massResolutionLb": "0.2",
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "bcf-mass-res-code-4",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "00 20 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "basalMetabolismSupported": false,
+    "musclePercentageSupported": false,
+    "muscleMassSupported": false,
+    "fatFreeMassSupported": false,
+    "softLeanMassSupported": false,
+    "bodyWaterMassSupported": false,
+    "impedanceSupported": false,
+    "weightSupported": false,
+    "heightSupported": false,
+    "massResolutionCode": 4,
+    "heightResolutionCode": 0,
+    "massResolutionKg": "0.05",
+    "massResolutionLb": "0.1",
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "bcf-mass-res-code-5",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "00 28 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "basalMetabolismSupported": false,
+    "musclePercentageSupported": false,
+    "muscleMassSupported": false,
+    "fatFreeMassSupported": false,
+    "softLeanMassSupported": false,
+    "bodyWaterMassSupported": false,
+    "impedanceSupported": false,
+    "weightSupported": false,
+    "heightSupported": false,
+    "massResolutionCode": 5,
+    "heightResolutionCode": 0,
+    "massResolutionKg": "0.02",
+    "massResolutionLb": "0.05",
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "bcf-mass-res-code-6",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "00 30 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "basalMetabolismSupported": false,
+    "musclePercentageSupported": false,
+    "muscleMassSupported": false,
+    "fatFreeMassSupported": false,
+    "softLeanMassSupported": false,
+    "bodyWaterMassSupported": false,
+    "impedanceSupported": false,
+    "weightSupported": false,
+    "heightSupported": false,
+    "massResolutionCode": 6,
+    "heightResolutionCode": 0,
+    "massResolutionKg": "0.01",
+    "massResolutionLb": "0.02",
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "bcf-mass-res-code-7",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "00 38 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "basalMetabolismSupported": false,
+    "musclePercentageSupported": false,
+    "muscleMassSupported": false,
+    "fatFreeMassSupported": false,
+    "softLeanMassSupported": false,
+    "bodyWaterMassSupported": false,
+    "impedanceSupported": false,
+    "weightSupported": false,
+    "heightSupported": false,
+    "massResolutionCode": 7,
+    "heightResolutionCode": 0,
+    "massResolutionKg": "0.005",
+    "massResolutionLb": "0.01",
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "bcf-height-res-code-0",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "00 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "basalMetabolismSupported": false,
+    "musclePercentageSupported": false,
+    "muscleMassSupported": false,
+    "fatFreeMassSupported": false,
+    "softLeanMassSupported": false,
+    "bodyWaterMassSupported": false,
+    "impedanceSupported": false,
+    "weightSupported": false,
+    "heightSupported": false,
+    "massResolutionCode": 0,
+    "heightResolutionCode": 0,
+    "massResolutionKg": null,
+    "massResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "bcf-height-res-code-1",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "00 80 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "basalMetabolismSupported": false,
+    "musclePercentageSupported": false,
+    "muscleMassSupported": false,
+    "fatFreeMassSupported": false,
+    "softLeanMassSupported": false,
+    "bodyWaterMassSupported": false,
+    "impedanceSupported": false,
+    "weightSupported": false,
+    "heightSupported": false,
+    "massResolutionCode": 0,
+    "heightResolutionCode": 1,
+    "massResolutionKg": null,
+    "massResolutionLb": null,
+    "heightResolutionMeters": "0.01",
+    "heightResolutionInches": "1"
+   }
+  },
+  {
+   "name": "bcf-height-res-code-2",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "00 00 01 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "basalMetabolismSupported": false,
+    "musclePercentageSupported": false,
+    "muscleMassSupported": false,
+    "fatFreeMassSupported": false,
+    "softLeanMassSupported": false,
+    "bodyWaterMassSupported": false,
+    "impedanceSupported": false,
+    "weightSupported": false,
+    "heightSupported": false,
+    "massResolutionCode": 0,
+    "heightResolutionCode": 2,
+    "massResolutionKg": null,
+    "massResolutionLb": null,
+    "heightResolutionMeters": "0.005",
+    "heightResolutionInches": "0.5"
+   }
+  },
+  {
+   "name": "bcf-height-res-code-3",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "00 80 01 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "basalMetabolismSupported": false,
+    "musclePercentageSupported": false,
+    "muscleMassSupported": false,
+    "fatFreeMassSupported": false,
+    "softLeanMassSupported": false,
+    "bodyWaterMassSupported": false,
+    "impedanceSupported": false,
+    "weightSupported": false,
+    "heightSupported": false,
+    "massResolutionCode": 0,
+    "heightResolutionCode": 3,
+    "massResolutionKg": null,
+    "massResolutionLb": null,
+    "heightResolutionMeters": "0.001",
+    "heightResolutionInches": "0.1"
+   }
+  },
+  {
+   "name": "bcf-mass-res-reserved-8",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "00 40 00 00",
+   "reject": false,
+   "warnings": [
+    "ReservedResolutionCode"
+   ],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "basalMetabolismSupported": false,
+    "musclePercentageSupported": false,
+    "muscleMassSupported": false,
+    "fatFreeMassSupported": false,
+    "softLeanMassSupported": false,
+    "bodyWaterMassSupported": false,
+    "impedanceSupported": false,
+    "weightSupported": false,
+    "heightSupported": false,
+    "massResolutionCode": 8,
+    "heightResolutionCode": 0,
+    "massResolutionKg": null,
+    "massResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "bcf-height-res-reserved-7",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "00 80 03 00",
+   "reject": false,
+   "warnings": [
+    "ReservedResolutionCode"
+   ],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "basalMetabolismSupported": false,
+    "musclePercentageSupported": false,
+    "muscleMassSupported": false,
+    "fatFreeMassSupported": false,
+    "softLeanMassSupported": false,
+    "bodyWaterMassSupported": false,
+    "impedanceSupported": false,
+    "weightSupported": false,
+    "heightSupported": false,
+    "massResolutionCode": 0,
+    "heightResolutionCode": 7,
+    "massResolutionKg": null,
+    "massResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "bcf-reserved-bit-18",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "00 00 04 00",
+   "reject": false,
+   "warnings": [
+    "ReservedBitsSet"
+   ],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "basalMetabolismSupported": false,
+    "musclePercentageSupported": false,
+    "muscleMassSupported": false,
+    "fatFreeMassSupported": false,
+    "softLeanMassSupported": false,
+    "bodyWaterMassSupported": false,
+    "impedanceSupported": false,
+    "weightSupported": false,
+    "heightSupported": false,
+    "massResolutionCode": 0,
+    "heightResolutionCode": 0,
+    "massResolutionKg": null,
+    "massResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "bcf-reserved-bit-31",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "00 00 00 80",
+   "reject": false,
+   "warnings": [
+    "ReservedBitsSet"
+   ],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "basalMetabolismSupported": false,
+    "musclePercentageSupported": false,
+    "muscleMassSupported": false,
+    "fatFreeMassSupported": false,
+    "softLeanMassSupported": false,
+    "bodyWaterMassSupported": false,
+    "impedanceSupported": false,
+    "weightSupported": false,
+    "heightSupported": false,
+    "massResolutionCode": 0,
+    "heightResolutionCode": 0,
+    "massResolutionKg": null,
+    "massResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "bcf-trailing-byte",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "FF 07 00 00 00",
+   "reject": false,
+   "warnings": [
+    "TrailingBytes"
+   ],
+   "expect": {
+    "timeStampSupported": true,
+    "multipleUsersSupported": true,
+    "basalMetabolismSupported": true,
+    "musclePercentageSupported": true,
+    "muscleMassSupported": true,
+    "fatFreeMassSupported": true,
+    "softLeanMassSupported": true,
+    "bodyWaterMassSupported": true,
+    "impedanceSupported": true,
+    "weightSupported": true,
+    "heightSupported": true,
+    "massResolutionCode": 0,
+    "heightResolutionCode": 0,
+    "massResolutionKg": null,
+    "massResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "bcf-empty",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "",
+   "reject": true,
+   "errorCode": "TooShort"
+  },
+  {
+   "name": "bcf-3-bytes",
+   "service": "181B",
+   "characteristic": "2A9B",
+   "hex": "FF 07 00",
+   "reject": true,
+   "errorCode": "TooShort"
+  },
+  {
+   "name": "bcm-si-bodyfat-only-18.5pct",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "00 00 B9 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-si-bodyfat-zero",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "00 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "0",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-si-bodyfat-max-valid-0xFFFE",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "00 00 FE FF",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "6553.4",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-si-bodyfat-unsuccessful-0xFFFF",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "00 00 FF FF",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": true,
+    "bodyFatPercent": null,
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-si-unsuccessful-keeps-timestamp-and-user",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "06 00 FF FF EA 07 0A 1A 08 1E 0F 02",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": true,
+    "bodyFatPercent": null,
+    "timestamp": "2026-10-26T08:30:15",
+    "userId": 2,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-si-unsuccessful-optional-flags-ignored",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "F8 0F FF FF",
+   "reject": false,
+   "warnings": [
+    "FieldsIgnoredMeasurementUnsuccessful"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": true,
+    "bodyFatPercent": null,
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-imperial-bodyfat-only",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "01 00 FA 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "25",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-si-only-timestamp",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "02 00 B9 00 EA 07 0A 1A 08 1E 0F",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": "2026-10-26T08:30:15",
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-imperial-only-timestamp",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "03 00 B9 00 EA 07 0A 1A 08 1E 0F",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": "2026-10-26T08:30:15",
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-si-only-user-id",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "04 00 B9 00 05",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": 5,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-imperial-only-user-id",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "05 00 B9 00 05",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": 5,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-si-only-basal-metabolism",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "08 00 B9 00 64 19",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": 6500,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-imperial-only-basal-metabolism",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "09 00 B9 00 64 19",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": 6500,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-si-only-muscle-percentage",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "10 00 B9 00 9C 01",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": "41.2",
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-imperial-only-muscle-percentage",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "11 00 B9 00 9C 01",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": "41.2",
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-si-only-muscle-mass",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "20 00 B9 00 28 23",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": {
+     "raw": 9000,
+     "original": "45",
+     "kilograms": "45"
+    },
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-imperial-only-muscle-mass",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "21 00 B9 00 28 23",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": {
+     "raw": 9000,
+     "original": "90",
+     "kilograms": "40.8233133"
+    },
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-si-only-fat-free-mass",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "40 00 B9 00 F8 2A",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": {
+     "raw": 11000,
+     "original": "55",
+     "kilograms": "55"
+    },
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-imperial-only-fat-free-mass",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "41 00 B9 00 F8 2A",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": {
+     "raw": 11000,
+     "original": "110",
+     "kilograms": "49.8951607"
+    },
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-si-only-soft-lean-mass",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "80 00 B9 00 A0 28",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": {
+     "raw": 10400,
+     "original": "52",
+     "kilograms": "52"
+    },
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-imperial-only-soft-lean-mass",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "81 00 B9 00 A0 28",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": {
+     "raw": 10400,
+     "original": "104",
+     "kilograms": "47.17360648"
+    },
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-si-only-body-water-mass",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "00 01 B9 00 B0 1D",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": {
+     "raw": 7600,
+     "original": "38",
+     "kilograms": "38"
+    },
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-imperial-only-body-water-mass",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "01 01 B9 00 B0 1D",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": {
+     "raw": 7600,
+     "original": "76",
+     "kilograms": "34.47302012"
+    },
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-si-only-impedance",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "00 02 B9 00 03 14",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": "512.3",
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-imperial-only-impedance",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "01 02 B9 00 03 14",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": "512.3",
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-si-only-weight",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "00 04 B9 00 B1 36",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": {
+     "raw": 14001,
+     "original": "70.005",
+     "kilograms": "70.005"
+    },
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-imperial-only-weight",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "01 04 B9 00 B1 36",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": {
+     "raw": 14001,
+     "original": "140.01",
+     "kilograms": "63.5074677237"
+    },
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-si-only-height",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "00 08 B9 00 D6 06",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": {
+     "raw": 1750,
+     "original": "1.75",
+     "meters": "1.75"
+    }
+   }
+  },
+  {
+   "name": "bcm-imperial-only-height",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "01 08 B9 00 D6 06",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": {
+     "raw": 1750,
+     "original": "175",
+     "meters": "4.445"
+    }
+   }
+  },
+  {
+   "name": "bcm-si-all-fields",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F B9 00 EA 07 0A 1A 08 1E 0F 05 64 19 9C 01 28 23 F8 2A A0 28 B0 1D 03 14 B1 36 D6 06",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": "2026-10-26T08:30:15",
+    "userId": 5,
+    "basalMetabolismKj": 6500,
+    "musclePercent": "41.2",
+    "muscleMass": {
+     "raw": 9000,
+     "original": "45",
+     "kilograms": "45"
+    },
+    "fatFreeMass": {
+     "raw": 11000,
+     "original": "55",
+     "kilograms": "55"
+    },
+    "softLeanMass": {
+     "raw": 10400,
+     "original": "52",
+     "kilograms": "52"
+    },
+    "bodyWaterMass": {
+     "raw": 7600,
+     "original": "38",
+     "kilograms": "38"
+    },
+    "impedanceOhm": "512.3",
+    "weight": {
+     "raw": 14001,
+     "original": "70.005",
+     "kilograms": "70.005"
+    },
+    "height": {
+     "raw": 1750,
+     "original": "1.75",
+     "meters": "1.75"
+    }
+   }
+  },
+  {
+   "name": "bcm-imperial-all-fields",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FF 0F FA 00 EA 07 0A 1A 08 1E 0F 05 64 19 9C 01 82 4D BB 5E 90 59 73 41 03 14 91 78 B1 02",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "25",
+    "timestamp": "2026-10-26T08:30:15",
+    "userId": 5,
+    "basalMetabolismKj": 6500,
+    "musclePercent": "41.2",
+    "muscleMass": {
+     "raw": 19842,
+     "original": "198.42",
+     "kilograms": "90.0017980554"
+    },
+    "fatFreeMass": {
+     "raw": 24251,
+     "original": "242.51",
+     "kilograms": "110.0006856487"
+    },
+    "softLeanMass": {
+     "raw": 22928,
+     "original": "229.28",
+     "kilograms": "103.9996585936"
+    },
+    "bodyWaterMass": {
+     "raw": 16755,
+     "original": "167.55",
+     "kilograms": "75.9994015935"
+    },
+    "impedanceOhm": "512.3",
+    "weight": {
+     "raw": 30865,
+     "original": "308.65",
+     "kilograms": "140.0012850005"
+    },
+    "height": {
+     "raw": 689,
+     "original": "68.9",
+     "meters": "1.75006"
+    }
+   }
+  },
+  {
+   "name": "bcm-si-all-fields-zeros",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F 00 00 EA 07 0A 1A 08 1E 0F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "0",
+    "timestamp": "2026-10-26T08:30:15",
+    "userId": 0,
+    "basalMetabolismKj": 0,
+    "musclePercent": "0",
+    "muscleMass": {
+     "raw": 0,
+     "original": "0",
+     "kilograms": "0"
+    },
+    "fatFreeMass": {
+     "raw": 0,
+     "original": "0",
+     "kilograms": "0"
+    },
+    "softLeanMass": {
+     "raw": 0,
+     "original": "0",
+     "kilograms": "0"
+    },
+    "bodyWaterMass": {
+     "raw": 0,
+     "original": "0",
+     "kilograms": "0"
+    },
+    "impedanceOhm": "0",
+    "weight": {
+     "raw": 0,
+     "original": "0",
+     "kilograms": "0"
+    },
+    "height": {
+     "raw": 0,
+     "original": "0",
+     "meters": "0"
+    }
+   }
+  },
+  {
+   "name": "bcm-si-all-fields-max-0xFFFE",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F FE FF EA 07 0A 1A 08 1E 0F FE FE FF FE FF FE FF FE FF FE FF FE FF FE FF FE FF FE FF",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "6553.4",
+    "timestamp": "2026-10-26T08:30:15",
+    "userId": 254,
+    "basalMetabolismKj": 65534,
+    "musclePercent": "6553.4",
+    "muscleMass": {
+     "raw": 65534,
+     "original": "327.67",
+     "kilograms": "327.67"
+    },
+    "fatFreeMass": {
+     "raw": 65534,
+     "original": "327.67",
+     "kilograms": "327.67"
+    },
+    "softLeanMass": {
+     "raw": 65534,
+     "original": "327.67",
+     "kilograms": "327.67"
+    },
+    "bodyWaterMass": {
+     "raw": 65534,
+     "original": "327.67",
+     "kilograms": "327.67"
+    },
+    "impedanceOhm": "6553.4",
+    "weight": {
+     "raw": 65534,
+     "original": "327.67",
+     "kilograms": "327.67"
+    },
+    "height": {
+     "raw": 65534,
+     "original": "65.534",
+     "meters": "65.534"
+    }
+   }
+  },
+  {
+   "name": "bcm-si-weight-and-height-only",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "00 0C B9 00 B1 36 D6 06",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": {
+     "raw": 14001,
+     "original": "70.005",
+     "kilograms": "70.005"
+    },
+    "height": {
+     "raw": 1750,
+     "original": "1.75",
+     "meters": "1.75"
+    }
+   }
+  },
+  {
+   "name": "bcm-si-masses-only",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "E0 01 B9 00 28 23 F8 2A A0 28 B0 1D",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": {
+     "raw": 9000,
+     "original": "45",
+     "kilograms": "45"
+    },
+    "fatFreeMass": {
+     "raw": 11000,
+     "original": "55",
+     "kilograms": "55"
+    },
+    "softLeanMass": {
+     "raw": 10400,
+     "original": "52",
+     "kilograms": "52"
+    },
+    "bodyWaterMass": {
+     "raw": 7600,
+     "original": "38",
+     "kilograms": "38"
+    },
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-si-basal-muscle-impedance",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "18 02 B9 00 64 19 9C 01 03 14",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": 6500,
+    "musclePercent": "41.2",
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": "512.3",
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-si-optional-basal-0xFFFF-unknown",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "08 00 B9 00 FF FF",
+   "reject": false,
+   "warnings": [
+    "OptionalFieldMarkedUnknown"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-si-optional-musclePct-0xFFFF-unknown",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "10 00 B9 00 FF FF",
+   "reject": false,
+   "warnings": [
+    "OptionalFieldMarkedUnknown"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-si-optional-muscleMass-0xFFFF-unknown",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "20 00 B9 00 FF FF",
+   "reject": false,
+   "warnings": [
+    "OptionalFieldMarkedUnknown"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-si-optional-fatFree-0xFFFF-unknown",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "40 00 B9 00 FF FF",
+   "reject": false,
+   "warnings": [
+    "OptionalFieldMarkedUnknown"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-si-optional-softLean-0xFFFF-unknown",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "80 00 B9 00 FF FF",
+   "reject": false,
+   "warnings": [
+    "OptionalFieldMarkedUnknown"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-si-optional-bodyWater-0xFFFF-unknown",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "00 01 B9 00 FF FF",
+   "reject": false,
+   "warnings": [
+    "OptionalFieldMarkedUnknown"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-si-optional-impedance-0xFFFF-unknown",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "00 02 B9 00 FF FF",
+   "reject": false,
+   "warnings": [
+    "OptionalFieldMarkedUnknown"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-si-optional-weight-0xFFFF-unknown",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "00 04 B9 00 FF FF",
+   "reject": false,
+   "warnings": [
+    "OptionalFieldMarkedUnknown"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-si-optional-height-0xFFFF-unknown",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "00 08 B9 00 FF FF",
+   "reject": false,
+   "warnings": [
+    "OptionalFieldMarkedUnknown"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-user-id-0",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "04 00 B9 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": 0,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-user-id-1",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "04 00 B9 00 01",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": 1,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-user-id-254",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "04 00 B9 00 FE",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": 254,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-user-id-255",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "04 00 B9 00 FF",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-timestamp-invalid-year-0",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "02 00 B9 00 00 00 01 01 00 00 00",
+   "reject": false,
+   "warnings": [
+    "InvalidTimestamp"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-timestamp-invalid-month-13",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "02 00 B9 00 EA 07 0D 01 00 00 00",
+   "reject": false,
+   "warnings": [
+    "InvalidTimestamp"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-timestamp-invalid-day-0",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "02 00 B9 00 EA 07 01 00 00 00 00",
+   "reject": false,
+   "warnings": [
+    "InvalidTimestamp"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-timestamp-invalid-feb-30",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "02 00 B9 00 EA 07 02 1E 00 00 00",
+   "reject": false,
+   "warnings": [
+    "InvalidTimestamp"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-timestamp-invalid-hour-24",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "02 00 B9 00 EA 07 01 01 18 00 00",
+   "reject": false,
+   "warnings": [
+    "InvalidTimestamp"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-timestamp-invalid-minute-60",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "02 00 B9 00 EA 07 01 01 00 3C 00",
+   "reject": false,
+   "warnings": [
+    "InvalidTimestamp"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-timestamp-invalid-second-60",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "02 00 B9 00 EA 07 01 01 00 00 3C",
+   "reject": false,
+   "warnings": [
+    "InvalidTimestamp"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-timestamp-valid-feb-29-leap-2028",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "02 00 B9 00 EC 07 02 1D 0C 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": "2028-02-29T12:00:00",
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-timestamp-valid-year-9999-max",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "02 00 B9 00 0F 27 0C 1F 17 3B 3B",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": "9999-12-31T23:59:59",
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-timestamp-valid-year-1582-min",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "02 00 B9 00 2E 06 01 01 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": "1582-01-01T00:00:00",
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-reserved-flag-bit-13",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "00 20 B9 00",
+   "reject": false,
+   "warnings": [
+    "ReservedBitsSet"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-reserved-flag-bits-13-15",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "00 E0 B9 00",
+   "reject": false,
+   "warnings": [
+    "ReservedBitsSet"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-trailing-byte",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "00 00 B9 00 AA",
+   "reject": false,
+   "warnings": [
+    "TrailingBytes"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "bodyFatPercent": "18.5",
+    "timestamp": null,
+    "userId": null,
+    "basalMetabolismKj": null,
+    "musclePercent": null,
+    "muscleMass": null,
+    "fatFreeMass": null,
+    "softLeanMass": null,
+    "bodyWaterMass": null,
+    "impedanceOhm": null,
+    "weight": null,
+    "height": null
+   }
+  },
+  {
+   "name": "bcm-multiple-packet-first",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "06 14 B9 00 EA 07 0A 1A 08 1E 0F 01 B1 36",
+   "reject": true,
+   "errorCode": "MultiPacketNotSupported"
+  },
+  {
+   "name": "bcm-multiple-packet-continuation",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "00 11 B9 00 B0 1D",
+   "reject": true,
+   "errorCode": "MultiPacketNotSupported"
+  },
+  {
+   "name": "bcm-multiple-packet-flag-only-2-bytes",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "00 10",
+   "reject": true,
+   "errorCode": "MultiPacketNotSupported"
+  },
+  {
+   "name": "bcm-empty",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "",
+   "reject": true,
+   "errorCode": "TooShort"
+  },
+  {
+   "name": "bcm-1-byte",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "00",
+   "reject": true,
+   "errorCode": "TooShort"
+  },
+  {
+   "name": "bcm-flags-only-2-bytes",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "00 00",
+   "reject": true,
+   "errorCode": "TooShort"
+  },
+  {
+   "name": "bcm-3-bytes",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "00 00 B9",
+   "reject": true,
+   "errorCode": "TooShort"
+  },
+  {
+   "name": "bcm-truncated-all-fields-prefix-4-of-30",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F B9 00",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "bcm-truncated-all-fields-prefix-5-of-30",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F B9 00 EA",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "bcm-truncated-all-fields-prefix-6-of-30",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F B9 00 EA 07",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "bcm-truncated-all-fields-prefix-7-of-30",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F B9 00 EA 07 0A",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "bcm-truncated-all-fields-prefix-8-of-30",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F B9 00 EA 07 0A 1A",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "bcm-truncated-all-fields-prefix-9-of-30",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F B9 00 EA 07 0A 1A 08",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "bcm-truncated-all-fields-prefix-10-of-30",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F B9 00 EA 07 0A 1A 08 1E",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "bcm-truncated-all-fields-prefix-11-of-30",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F B9 00 EA 07 0A 1A 08 1E 0F",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "bcm-truncated-all-fields-prefix-12-of-30",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F B9 00 EA 07 0A 1A 08 1E 0F 05",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "bcm-truncated-all-fields-prefix-13-of-30",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F B9 00 EA 07 0A 1A 08 1E 0F 05 64",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "bcm-truncated-all-fields-prefix-14-of-30",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F B9 00 EA 07 0A 1A 08 1E 0F 05 64 19",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "bcm-truncated-all-fields-prefix-15-of-30",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F B9 00 EA 07 0A 1A 08 1E 0F 05 64 19 9C",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "bcm-truncated-all-fields-prefix-16-of-30",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F B9 00 EA 07 0A 1A 08 1E 0F 05 64 19 9C 01",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "bcm-truncated-all-fields-prefix-17-of-30",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F B9 00 EA 07 0A 1A 08 1E 0F 05 64 19 9C 01 28",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "bcm-truncated-all-fields-prefix-18-of-30",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F B9 00 EA 07 0A 1A 08 1E 0F 05 64 19 9C 01 28 23",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "bcm-truncated-all-fields-prefix-19-of-30",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F B9 00 EA 07 0A 1A 08 1E 0F 05 64 19 9C 01 28 23 F8",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "bcm-truncated-all-fields-prefix-20-of-30",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F B9 00 EA 07 0A 1A 08 1E 0F 05 64 19 9C 01 28 23 F8 2A",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "bcm-truncated-all-fields-prefix-21-of-30",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F B9 00 EA 07 0A 1A 08 1E 0F 05 64 19 9C 01 28 23 F8 2A A0",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "bcm-truncated-all-fields-prefix-22-of-30",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F B9 00 EA 07 0A 1A 08 1E 0F 05 64 19 9C 01 28 23 F8 2A A0 28",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "bcm-truncated-all-fields-prefix-23-of-30",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F B9 00 EA 07 0A 1A 08 1E 0F 05 64 19 9C 01 28 23 F8 2A A0 28 B0",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "bcm-truncated-all-fields-prefix-24-of-30",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F B9 00 EA 07 0A 1A 08 1E 0F 05 64 19 9C 01 28 23 F8 2A A0 28 B0 1D",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "bcm-truncated-all-fields-prefix-25-of-30",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F B9 00 EA 07 0A 1A 08 1E 0F 05 64 19 9C 01 28 23 F8 2A A0 28 B0 1D 03",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "bcm-truncated-all-fields-prefix-26-of-30",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F B9 00 EA 07 0A 1A 08 1E 0F 05 64 19 9C 01 28 23 F8 2A A0 28 B0 1D 03 14",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "bcm-truncated-all-fields-prefix-27-of-30",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F B9 00 EA 07 0A 1A 08 1E 0F 05 64 19 9C 01 28 23 F8 2A A0 28 B0 1D 03 14 B1",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "bcm-truncated-all-fields-prefix-28-of-30",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F B9 00 EA 07 0A 1A 08 1E 0F 05 64 19 9C 01 28 23 F8 2A A0 28 B0 1D 03 14 B1 36",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "bcm-truncated-all-fields-prefix-29-of-30",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "FE 0F B9 00 EA 07 0A 1A 08 1E 0F 05 64 19 9C 01 28 23 F8 2A A0 28 B0 1D 03 14 B1 36 D6",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "bcm-truncated-timestamp-6-of-7",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "02 00 B9 00 EA 07 0A 1A 08 1E",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "bcm-truncated-user-id-missing",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "04 00 B9 00",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "bcm-truncated-weight-half",
+   "service": "181B",
+   "characteristic": "2A9C",
+   "hex": "00 04 B9 00 B1",
+   "reject": true,
+   "errorCode": "Truncated"
+  }
+ ]
+}

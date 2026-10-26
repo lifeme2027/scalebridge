@@ -1,0 +1,1985 @@
+{
+ "format": "scalebridge-vectors/1",
+ "suite": "weight-scale",
+ "description": "Weight Scale Service (0x181D): Weight Scale Feature 0x2A9E and Weight Measurement 0x2A9D. Hand-built byte vectors, expected values computed independently with Python Decimal. Not captured from real hardware.",
+ "vectors": [
+  {
+   "name": "wsf-zero",
+   "service": "181D",
+   "characteristic": "2A9E",
+   "hex": "00 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "bmiSupported": false,
+    "weightResolutionCode": 0,
+    "heightResolutionCode": 0,
+    "weightResolutionKg": null,
+    "weightResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "wsf-timestamp-only",
+   "service": "181D",
+   "characteristic": "2A9E",
+   "hex": "01 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": true,
+    "multipleUsersSupported": false,
+    "bmiSupported": false,
+    "weightResolutionCode": 0,
+    "heightResolutionCode": 0,
+    "weightResolutionKg": null,
+    "weightResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "wsf-multiuser-only",
+   "service": "181D",
+   "characteristic": "2A9E",
+   "hex": "02 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": true,
+    "bmiSupported": false,
+    "weightResolutionCode": 0,
+    "heightResolutionCode": 0,
+    "weightResolutionKg": null,
+    "weightResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "wsf-bmi-only",
+   "service": "181D",
+   "characteristic": "2A9E",
+   "hex": "04 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "bmiSupported": true,
+    "weightResolutionCode": 0,
+    "heightResolutionCode": 0,
+    "weightResolutionKg": null,
+    "weightResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "wsf-all-support-bits-max-res",
+   "service": "181D",
+   "characteristic": "2A9E",
+   "hex": "BF 01 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": true,
+    "multipleUsersSupported": true,
+    "bmiSupported": true,
+    "weightResolutionCode": 7,
+    "heightResolutionCode": 3,
+    "weightResolutionKg": "0.005",
+    "weightResolutionLb": "0.01",
+    "heightResolutionMeters": "0.001",
+    "heightResolutionInches": "0.1"
+   }
+  },
+  {
+   "name": "wsf-weight-res-code-0",
+   "service": "181D",
+   "characteristic": "2A9E",
+   "hex": "00 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "bmiSupported": false,
+    "weightResolutionCode": 0,
+    "heightResolutionCode": 0,
+    "weightResolutionKg": null,
+    "weightResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "wsf-weight-res-code-1",
+   "service": "181D",
+   "characteristic": "2A9E",
+   "hex": "08 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "bmiSupported": false,
+    "weightResolutionCode": 1,
+    "heightResolutionCode": 0,
+    "weightResolutionKg": "0.5",
+    "weightResolutionLb": "1",
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "wsf-weight-res-code-2",
+   "service": "181D",
+   "characteristic": "2A9E",
+   "hex": "10 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "bmiSupported": false,
+    "weightResolutionCode": 2,
+    "heightResolutionCode": 0,
+    "weightResolutionKg": "0.2",
+    "weightResolutionLb": "0.5",
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "wsf-weight-res-code-3",
+   "service": "181D",
+   "characteristic": "2A9E",
+   "hex": "18 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "bmiSupported": false,
+    "weightResolutionCode": 3,
+    "heightResolutionCode": 0,
+    "weightResolutionKg": "0.1",
+    "weightResolutionLb": "0.2",
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "wsf-weight-res-code-4",
+   "service": "181D",
+   "characteristic": "2A9E",
+   "hex": "20 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "bmiSupported": false,
+    "weightResolutionCode": 4,
+    "heightResolutionCode": 0,
+    "weightResolutionKg": "0.05",
+    "weightResolutionLb": "0.1",
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "wsf-weight-res-code-5",
+   "service": "181D",
+   "characteristic": "2A9E",
+   "hex": "28 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "bmiSupported": false,
+    "weightResolutionCode": 5,
+    "heightResolutionCode": 0,
+    "weightResolutionKg": "0.02",
+    "weightResolutionLb": "0.05",
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "wsf-weight-res-code-6",
+   "service": "181D",
+   "characteristic": "2A9E",
+   "hex": "30 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "bmiSupported": false,
+    "weightResolutionCode": 6,
+    "heightResolutionCode": 0,
+    "weightResolutionKg": "0.01",
+    "weightResolutionLb": "0.02",
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "wsf-weight-res-code-7",
+   "service": "181D",
+   "characteristic": "2A9E",
+   "hex": "38 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "bmiSupported": false,
+    "weightResolutionCode": 7,
+    "heightResolutionCode": 0,
+    "weightResolutionKg": "0.005",
+    "weightResolutionLb": "0.01",
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "wsf-height-res-code-0",
+   "service": "181D",
+   "characteristic": "2A9E",
+   "hex": "00 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "bmiSupported": false,
+    "weightResolutionCode": 0,
+    "heightResolutionCode": 0,
+    "weightResolutionKg": null,
+    "weightResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "wsf-height-res-code-1",
+   "service": "181D",
+   "characteristic": "2A9E",
+   "hex": "80 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "bmiSupported": false,
+    "weightResolutionCode": 0,
+    "heightResolutionCode": 1,
+    "weightResolutionKg": null,
+    "weightResolutionLb": null,
+    "heightResolutionMeters": "0.01",
+    "heightResolutionInches": "1"
+   }
+  },
+  {
+   "name": "wsf-height-res-code-2",
+   "service": "181D",
+   "characteristic": "2A9E",
+   "hex": "00 01 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "bmiSupported": false,
+    "weightResolutionCode": 0,
+    "heightResolutionCode": 2,
+    "weightResolutionKg": null,
+    "weightResolutionLb": null,
+    "heightResolutionMeters": "0.005",
+    "heightResolutionInches": "0.5"
+   }
+  },
+  {
+   "name": "wsf-height-res-code-3",
+   "service": "181D",
+   "characteristic": "2A9E",
+   "hex": "80 01 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "bmiSupported": false,
+    "weightResolutionCode": 0,
+    "heightResolutionCode": 3,
+    "weightResolutionKg": null,
+    "weightResolutionLb": null,
+    "heightResolutionMeters": "0.001",
+    "heightResolutionInches": "0.1"
+   }
+  },
+  {
+   "name": "wsf-weight-res-reserved-8",
+   "service": "181D",
+   "characteristic": "2A9E",
+   "hex": "40 00 00 00",
+   "reject": false,
+   "warnings": [
+    "ReservedResolutionCode"
+   ],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "bmiSupported": false,
+    "weightResolutionCode": 8,
+    "heightResolutionCode": 0,
+    "weightResolutionKg": null,
+    "weightResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "wsf-weight-res-reserved-15",
+   "service": "181D",
+   "characteristic": "2A9E",
+   "hex": "78 00 00 00",
+   "reject": false,
+   "warnings": [
+    "ReservedResolutionCode"
+   ],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "bmiSupported": false,
+    "weightResolutionCode": 15,
+    "heightResolutionCode": 0,
+    "weightResolutionKg": null,
+    "weightResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "wsf-height-res-reserved-4",
+   "service": "181D",
+   "characteristic": "2A9E",
+   "hex": "00 02 00 00",
+   "reject": false,
+   "warnings": [
+    "ReservedResolutionCode"
+   ],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "bmiSupported": false,
+    "weightResolutionCode": 0,
+    "heightResolutionCode": 4,
+    "weightResolutionKg": null,
+    "weightResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "wsf-reserved-bit-10",
+   "service": "181D",
+   "characteristic": "2A9E",
+   "hex": "00 04 00 00",
+   "reject": false,
+   "warnings": [
+    "ReservedBitsSet"
+   ],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "bmiSupported": false,
+    "weightResolutionCode": 0,
+    "heightResolutionCode": 0,
+    "weightResolutionKg": null,
+    "weightResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "wsf-reserved-bit-31",
+   "service": "181D",
+   "characteristic": "2A9E",
+   "hex": "00 00 00 80",
+   "reject": false,
+   "warnings": [
+    "ReservedBitsSet"
+   ],
+   "expect": {
+    "timeStampSupported": false,
+    "multipleUsersSupported": false,
+    "bmiSupported": false,
+    "weightResolutionCode": 0,
+    "heightResolutionCode": 0,
+    "weightResolutionKg": null,
+    "weightResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "wsf-trailing-byte",
+   "service": "181D",
+   "characteristic": "2A9E",
+   "hex": "07 00 00 00 00",
+   "reject": false,
+   "warnings": [
+    "TrailingBytes"
+   ],
+   "expect": {
+    "timeStampSupported": true,
+    "multipleUsersSupported": true,
+    "bmiSupported": true,
+    "weightResolutionCode": 0,
+    "heightResolutionCode": 0,
+    "weightResolutionKg": null,
+    "weightResolutionLb": null,
+    "heightResolutionMeters": null,
+    "heightResolutionInches": null
+   }
+  },
+  {
+   "name": "wsf-empty",
+   "service": "181D",
+   "characteristic": "2A9E",
+   "hex": "",
+   "reject": true,
+   "errorCode": "TooShort"
+  },
+  {
+   "name": "wsf-3-bytes",
+   "service": "181D",
+   "characteristic": "2A9E",
+   "hex": "07 00 00",
+   "reject": true,
+   "errorCode": "TooShort"
+  },
+  {
+   "name": "wsm-si-70.005kg",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "00 B1 36",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14001,
+     "original": "70.005",
+     "kilograms": "70.005"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-si-zero",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 0,
+     "original": "0",
+     "kilograms": "0"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-si-one-lsb-0.005kg",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "00 01 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 1,
+     "original": "0.005",
+     "kilograms": "0.005"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-si-max-valid-0xFFFE-327.67kg",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "00 FE FF",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 65534,
+     "original": "327.67",
+     "kilograms": "327.67"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-si-unsuccessful-0xFFFF",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "00 FF FF",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": true,
+    "weight": null,
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-si-unsuccessful-keeps-timestamp-and-user",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "06 FF FF EA 07 0A 1A 08 1E 0F 03",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": true,
+    "weight": null,
+    "timestamp": "2026-10-26T08:30:15",
+    "userId": 3,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-si-unsuccessful-with-bmi-flag-ignored",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "08 FF FF",
+   "reject": false,
+   "warnings": [
+    "FieldsIgnoredMeasurementUnsuccessful"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": true,
+    "weight": null,
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-imperial-154.32lb",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "01 48 3C",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 15432,
+     "original": "154.32",
+     "kilograms": "69.9983745384"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-imperial-zero",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "01 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 0,
+     "original": "0",
+     "kilograms": "0"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-imperial-one-lsb-0.01lb",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "01 01 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 1,
+     "original": "0.01",
+     "kilograms": "0.0045359237"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-imperial-max-valid-0xFFFE-655.34lb",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "01 FE FF",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 65534,
+     "original": "655.34",
+     "kilograms": "297.2572237558"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-imperial-unsuccessful-0xFFFF",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "01 FF FF",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": true,
+    "weight": null,
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-imperial-precision-22046lb",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "01 1E 56",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 22046,
+     "original": "220.46",
+     "kilograms": "99.9989738902"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-flags-0x00-combo",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "00 98 3A",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 15000,
+     "original": "75",
+     "kilograms": "75"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-flags-0x01-combo",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "01 99 3A",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 15001,
+     "original": "150.01",
+     "kilograms": "68.0433914237"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-flags-0x02-combo",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "02 9A 3A EA 07 01 02 03 04 05",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 15002,
+     "original": "75.01",
+     "kilograms": "75.01"
+    },
+    "timestamp": "2026-01-02T03:04:05",
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-flags-0x03-combo",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "03 9B 3A EA 07 01 02 03 04 05",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 15003,
+     "original": "150.03",
+     "kilograms": "68.0524632711"
+    },
+    "timestamp": "2026-01-02T03:04:05",
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-flags-0x04-combo",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "04 9C 3A 07",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 15004,
+     "original": "75.02",
+     "kilograms": "75.02"
+    },
+    "timestamp": null,
+    "userId": 7,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-flags-0x05-combo",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "05 9D 3A 07",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 15005,
+     "original": "150.05",
+     "kilograms": "68.0615351185"
+    },
+    "timestamp": null,
+    "userId": 7,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-flags-0x06-combo",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "06 9E 3A EA 07 01 02 03 04 05 07",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 15006,
+     "original": "75.03",
+     "kilograms": "75.03"
+    },
+    "timestamp": "2026-01-02T03:04:05",
+    "userId": 7,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-flags-0x07-combo",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "07 9F 3A EA 07 01 02 03 04 05 07",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 15007,
+     "original": "150.07",
+     "kilograms": "68.0706069659"
+    },
+    "timestamp": "2026-01-02T03:04:05",
+    "userId": 7,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-flags-0x08-combo",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "08 A0 3A DF 00 C7 06",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 15008,
+     "original": "75.04",
+     "kilograms": "75.04"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": "22.3",
+    "height": {
+     "raw": 1735,
+     "original": "1.735",
+     "meters": "1.735"
+    }
+   }
+  },
+  {
+   "name": "wsm-flags-0x09-combo",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "09 A1 3A DF 00 AB 02",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 15009,
+     "original": "150.09",
+     "kilograms": "68.0796788133"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": "22.3",
+    "height": {
+     "raw": 683,
+     "original": "68.3",
+     "meters": "1.73482"
+    }
+   }
+  },
+  {
+   "name": "wsm-flags-0x0A-combo",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "0A A2 3A EA 07 01 02 03 04 05 DF 00 C7 06",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 15010,
+     "original": "75.05",
+     "kilograms": "75.05"
+    },
+    "timestamp": "2026-01-02T03:04:05",
+    "userId": null,
+    "bmi": "22.3",
+    "height": {
+     "raw": 1735,
+     "original": "1.735",
+     "meters": "1.735"
+    }
+   }
+  },
+  {
+   "name": "wsm-flags-0x0B-combo",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "0B A3 3A EA 07 01 02 03 04 05 DF 00 AB 02",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 15011,
+     "original": "150.11",
+     "kilograms": "68.0887506607"
+    },
+    "timestamp": "2026-01-02T03:04:05",
+    "userId": null,
+    "bmi": "22.3",
+    "height": {
+     "raw": 683,
+     "original": "68.3",
+     "meters": "1.73482"
+    }
+   }
+  },
+  {
+   "name": "wsm-flags-0x0C-combo",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "0C A4 3A 07 DF 00 C7 06",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 15012,
+     "original": "75.06",
+     "kilograms": "75.06"
+    },
+    "timestamp": null,
+    "userId": 7,
+    "bmi": "22.3",
+    "height": {
+     "raw": 1735,
+     "original": "1.735",
+     "meters": "1.735"
+    }
+   }
+  },
+  {
+   "name": "wsm-flags-0x0D-combo",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "0D A5 3A 07 DF 00 AB 02",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 15013,
+     "original": "150.13",
+     "kilograms": "68.0978225081"
+    },
+    "timestamp": null,
+    "userId": 7,
+    "bmi": "22.3",
+    "height": {
+     "raw": 683,
+     "original": "68.3",
+     "meters": "1.73482"
+    }
+   }
+  },
+  {
+   "name": "wsm-flags-0x0E-combo",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "0E A6 3A EA 07 01 02 03 04 05 07 DF 00 C7 06",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 15014,
+     "original": "75.07",
+     "kilograms": "75.07"
+    },
+    "timestamp": "2026-01-02T03:04:05",
+    "userId": 7,
+    "bmi": "22.3",
+    "height": {
+     "raw": 1735,
+     "original": "1.735",
+     "meters": "1.735"
+    }
+   }
+  },
+  {
+   "name": "wsm-flags-0x0F-combo",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "0F A7 3A EA 07 01 02 03 04 05 07 DF 00 AB 02",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 15015,
+     "original": "150.15",
+     "kilograms": "68.1068943555"
+    },
+    "timestamp": "2026-01-02T03:04:05",
+    "userId": 7,
+    "bmi": "22.3",
+    "height": {
+     "raw": 683,
+     "original": "68.3",
+     "meters": "1.73482"
+    }
+   }
+  },
+  {
+   "name": "wsm-timestamp-invalid-year-0",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "02 B0 36 00 00 01 01 00 00 00",
+   "reject": false,
+   "warnings": [
+    "InvalidTimestamp"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14000,
+     "original": "70",
+     "kilograms": "70"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-timestamp-invalid-year-1581",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "02 B0 36 2D 06 01 01 00 00 00",
+   "reject": false,
+   "warnings": [
+    "InvalidTimestamp"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14000,
+     "original": "70",
+     "kilograms": "70"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-timestamp-invalid-month-0",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "02 B0 36 EA 07 00 01 00 00 00",
+   "reject": false,
+   "warnings": [
+    "InvalidTimestamp"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14000,
+     "original": "70",
+     "kilograms": "70"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-timestamp-invalid-month-13",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "02 B0 36 EA 07 0D 01 00 00 00",
+   "reject": false,
+   "warnings": [
+    "InvalidTimestamp"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14000,
+     "original": "70",
+     "kilograms": "70"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-timestamp-invalid-day-0",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "02 B0 36 EA 07 01 00 00 00 00",
+   "reject": false,
+   "warnings": [
+    "InvalidTimestamp"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14000,
+     "original": "70",
+     "kilograms": "70"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-timestamp-invalid-day-32",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "02 B0 36 EA 07 01 20 00 00 00",
+   "reject": false,
+   "warnings": [
+    "InvalidTimestamp"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14000,
+     "original": "70",
+     "kilograms": "70"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-timestamp-invalid-feb-30",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "02 B0 36 EA 07 02 1E 00 00 00",
+   "reject": false,
+   "warnings": [
+    "InvalidTimestamp"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14000,
+     "original": "70",
+     "kilograms": "70"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-timestamp-invalid-feb-29-non-leap-2027",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "02 B0 36 EB 07 02 1D 00 00 00",
+   "reject": false,
+   "warnings": [
+    "InvalidTimestamp"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14000,
+     "original": "70",
+     "kilograms": "70"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-timestamp-invalid-hour-24",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "02 B0 36 EA 07 01 01 18 00 00",
+   "reject": false,
+   "warnings": [
+    "InvalidTimestamp"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14000,
+     "original": "70",
+     "kilograms": "70"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-timestamp-invalid-minute-60",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "02 B0 36 EA 07 01 01 00 3C 00",
+   "reject": false,
+   "warnings": [
+    "InvalidTimestamp"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14000,
+     "original": "70",
+     "kilograms": "70"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-timestamp-invalid-second-60",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "02 B0 36 EA 07 01 01 00 00 3C",
+   "reject": false,
+   "warnings": [
+    "InvalidTimestamp"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14000,
+     "original": "70",
+     "kilograms": "70"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-timestamp-invalid-apr-31",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "02 B0 36 EA 07 04 1F 00 00 00",
+   "reject": false,
+   "warnings": [
+    "InvalidTimestamp"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14000,
+     "original": "70",
+     "kilograms": "70"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-timestamp-invalid-year-65535",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "02 B0 36 FF FF 01 01 00 00 00",
+   "reject": false,
+   "warnings": [
+    "InvalidTimestamp"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14000,
+     "original": "70",
+     "kilograms": "70"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-timestamp-valid-feb-29-leap-2028",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "02 B0 36 EC 07 02 1D 0C 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14000,
+     "original": "70",
+     "kilograms": "70"
+    },
+    "timestamp": "2028-02-29T12:00:00",
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-timestamp-valid-year-1582-min",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "02 B0 36 2E 06 01 01 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14000,
+     "original": "70",
+     "kilograms": "70"
+    },
+    "timestamp": "1582-01-01T00:00:00",
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-timestamp-valid-year-9999-max",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "02 B0 36 0F 27 0C 1F 17 3B 3B",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14000,
+     "original": "70",
+     "kilograms": "70"
+    },
+    "timestamp": "9999-12-31T23:59:59",
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-timestamp-valid-midnight",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "02 B0 36 EA 07 0A 1A 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14000,
+     "original": "70",
+     "kilograms": "70"
+    },
+    "timestamp": "2026-10-26T00:00:00",
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-timestamp-valid-century-leap-2000",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "02 B0 36 D0 07 02 1D 01 02 03",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14000,
+     "original": "70",
+     "kilograms": "70"
+    },
+    "timestamp": "2000-02-29T01:02:03",
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-user-id-0",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "04 B0 36 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14000,
+     "original": "70",
+     "kilograms": "70"
+    },
+    "timestamp": null,
+    "userId": 0,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-user-id-1",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "04 B0 36 01",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14000,
+     "original": "70",
+     "kilograms": "70"
+    },
+    "timestamp": null,
+    "userId": 1,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-user-id-254",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "04 B0 36 FE",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14000,
+     "original": "70",
+     "kilograms": "70"
+    },
+    "timestamp": null,
+    "userId": 254,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-user-id-255",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "04 B0 36 FF",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14000,
+     "original": "70",
+     "kilograms": "70"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-si-bmi-22.5-height-1.750m",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "08 B1 36 E1 00 D6 06",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14001,
+     "original": "70.005",
+     "kilograms": "70.005"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": "22.5",
+    "height": {
+     "raw": 1750,
+     "original": "1.75",
+     "meters": "1.75"
+    }
+   }
+  },
+  {
+   "name": "wsm-si-bmi-0-height-0",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "08 B1 36 00 00 00 00",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14001,
+     "original": "70.005",
+     "kilograms": "70.005"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": "0",
+    "height": {
+     "raw": 0,
+     "original": "0",
+     "meters": "0"
+    }
+   }
+  },
+  {
+   "name": "wsm-imperial-bmi-height-68.9in",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "09 48 3C E1 00 B1 02",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 15432,
+     "original": "154.32",
+     "kilograms": "69.9983745384"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": "22.5",
+    "height": {
+     "raw": 689,
+     "original": "68.9",
+     "meters": "1.75006"
+    }
+   }
+  },
+  {
+   "name": "wsm-si-bmi-unknown-0xFFFF",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "08 B1 36 FF FF D6 06",
+   "reject": false,
+   "warnings": [
+    "OptionalFieldMarkedUnknown"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14001,
+     "original": "70.005",
+     "kilograms": "70.005"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": {
+     "raw": 1750,
+     "original": "1.75",
+     "meters": "1.75"
+    }
+   }
+  },
+  {
+   "name": "wsm-si-height-unknown-0xFFFF",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "08 B1 36 E1 00 FF FF",
+   "reject": false,
+   "warnings": [
+    "OptionalFieldMarkedUnknown"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14001,
+     "original": "70.005",
+     "kilograms": "70.005"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": "22.5",
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-imperial-height-max-0xFFFE",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "09 48 3C E1 00 FE FF",
+   "reject": false,
+   "warnings": [],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 15432,
+     "original": "154.32",
+     "kilograms": "69.9983745384"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": "22.5",
+    "height": {
+     "raw": 65534,
+     "original": "6553.4",
+     "meters": "166.45636"
+    }
+   }
+  },
+  {
+   "name": "wsm-reserved-flag-bit-4",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "10 B1 36",
+   "reject": false,
+   "warnings": [
+    "ReservedBitsSet"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14001,
+     "original": "70.005",
+     "kilograms": "70.005"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-reserved-flag-bits-4-7",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "F0 B1 36",
+   "reject": false,
+   "warnings": [
+    "ReservedBitsSet"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14001,
+     "original": "70.005",
+     "kilograms": "70.005"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-trailing-byte",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "00 B1 36 AA",
+   "reject": false,
+   "warnings": [
+    "TrailingBytes"
+   ],
+   "expect": {
+    "unit": "si",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14001,
+     "original": "70.005",
+     "kilograms": "70.005"
+    },
+    "timestamp": null,
+    "userId": null,
+    "bmi": null,
+    "height": null
+   }
+  },
+  {
+   "name": "wsm-trailing-after-full-fields",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "0F B1 36 EA 07 0A 1A 08 1E 0F 01 E1 00 D6 06 01 02 03",
+   "reject": false,
+   "warnings": [
+    "TrailingBytes"
+   ],
+   "expect": {
+    "unit": "imperial",
+    "measurementUnsuccessful": false,
+    "weight": {
+     "raw": 14001,
+     "original": "140.01",
+     "kilograms": "63.5074677237"
+    },
+    "timestamp": "2026-10-26T08:30:15",
+    "userId": 1,
+    "bmi": "22.5",
+    "height": {
+     "raw": 1750,
+     "original": "175",
+     "meters": "4.445"
+    }
+   }
+  },
+  {
+   "name": "wsm-empty",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "",
+   "reject": true,
+   "errorCode": "TooShort"
+  },
+  {
+   "name": "wsm-1-byte",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "00",
+   "reject": true,
+   "errorCode": "TooShort"
+  },
+  {
+   "name": "wsm-2-bytes",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "00 59",
+   "reject": true,
+   "errorCode": "TooShort"
+  },
+  {
+   "name": "wsm-truncated-all-fields-prefix-3-of-15",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "0F B1 36",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "wsm-truncated-all-fields-prefix-4-of-15",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "0F B1 36 EA",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "wsm-truncated-all-fields-prefix-5-of-15",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "0F B1 36 EA 07",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "wsm-truncated-all-fields-prefix-6-of-15",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "0F B1 36 EA 07 0A",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "wsm-truncated-all-fields-prefix-7-of-15",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "0F B1 36 EA 07 0A 1A",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "wsm-truncated-all-fields-prefix-8-of-15",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "0F B1 36 EA 07 0A 1A 08",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "wsm-truncated-all-fields-prefix-9-of-15",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "0F B1 36 EA 07 0A 1A 08 1E",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "wsm-truncated-all-fields-prefix-10-of-15",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "0F B1 36 EA 07 0A 1A 08 1E 0F",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "wsm-truncated-all-fields-prefix-11-of-15",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "0F B1 36 EA 07 0A 1A 08 1E 0F 01",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "wsm-truncated-all-fields-prefix-12-of-15",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "0F B1 36 EA 07 0A 1A 08 1E 0F 01 E1",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "wsm-truncated-all-fields-prefix-13-of-15",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "0F B1 36 EA 07 0A 1A 08 1E 0F 01 E1 00",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "wsm-truncated-all-fields-prefix-14-of-15",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "0F B1 36 EA 07 0A 1A 08 1E 0F 01 E1 00 D6",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "wsm-truncated-user-id-missing",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "04 B0 36",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "wsm-truncated-timestamp-6-of-7",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "02 B0 36 EA 07 0A 1A 08 1E",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "wsm-truncated-bmi-without-height",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "08 B0 36 E1 00",
+   "reject": true,
+   "errorCode": "Truncated"
+  },
+  {
+   "name": "wsm-truncated-bmi-half",
+   "service": "181D",
+   "characteristic": "2A9D",
+   "hex": "08 B0 36 E1",
+   "reject": true,
+   "errorCode": "Truncated"
+  }
+ ]
+}
