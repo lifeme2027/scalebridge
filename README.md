@@ -76,6 +76,10 @@ Windows（PowerShell）与 Linux 用法相同；发布包里直接运行 `ScaleB
 已知限制：Weight Scale 与 Body Composition 的记录**不会合并**成一条；没有历史条数上限或接收节流；
 BCS 多包重组尚未实现，见 [NOTES.md](NOTES.md)。
 
+连接模型的限制（如实说明）：**同一时刻只有一个会话**——连接新设备前要先断开当前设备；**没有自动重连**——
+设备掉线、被关机或蓝牙被关闭后，状态栏会显示「连接已断开」，需要你手动重新扫描、选择并连接；
+重新打开系统蓝牙也不会自动恢复。扫描默认 30 秒后若没发现设备会提示「未发现设备」并可重新扫描（`--scan-timeout` 可调）。
+
 ## 打包与 CI
 
 * `.github/workflows/ci.yml`：Ubuntu + Windows 构建并跑全部测试；Ubuntu 上另有 xvfb 下的应用启动冒烟（9 个场景各启动一次）。

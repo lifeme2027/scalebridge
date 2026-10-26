@@ -45,13 +45,14 @@
             </StackPanel>
           </Border>
           <DataGrid Grid.Row="3" ItemsSource="{Binding Devices}" SelectedItem="{Binding SelectedDevice, Mode=TwoWay}"
-                    AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" CanUserResizeColumns="True">
+                    AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" CanUserResizeColumns="True"
+                    HorizontalScrollBarVisibility="Auto">
             <DataGrid.Columns>
-              <DataGridTextColumn Header="{loc:T Col.Name}" Binding="{Binding NameText}" Width="2*" />
+              <DataGridTextColumn Header="{loc:T Col.Name}" Binding="{Binding NameText}" Width="2*" MinWidth="120" />
               <DataGridTextColumn Header="{loc:T Col.Rssi}" Binding="{Binding RssiText}" Width="Auto" />
-              <DataGridTextColumn Header="{loc:T Col.Protocol}" Binding="{Binding ProtocolText}" Width="3*" />
-              <DataGridTextColumn Header="{loc:T Col.Tags}" Binding="{Binding TagText}" Width="3*" />
-              <DataGridTextColumn Header="{loc:T Col.DeviceId}" Binding="{Binding Id}" Width="2*" />
+              <DataGridTextColumn Header="{loc:T Col.Protocol}" Binding="{Binding ProtocolText}" Width="3*" MinWidth="120" />
+              <DataGridTextColumn Header="{loc:T Col.Tags}" Binding="{Binding TagText}" Width="3*" MinWidth="120" />
+              <DataGridTextColumn Header="{loc:T Col.DeviceId}" Binding="{Binding Id}" Width="2*" MinWidth="120" />
             </DataGrid.Columns>
           </DataGrid>
         </Grid>
@@ -99,16 +100,17 @@
           </WrapPanel>
           <TextBlock Grid.Row="1" Margin="0,0,0,8" Classes="muted" TextTrimming="CharacterEllipsis" Text="{Binding HistorySummary}" />
           <DataGrid Grid.Row="2" ItemsSource="{Binding History}" AutoGenerateColumns="False" IsReadOnly="False"
-                    SelectionMode="Extended" CanUserResizeColumns="True" CanUserSortColumns="False">
+                    SelectionMode="Extended" CanUserResizeColumns="True" CanUserSortColumns="False"
+                    HorizontalScrollBarVisibility="Auto">
             <DataGrid.Columns>
               <DataGridCheckBoxColumn Header="" Binding="{Binding IsChecked, Mode=TwoWay}" Width="Auto" />
-              <DataGridTextColumn Header="{loc:T History.Time}" Binding="{Binding TimeText}" IsReadOnly="True" Width="Auto" />
+              <DataGridTextColumn Header="{loc:T History.Time}" Binding="{Binding TimeText}" IsReadOnly="True" Width="Auto" MinWidth="175" />
               <DataGridTextColumn Header="{loc:T History.Weight}" Binding="{Binding WeightText}" IsReadOnly="True" Width="Auto" MinWidth="110" />
-              <DataGridTextColumn Header="BMI" Binding="{Binding BmiText}" IsReadOnly="True" Width="Auto" />
-              <DataGridTextColumn Header="{loc:T History.Fat}" Binding="{Binding FatText}" IsReadOnly="True" Width="Auto" />
-              <DataGridTextColumn Header="{loc:T History.Device}" Binding="{Binding DeviceText}" IsReadOnly="True" Width="2*" />
-              <DataGridTextColumn Header="{loc:T History.Source}" Binding="{Binding SourceText}" IsReadOnly="True" Width="Auto" />
-              <DataGridTextColumn Header="{loc:T History.Flags}" Binding="{Binding FlagsText}" IsReadOnly="True" Width="3*" />
+              <DataGridTextColumn Header="BMI" Binding="{Binding BmiText}" IsReadOnly="True" Width="Auto" MinWidth="72" />
+              <DataGridTextColumn Header="{loc:T History.Fat}" Binding="{Binding FatText}" IsReadOnly="True" Width="Auto" MinWidth="70" />
+              <DataGridTextColumn Header="{loc:T History.Device}" Binding="{Binding DeviceText}" IsReadOnly="True" Width="2*" MinWidth="120" />
+              <DataGridTextColumn Header="{loc:T History.Source}" Binding="{Binding SourceText}" IsReadOnly="True" Width="Auto" MinWidth="90" />
+              <DataGridTextColumn Header="{loc:T History.Flags}" Binding="{Binding FlagsText}" IsReadOnly="True" Width="3*" MinWidth="180" />
             </DataGrid.Columns>
           </DataGrid>
         </Grid>
