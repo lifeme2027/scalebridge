@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Windows 蓝牙适配器的 WinRT 外壳（实验性：仅按规范实现，未真机验证）。
+    WinRT API 通过 TFM「net8.0-windows10.0.19041.0」自带的 CsWinRT 投影使用，不引入任何第三方包。
+    Linux 上需要 EnableWindowsTargeting 才能还原/编译（只做编译检查，运行必须在 Windows 上）。
+    业务逻辑全部在 ScaleBridge.Windows.Core（平台无关、可在 Linux 测试）。
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <RootNamespace>ScaleBridge.Windows.WinRt</RootNamespace>
+    <AssemblyName>ScaleBridge.Windows</AssemblyName>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ScaleBridge.Windows.Core\ScaleBridge.Windows.Core.csproj" />
+    <InternalsVisibleTo Include="ScaleBridge.Windows.Tests" />
+  </ItemGroup>
+</Project>
