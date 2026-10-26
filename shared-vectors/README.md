@@ -34,7 +34,7 @@
 
 ### 错误码（`errorCode`）
 
-* `TooShort`：数据短于该特征的最小长度（连必选字段都不全）。
+* `TooShort`：数据短于该特征的最小长度（连必选字段都不全）。例外：Body Composition Measurement 在已读到 Flags 且 bit12 置位时优先 `MultiPacketNotSupported`（见 NOTES.md Q21）。
 * `Truncated`：Flags 声明存在的可选字段放不下（截断包）。
 * `MultiPacketNotSupported`：Body Composition 的 Multiple Packet Measurement 位（bit12）被置位，阶段 1 不支持。
 
