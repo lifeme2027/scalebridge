@@ -34,3 +34,34 @@ jobs:
           name: test-results-${{ matrix.os }}
           path: "**/TestResults/*.trx"
           if-no-files-found: ignore
+
+  app-smoke:
+    name: 应用启动冒烟 (xvfb, Fake 演示数据)
+    needs: build-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: 安装 xvfb 与字体
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libfontconfig1 fonts-noto-cjk
+      - name: Build 应用
+        run: dotnet build src/ScaleBridge.App/ScaleBridge.App.csproj -c Release
+      - name: 无头启动：扫描 → 连接 → 收到数据 → 写入历史（全程是演示数据）
+        run: |
+          export SCALEBRIDGE_DATA_DIR="$(mktemp -d)"
+          out=src/ScaleBridge.App/bin/Release/net8.0
+          xvfb-run -a dotnet "$out/ScaleBridge.dll" --smoke | tee smoke.log
+          grep -q SCALEBRIDGE_SMOKE_OK smoke.log
+      - name: 其余场景也各跑一遍（掉线 / 截断包 / 0xFFFF 等不应让程序崩溃）
+        run: |
+          out=src/ScaleBridge.App/bin/Release/net8.0
+          for s in $(dotnet "$out/ScaleBridge.dll" --list-scenarios | cut -f1); do
+            export SCALEBRIDGE_DATA_DIR="$(mktemp -d)"
+            echo "== $s"
+            xvfb-run -a dotnet "$out/ScaleBridge.dll" --smoke --scenario "$s" | tee smoke-$s.log
+            grep -q SCALEBRIDGE_SMOKE_OK smoke-$s.log
+          done

@@ -1,0 +1,60 @@
+name: Release 打包
+
+# 打包 win-x64 与 linux-x64 的桌面程序并作为 Actions 构件上传。
+# 本工作流不会创建或发布 GitHub Release：手动触发（workflow_dispatch）或推送 v* 标签时只产出构件。
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: 打包 (${{ matrix.rid }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+          - os: windows-latest
+            rid: win-x64
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Publish（自包含单文件，无需另装 .NET 运行时）
+        shell: bash
+        run: |
+          dotnet publish src/ScaleBridge.App/ScaleBridge.App.csproj -c Release -r ${{ matrix.rid }} \
+            --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true \
+            -p:DebugType=none -o publish/${{ matrix.rid }}
+      - name: 附带说明文件并打包
+        shell: bash
+        run: |
+          cp README.md PRIVACY.md LICENSE publish/${{ matrix.rid }}/
+          mkdir -p dist
+          if [ "${{ matrix.rid }}" = "win-x64" ]; then
+            (cd publish/${{ matrix.rid }} && 7z a -tzip "$GITHUB_WORKSPACE/dist/ScaleBridge-${{ matrix.rid }}.zip" . > /dev/null)
+          else
+            tar -C publish -czf dist/ScaleBridge-${{ matrix.rid }}.tar.gz ${{ matrix.rid }}
+          fi
+          ls -l dist
+      - name: Linux 冒烟（打包产物本身，xvfb 下启动演示场景）
+        if: matrix.rid == 'linux-x64'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libfontconfig1 fonts-noto-cjk
+          export SCALEBRIDGE_DATA_DIR="$(mktemp -d)"
+          xvfb-run -a publish/linux-x64/ScaleBridge --smoke | tee smoke.log
+          grep -q SCALEBRIDGE_SMOKE_OK smoke.log
+      - name: 上传构件
+        uses: actions/upload-artifact@v4
+        with:
+          name: ScaleBridge-${{ matrix.rid }}
+          path: dist/*
+          if-no-files-found: error

@@ -126,10 +126,34 @@
   `wm`→`--service 181D --char 2A9D`、`wsf`→`181D/2A9E`、`bcm`→`181B/2A9C`、`bcf`→`181B/2A9B`；错误码/警告名直接用我们的 `ParseErrorCode` / `ParseWarningCode`。
 * 他们的 340 条向量可批量走 `--stdin`（行格式 `181D/2A9D 00 59 36`），一次启动处理全部，避免每条一次 `dotnet run` 的开销。
 
+## 阶段 1 桌面程序：结构与取舍
+
+* **分层**：`Core`（无 UI、无蓝牙库）→ `Ble.Fake`（演示数据）/ `Data`（SQLite）→ `App`（Avalonia，MVVM，CommunityToolkit.Mvvm）。
+  App 经 `IAdapterFactory`、`IDialogService`、`IUiDispatcher` 三个小接口访问外界，测试里全部替换成内存实现，
+  所以 ViewModel 的整条流程（扫描→连接→接收→历史→导出）能在没有显示器、没有蓝牙的 CI 上跑。
+* **演示场景（Fake）**：`normal-si`、`imperial`、`body-composition`、`timestamp-user-bmi-height`、`invalid-0xffff`、
+  `truncated-packet`、`mid-connection-disconnect`、`reconnect`、`multi-device`。都是脚本回放的字节，经过与真机同一套 Core 解析器；
+  **只证明「界面与解析链路能处理这些字节」，不证明任何真实设备。**
+* **本地化（与计划的偏差）**：不用 ResourceDictionary XAML，而是嵌入的 `zh.json` / `en.json` 字典 + `Loc` 单例 + `{loc:T Key}` 标记扩展
+  （对 `Loc.Instance` 的索引器 `[key]` 做 OneWay 绑定）。理由：语言能在运行时切换而无需重启，字典可以被单元测试（zh/en 键一致、占位符一致、
+  英文里不能出现中文、XAML 与 ViewModel 用到的键都存在、每个 `BleErrorKind` 都有 `Err.<kind>` 文案）。
+  默认跟随系统语言（`zh*` → 中文，其余英文），选择会保存。
+* **绑定方式**：关闭了编译绑定（`AvaloniaUseCompiledBindingsByDefault=false`），用反射绑定——索引器绑定在编译绑定下不好用。
+  **踩过的坑**：Avalonia 只在 `PropertyChanged` 名为 `"Item"` 时刷新索引器绑定，`"Item[]"` 不够；`Loc` 切换语言时两个都发。
+* **数据**：历史与设置在 `scalebridge.db`（路径见 PRIVACY.md）。`MeasurementIngestor` 在删除/清空历史后需要 `Reload()` 才会重建去重状态。
+* **导出**：CSV 与 JSON 都导出**全部历史**（与界面上的过滤无关，有测试）。
+* **已知限制**：WSS（0x181D）与 BCS（0x181B）的记录不合并（Q17）；没有接收节流与历史条数上限（Q19）；BCS 多包重组留到真实适配器之后（Q6/Q7）。
+* **界面检查**：在 `Xvfb 1024x700` 下对 zh/en 的四个页签各截一次图，目视没有溢出，长文本截断；这是人工看图，不是自动化断言。
+* **打包**：`release.yml` 发布 `win-x64` 与 `linux-x64` 的**自包含单文件**（含 .NET 运行时；未裁剪；未签名）。
+  Linux 产物在 CI 里用 xvfb 跑 `--smoke`；Windows 产物只验证能构建与打包，**没有在 Windows 上启动过界面**。
+  工作流只上传 Actions 构件，**不创建 GitHub Release**。
+* **Windows 控制台**：App 是 WinExe；带 `--help/--list-scenarios/--smoke/--scenario` 启动时会 `AttachConsole` 接上父进程控制台才能看到输出
+  （未在 Windows 上实测）。
+
 ## 路线图（仅规划，阶段 1 不实现）
 
-* **阶段 2 — Windows**：WinRT 蓝牙适配器，目标框架 `net8.0-windows10.0.19041`。
-* **阶段 2 — Linux**：基于 D-Bus 的 BlueZ 适配器（评估 Tmds.DBus 等库，见下）。
+* **阶段 2 — Windows**：WinRT 蓝牙适配器，目标框架 `net8.0-windows10.0.19041`（只有占位说明 `src/ScaleBridge.Ble.Windows/README.md`，没有代码）。
+* **阶段 2 — Linux**：基于 D-Bus 的 BlueZ 适配器（评估 Tmds.DBus 等库，见下）。仓库里已有他人加入的探索性脚手架 `src/ScaleBridge.Linux`，未接入界面、未真机验证，不算阶段 1 交付。
 * **阶段 3**：小米 / Renpho / 芯海（Chipsea/OKOK）等私有协议的解析器，一律先标「实验性」。
 
 ### BlueZ / Tmds.DBus 初步评估（未完成，供阶段 2 参考）
