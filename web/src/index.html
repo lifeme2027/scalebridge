@@ -48,7 +48,7 @@
       <strong data-i18n="connect.status"></strong>: <span id="conn-state" data-testid="conn-state" role="status" aria-live="polite"></span>
       <span id="conn-device" data-testid="conn-device"></span>
     </p>
-    <p id="conn-info" data-testid="conn-info" class="muted"></p>
+    <p id="conn-info" data-testid="conn-info" class="muted" aria-live="polite"></p>
     <p id="conn-error" data-testid="conn-error" class="error" role="alert"></p>
   </section>
 
@@ -64,7 +64,7 @@
   </section>
 
   <section id="history" data-testid="history" aria-labelledby="history-h" class="card">
-    <h2 id="history-h" data-testid="history-h" data-i18n="history.heading"></h2>
+    <h2 id="history-h" data-testid="history-h" tabindex="-1" data-i18n="history.heading"></h2>
     <p id="history-count" data-testid="history-count" class="muted"></p>
     <p id="store-warning" data-testid="store-warning" class="error" role="alert" hidden></p>
     <div class="table-wrap">
