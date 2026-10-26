@@ -20,6 +20,9 @@ public interface IUiDispatcher
 
 public interface IAdapterFactory
 {
-    /// <summary>当前设置对应的适配器；尚未实现（阶段 2 的 Windows / Linux）返回 null。</summary>
+    /// <summary>本机可选的适配器 id（Fake 永远在第一位；Windows 版额外提供 "windows" 真实蓝牙）。</summary>
+    IReadOnlyList<string> AvailableAdapterIds { get; }
+
+    /// <summary>当前设置对应的适配器；本机不可用的适配器（例如 Linux 版没有真实适配器）返回 null。</summary>
     IBleAdapter? Create(AppSettings settings);
 }

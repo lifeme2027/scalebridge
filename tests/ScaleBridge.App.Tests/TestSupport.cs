@@ -44,14 +44,15 @@ public sealed class TestApp : IDisposable
     public SqliteSettingsStore Settings { get; }
     public MainViewModel Vm { get; }
 
-    public TestApp(string scenario = "normal-si", LanguageSetting lang = LanguageSetting.En, string adapter = AdapterFactory.FakeId)
+    public TestApp(string scenario = "normal-si", LanguageSetting lang = LanguageSetting.En, string adapter = AdapterFactory.FakeId,
+        Func<IBleAdapter>? windowsFactory = null)
     {
         Directory.CreateDirectory(Dir);
         Db = new SqliteDatabase(Path.Combine(Dir, "t.db"));
         Repo = new SqliteMeasurementRepository(Db);
         Settings = new SqliteSettingsStore(Db);
         var s = new AppSettings { Language = lang, ScenarioId = scenario, AdapterId = adapter };
-        Vm = new MainViewModel(Repo, Settings, Dialogs, Ui, new AdapterFactory(0), Loc, Dir, s);
+        Vm = new MainViewModel(Repo, Settings, Dialogs, Ui, new AdapterFactory(0, windowsFactory), Loc, Dir, s);
     }
 
     public T Read<T>(Func<T> f) => Ui.Read(f);

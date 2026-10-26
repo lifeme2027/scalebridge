@@ -20,6 +20,9 @@
       <Border Background="#FFF4CE" Padding="12,6" IsVisible="{Binding IsDemoActive}">
         <TextBlock Foreground="#5C4400" TextWrapping="Wrap" Text="{loc:T Banner.Demo}" />
       </Border>
+      <Border Background="#FDE7E9" Padding="12,6" IsVisible="{Binding IsRealAdapterSelected}">
+        <TextBlock Foreground="#8A1C24" TextWrapping="Wrap" Text="{loc:T Banner.RealBle}" />
+      </Border>
       <Border Background="#E6F0FA" Padding="12,6">
         <TextBlock Foreground="#14365A" TextWrapping="Wrap" Text="{loc:T Banner.Experimental}" />
       </Border>
@@ -115,7 +118,7 @@
             <ComboBox MinWidth="260" ItemsSource="{Binding UnitChoices}" SelectedItem="{Binding SelectedUnit, Mode=TwoWay}" ItemTemplate="{StaticResource ChoiceTemplate}" />
             <TextBlock Text="{loc:T Set.Adapter}" />
             <ComboBox MinWidth="260" ItemsSource="{Binding AdapterChoices}" SelectedItem="{Binding SelectedAdapter, Mode=TwoWay}" ItemTemplate="{StaticResource ChoiceTemplate}" />
-            <TextBlock TextWrapping="Wrap" Foreground="#8A1C24" IsVisible="{Binding AdapterIsStage2}" Text="{loc:T Set.AdapterStage2}" />
+            <TextBlock TextWrapping="Wrap" Foreground="#8A1C24" IsVisible="{Binding IsRealAdapterSelected}" Text="{loc:T Set.AdapterReal}" />
             <StackPanel Spacing="10" IsVisible="{Binding IsFakeAdapterSelected}">
               <TextBlock Text="{loc:T Set.Scenario}" />
               <ComboBox MinWidth="260" ItemsSource="{Binding ScenarioChoices}" SelectedItem="{Binding SelectedScenario, Mode=TwoWay}" ItemTemplate="{StaticResource ChoiceTemplate}" />

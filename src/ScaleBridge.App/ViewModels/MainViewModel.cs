@@ -65,12 +65,15 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             new(LanguageSetting.En, L, _ => "English"),
         };
         _unitChoices = new() { new(WeightUnit.Kg, L, _ => "kg"), new(WeightUnit.Lb, L, _ => "lb") };
-        _adapterChoices = new()
-        {
-            new(AdapterFactory.FakeId, L, l => l["Adapter.Fake"]),
-            new(AdapterFactory.WindowsId, L, l => l["Adapter.Windows"]),
-            new(AdapterFactory.LinuxId, L, l => l["Adapter.Linux"]),
-        };
+        // 只列出本机真的可用的适配器：Fake 永远第一（默认）；Windows 版额外有「真实蓝牙（实验性）」；Linux 只有 Fake。
+        _adapterChoices = adapters.AvailableAdapterIds
+            .Where(id => id is AdapterFactory.FakeId or AdapterFactory.WindowsId)
+            .Select(id => id == AdapterFactory.WindowsId
+                ? new Choice<string>(id, L, l => l["Adapter.Windows"])
+                : new Choice<string>(id, L, l => l["Adapter.Fake"]))
+            .ToList();
+        if (_adapterChoices.Count == 0 || _adapterChoices[0].Value != AdapterFactory.FakeId)
+            _adapterChoices.Insert(0, new(AdapterFactory.FakeId, L, l => l["Adapter.Fake"]));
         _scenarioChoices = FakeScenarioLibrary.All.Select(s => new Choice<string>(s.Id, L, l => s.Title.Get(l.IsChinese))).ToList();
 
         LanguageChoices = _languageChoices;
@@ -80,7 +83,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         _selectedLanguage = _languageChoices.First(c => c.Value == _settings.Language);
         _selectedUnit = _unitChoices.First(c => c.Value == _settings.Unit);
+        // 设置里存的适配器本机用不了（例如把数据库从 Windows 拷到 Linux）时回落到 Fake，并让内部设置与界面一致。
         _selectedAdapter = _adapterChoices.FirstOrDefault(c => c.Value == _settings.AdapterId) ?? _adapterChoices[0];
+        _settings = _settings with { AdapterId = _selectedAdapter.Value };
         _selectedScenario = _scenarioChoices.FirstOrDefault(c => c.Value == _settings.ScenarioId) ?? _scenarioChoices[0];
         _showBmi = _settings.ShowBmi;
         _showBodyFat = _settings.ShowBodyFat;
@@ -119,7 +124,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public bool IsDemoActive => _adapterChoiceIsFake;
     private bool _adapterChoiceIsFake => SelectedAdapter.Value == AdapterFactory.FakeId;
     public bool IsFakeAdapterSelected => _adapterChoiceIsFake;
-    public bool AdapterIsStage2 => !_adapterChoiceIsFake;
+    /// <summary>选中的是真实蓝牙适配器（目前只有 Windows 的 WinRT 适配器）：界面要显示「实验性（仅按规范实现，未真机验证）」。</summary>
+    public bool IsRealAdapterSelected => !_adapterChoiceIsFake;
     public string ScenarioDescription => FakeScenarioLibrary.Find(SelectedScenario.Value) is { } s ? s.Description.Get(L.IsChinese) : "";
 
     public ConnectionState ConnectionState => _conn.State;
@@ -202,7 +208,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         ResetAdapterState();
         OnPropertyChanged(nameof(IsDemoActive));
         OnPropertyChanged(nameof(IsFakeAdapterSelected));
-        OnPropertyChanged(nameof(AdapterIsStage2));
+        OnPropertyChanged(nameof(IsRealAdapterSelected));
         PersistSettings();
     }
 
@@ -309,7 +315,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         if (IsScanning || _disposed) return;
         var adapter = GetAdapter();
-        if (adapter is null) { SetStatus("Status.AdapterStage2"); return; }
+        if (adapter is null) { SetStatus("Status.AdapterUnsupported"); return; }
         BleAvailability availability;
         try { availability = await adapter.GetAvailabilityAsync().ConfigureAwait(true); }
         catch (BleException ex) { SetStatus("Status.ScanFailed", ex.Message); return; }
@@ -318,7 +324,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             SetStatus(availability switch
             {
                 BleAvailability.PermissionDenied => "Status.BlePermission",
-                BleAvailability.NotImplemented => "Status.AdapterStage2",
+                BleAvailability.NotImplemented => "Status.AdapterUnsupported",
                 _ => "Status.BleUnavailable",
             });
             return;
@@ -384,7 +390,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         if (_disposed || IsSessionActive || SelectedDevice is not { } dev) return;
         var adapter = GetAdapter();
-        if (adapter is null) { SetStatus("Status.AdapterStage2"); return; }
+        if (adapter is null) { SetStatus("Status.AdapterUnsupported"); return; }
         StopScan();
         var session = new ScaleSession(adapter, dev.Id, dev.Name, _clock, TimeSpan.FromSeconds(15));
         var gen = ++_sessionGeneration;

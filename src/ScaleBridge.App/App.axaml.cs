@@ -30,7 +30,7 @@ public class App : Application
             var window = new MainWindow();
             var vm = new MainViewModel(
                 new SqliteMeasurementRepository(db), settingsStore, new AvaloniaDialogService(() => window), new AvaloniaDispatcher(),
-                new AdapterFactory(opts.Fast || opts.Smoke || opts.Autoplay ? 0.1 : 1.0), Loc.Instance, AppPaths.DataDirectory, settings);
+                new AdapterFactory(opts.Fast || opts.Smoke || opts.Autoplay ? 0.1 : 1.0, PlatformAdapters.WindowsFactory()), Loc.Instance, AppPaths.DataDirectory, settings);
             if (opts.Tab is { } tab) vm.SelectedTab = tab;
             window.DataContext = vm;
             desktop.MainWindow = window;
@@ -40,6 +40,9 @@ public class App : Application
                 window.Opened += (_, _) => DispatcherTimer.RunOnce(async () => await SmokeAsync(vm, keepRunning: true), TimeSpan.FromSeconds(1));
             if (opts.Smoke)
                 window.Opened += (_, _) => DispatcherTimer.RunOnce(async () => desktop.Shutdown(await SmokeAsync(vm)), TimeSpan.FromSeconds(1));
+            // 自检最长 60 秒：窗口永远没打开（比如没有显示环境）时也别让 CI 挂住。
+            if (opts.Smoke)
+                DispatcherTimer.RunOnce(() => { ReportSmoke("SCALEBRIDGE_SMOKE_FAIL timeout waiting for the window"); desktop.Shutdown(1); }, TimeSpan.FromSeconds(60));
         }
         base.OnFrameworkInitializationCompleted();
     }
@@ -48,6 +51,19 @@ public class App : Application
     /// 无人值守端到端自检（CI 里在 xvfb 下运行）：Fake 适配器扫描 → 连接 → 收到数据 → 写入 SQLite 历史。
     /// 打印 SCALEBRIDGE_SMOKE_OK 表示整条链路通；这只证明演示数据链路，不代表任何真机验证。
     /// </summary>
+    /// <summary>
+    /// 自检结果输出到控制台，并且（设置了环境变量 SCALEBRIDGE_SMOKE_FILE 时）追加写到该文件。
+    /// Windows 的 WinExe 没有控制台、管道也抓不到输出，CI 靠这个文件来读结果。
+    /// </summary>
+    private static void ReportSmoke(string line)
+    {
+        Console.WriteLine(line);
+        var path = Environment.GetEnvironmentVariable("SCALEBRIDGE_SMOKE_FILE");
+        if (string.IsNullOrWhiteSpace(path)) return;
+        try { File.AppendAllText(path, line + Environment.NewLine); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { Console.Error.WriteLine("cannot write SCALEBRIDGE_SMOKE_FILE: " + ex.Message); }
+    }
+
     private static async Task<int> SmokeAsync(MainViewModel vm, bool keepRunning = false)
     {
         async Task<bool> WaitAsync(Func<bool> cond, int ms)
@@ -56,19 +72,19 @@ public class App : Application
             return cond();
         }
         await vm.StartScanAsync();
-        if (!await WaitAsync(() => vm.Devices.Count > 0, 10_000)) { Console.WriteLine("SCALEBRIDGE_SMOKE_FAIL no device found"); return 1; }
+        if (!await WaitAsync(() => vm.Devices.Count > 0, 10_000)) { ReportSmoke("SCALEBRIDGE_SMOKE_FAIL no device found"); return 1; }
         vm.SelectedDevice = vm.Devices[0];
         vm.Connect();
         if (!await WaitAsync(() => vm.LastMeasurement is not null && vm.History.Count > 0, 15_000))
         {
-            Console.WriteLine($"SCALEBRIDGE_SMOKE_FAIL no measurement (connection: {vm.ConnectionText})");
+            ReportSmoke($"SCALEBRIDGE_SMOKE_FAIL no measurement (connection: {vm.ConnectionText})");
             return 1;
         }
         var m = vm.LastMeasurement!;
         if (keepRunning) return 0;
         vm.StopScan();
         vm.Disconnect();
-        Console.WriteLine($"SCALEBRIDGE_SMOKE_OK adapter={vm.SelectedAdapter.Value} scenario={vm.SelectedScenario.Value} devices={vm.Devices.Count} " +
+        ReportSmoke($"SCALEBRIDGE_SMOKE_OK adapter={vm.SelectedAdapter.Value} scenario={vm.SelectedScenario.Value} devices={vm.Devices.Count} " +
                           $"history={vm.History.Count} weightKg={m.WeightKg} demo={m.IsDemo} experimental={m.IsExperimental} lang={vm.L.LanguageCode} data={vm.DataDirectory}");
         return 0;
     }

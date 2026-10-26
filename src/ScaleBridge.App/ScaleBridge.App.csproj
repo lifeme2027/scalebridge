@@ -1,5 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <!-- Directory.Build.props 里是单个 TargetFramework，这里清空后改成多目标：
+         net8.0 = 全平台（Linux/macOS/Windows 通用，只带 Fake 适配器）；
+         net8.0-windows10.0.19041.0 = Windows 专用，额外带上真实蓝牙适配器（WinRT，实验性）。 -->
+    <TargetFramework />
+    <TargetFrameworks>net8.0;net8.0-windows10.0.19041.0</TargetFrameworks>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <OutputType>WinExe</OutputType>
     <AssemblyName>ScaleBridge</AssemblyName>
     <RootNamespace>ScaleBridge.App</RootNamespace>
@@ -19,6 +25,9 @@
     <ProjectReference Include="..\ScaleBridge.Core\ScaleBridge.Core.csproj" />
     <ProjectReference Include="..\ScaleBridge.Data\ScaleBridge.Data.csproj" />
     <ProjectReference Include="..\ScaleBridge.Ble.Fake\ScaleBridge.Ble.Fake.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.StartsWith('net8.0-windows'))">
+    <ProjectReference Include="..\ScaleBridge.Windows\ScaleBridge.Windows.csproj" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="ScaleBridge.App.Tests" />

@@ -169,15 +169,15 @@ public class MainViewModelFlowTests
     }
 
     [Fact]
-    public async Task Stage2Adapter_ShowsNotImplemented_AndNeverScans()
+    public async Task UnavailableRealAdapter_FallsBackToFake_AndStillScansDemoData()
     {
+        // 没有注入 Windows 适配器（Linux/通用构建）时，设置里残留的 "windows" 不能让界面卡在一个什么都不做的选项上。
         using var t = new TestApp(adapter: AdapterFactory.WindowsId);
-        Assert.True(t.Vm.AdapterIsStage2);
-        Assert.False(t.Vm.IsDemoActive);
+        Assert.False(t.Vm.IsRealAdapterSelected);
+        Assert.True(t.Vm.IsDemoActive);
+        Assert.Equal(AdapterFactory.FakeId, t.Vm.SelectedAdapter.Value);
         await t.Vm.StartScanAsync();
-        Assert.False(t.Vm.IsScanning);
-        Assert.Empty(t.Vm.Devices);
-        Assert.Contains("phase 2", t.Vm.StatusText);
+        await t.UntilAsync(() => t.Vm.Devices.Count == 1, "demo device");
     }
 
     [Fact]
@@ -345,11 +345,10 @@ public class MainViewModelFlowTests
     {
         using var t = new TestApp("normal-si");
         t.Vm.SelectedScenario = t.Vm.ScenarioChoices.First(c => c.Value == "imperial");
-        t.Vm.SelectedAdapter = t.Vm.AdapterChoices.First(c => c.Value == AdapterFactory.LinuxId);
         var saved = t.Settings.Load();
         Assert.Equal("imperial", saved.ScenarioId);
-        Assert.Equal(AdapterFactory.LinuxId, saved.AdapterId);
-        Assert.True(t.Vm.AdapterIsStage2);
+        Assert.Equal(AdapterFactory.FakeId, saved.AdapterId);
+        Assert.Equal(new[] { AdapterFactory.FakeId }, t.Vm.AdapterChoices.Select(c => c.Value));
         await Task.CompletedTask;
     }
 
@@ -358,8 +357,10 @@ public class MainViewModelFlowTests
     {
         using var t = new TestApp();
         Assert.True(t.Vm.IsDemoActive);
-        t.Vm.SelectedAdapter = t.Vm.AdapterChoices.First(c => c.Value == AdapterFactory.WindowsId);
-        Assert.False(t.Vm.IsDemoActive);
+        using var w = new TestApp(windowsFactory: () => new StubRealAdapter());
+        Assert.True(w.Vm.IsDemoActive);
+        w.Vm.SelectedAdapter = w.Vm.AdapterChoices.First(c => c.Value == AdapterFactory.WindowsId);
+        Assert.False(w.Vm.IsDemoActive);
         await Task.CompletedTask;
     }
 
