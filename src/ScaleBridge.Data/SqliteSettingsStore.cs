@@ -29,6 +29,9 @@ public sealed class SqliteSettingsStore : ISettingsStore
             ScenarioId = kv.TryGetValue("scenario", out var s) && !string.IsNullOrWhiteSpace(s) ? s : d.ScenarioId,
             ShowBmi = Bool(kv, "show_bmi", d.ShowBmi),
             ShowBodyFat = Bool(kv, "show_body_fat", d.ShowBodyFat),
+            HistoryWindow = kv.TryGetValue("history_window", out var hw) &&
+                int.TryParse(hw, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var n)
+                ? AppSettings.NormalizeHistoryWindow(n) : d.HistoryWindow,
         };
     }
 
@@ -51,6 +54,7 @@ public sealed class SqliteSettingsStore : ISettingsStore
         Put("scenario", s.ScenarioId);
         Put("show_bmi", s.ShowBmi ? "1" : "0");
         Put("show_body_fat", s.ShowBodyFat ? "1" : "0");
+        Put("history_window", AppSettings.NormalizeHistoryWindow(s.HistoryWindow).ToString(System.Globalization.CultureInfo.InvariantCulture));
         tx.Commit();
     }
 

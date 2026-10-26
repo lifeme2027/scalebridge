@@ -35,6 +35,8 @@
   "History.Source": "Source",
   "History.Flags": "Flags",
   "History.Summary": "Showing {0} of {1} records (newest first; exports always include all records)",
+  "History.SummaryWindow": "Showing {0} of {1} records; the newest {2} are loaded — use “Load more” for older ones (exports always include all records)",
+  "Btn.LoadMore": "Load more",
   "Set.Language": "Language",
   "Set.Unit": "Weight unit",
   "Set.Adapter": "Bluetooth adapter",

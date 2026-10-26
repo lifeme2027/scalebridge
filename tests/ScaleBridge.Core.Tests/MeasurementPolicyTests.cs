@@ -109,16 +109,6 @@ public class MeasurementPolicyTests
     }
 
     // ---- Ingestor ----
-    private sealed class MemoryRepo : IMeasurementRepository
-    {
-        private readonly List<Measurement> _items = new();
-        private long _id;
-        public Measurement Add(Measurement m) { var s = m with { Id = ++_id }; _items.Add(s); return s; }
-        public IReadOnlyList<Measurement> List() => _items.OrderByDescending(x => x.DisplayTime).ToList();
-        public int Delete(IEnumerable<long> ids) { var set = ids.ToHashSet(); return _items.RemoveAll(x => set.Contains(x.Id)); }
-        public int Clear() { var n = _items.Count; _items.Clear(); return n; }
-    }
-
     [Fact]
     public void Ingestor_saves_without_timestamp_every_time()
     {
@@ -149,11 +139,10 @@ public class MeasurementPolicyTests
         var ts = new DateTime(2026, 10, 26, 7, 59, 30);
         new MeasurementIngestor(repo).Ingest(M(ts: ts));
 
-        var restarted = new MeasurementIngestor(repo);        // 重启：从仓库已有记录重建
+        var restarted = new MeasurementIngestor(repo);        // 重启：去重键在仓库里，不在 ingestor 里
         Assert.Equal(IngestOutcome.Duplicate, restarted.Ingest(M(ts: ts)).Outcome);
 
         repo.Clear();
-        restarted.Reload();
         Assert.Equal(IngestOutcome.Saved, restarted.Ingest(M(ts: ts)).Outcome);
     }
 

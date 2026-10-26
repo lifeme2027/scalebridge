@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>ScaleBridge.HistoryBench</RootNamespace>
+    <AssemblyName>scalebridge-history-bench</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ScaleBridge.App\ScaleBridge.App.csproj" SetTargetFramework="TargetFramework=net8.0" />
+  </ItemGroup>
+</Project>

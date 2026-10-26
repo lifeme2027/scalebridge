@@ -14,16 +14,19 @@ public sealed class SqliteMeasurementRepository : IMeasurementRepository
     public Measurement Add(Measurement m)
     {
         using var c = _db.Open();
+        using var tx = c.BeginTransaction();
         using var cmd = c.CreateCommand();
+        cmd.Transaction = tx;
         cmd.CommandText = """
-            INSERT INTO measurements (device_time, received_at, weight_kg, original_weight, original_unit, raw_weight, bmi, height_m,
+            INSERT INTO measurements (display_time, device_time, received_at, weight_kg, original_weight, original_unit, raw_weight, bmi, height_m,
               body_fat_percent, muscle_percent, muscle_mass_kg, fat_free_mass_kg, soft_lean_mass_kg, body_water_mass_kg,
               basal_metabolism_kj, impedance_ohm, user_id, device_id, device_name, source, experimental, demo)
-            VALUES ($device_time, $received_at, $weight_kg, $original_weight, $original_unit, $raw_weight, $bmi, $height_m,
+            VALUES ($display_time, $device_time, $received_at, $weight_kg, $original_weight, $original_unit, $raw_weight, $bmi, $height_m,
               $body_fat, $muscle_pct, $muscle_mass, $fat_free, $soft_lean, $body_water,
               $basal, $impedance, $user_id, $device_id, $device_name, $source, $experimental, $demo);
             SELECT last_insert_rowid();
             """;
+        Bind(cmd, "$display_time", m.DisplayTime.ToString(SqliteDatabase.DisplayTimeFormat, Inv));
         Bind(cmd, "$device_time", m.DeviceTimestamp?.ToString("yyyy-MM-dd'T'HH:mm:ss", Inv));
         Bind(cmd, "$received_at", m.ReceivedAt.ToString("o", Inv));
         Bind(cmd, "$weight_kg", Dec(m.WeightKg));
@@ -47,19 +50,67 @@ public sealed class SqliteMeasurementRepository : IMeasurementRepository
         Bind(cmd, "$experimental", m.IsExperimental ? 1L : 0L);
         Bind(cmd, "$demo", m.IsDemo ? 1L : 0L);
         var id = Convert.ToInt64(cmd.ExecuteScalar(), Inv);
+        if (MeasurementPolicy.DedupKey(m) is { } key) PutKey(c, tx, key, id);
+        tx.Commit();
         return m with { Id = id };
     }
 
-    public IReadOnlyList<Measurement> List()
+    public IReadOnlyList<Measurement> List() => Query("SELECT * FROM measurements ORDER BY display_time DESC, id DESC;", null);
+
+    public int Count()
+    {
+        using var c = _db.Open();
+        using var cmd = c.CreateCommand();
+        cmd.CommandText = "SELECT COUNT(*) FROM measurements;";
+        return Convert.ToInt32(cmd.ExecuteScalar(), Inv);
+    }
+
+    public IReadOnlyList<Measurement> ListPage(int limit, Measurement? after = null)
+    {
+        if (limit <= 0) return Array.Empty<Measurement>();
+        if (after is null)
+            return Query("SELECT * FROM measurements ORDER BY display_time DESC, id DESC LIMIT $limit;", cmd => cmd.Parameters.AddWithValue("$limit", limit));
+        return Query("""
+            SELECT * FROM measurements
+            WHERE display_time < $t OR (display_time = $t AND id < $id)
+            ORDER BY display_time DESC, id DESC LIMIT $limit;
+            """, cmd =>
+        {
+            cmd.Parameters.AddWithValue("$t", after.DisplayTime.ToString(SqliteDatabase.DisplayTimeFormat, Inv));
+            cmd.Parameters.AddWithValue("$id", after.Id);
+            cmd.Parameters.AddWithValue("$limit", limit);
+        });
+    }
+
+    public bool HasDedupKey(string key)
+    {
+        using var c = _db.Open();
+        using var cmd = c.CreateCommand();
+        cmd.CommandText = "SELECT 1 FROM dedup_keys WHERE key = $k LIMIT 1;";
+        cmd.Parameters.AddWithValue("$k", key);
+        return cmd.ExecuteScalar() is not null;
+    }
+
+    private List<Measurement> Query(string sql, Action<SqliteCommand>? bind)
     {
         var list = new List<Measurement>();
         using var c = _db.Open();
         using var cmd = c.CreateCommand();
-        cmd.CommandText = "SELECT * FROM measurements;";
+        cmd.CommandText = sql;
+        bind?.Invoke(cmd);
         using var r = cmd.ExecuteReader();
-        while (r.Read()) list.Add(Read(r));
-        // 显示时间倒序；相同时按主键倒序（后收到的在前）
-        return list.OrderByDescending(x => x.DisplayTime).ThenByDescending(x => x.Id).ToList();
+        while (r.Read()) list.Add(ReadRow(r));
+        return list;
+    }
+
+    private static void PutKey(SqliteConnection c, SqliteTransaction tx, string key, long id)
+    {
+        using var cmd = c.CreateCommand();
+        cmd.Transaction = tx;
+        cmd.CommandText = "INSERT OR IGNORE INTO dedup_keys(key, measurement_id) VALUES ($k, $id);";
+        cmd.Parameters.AddWithValue("$k", key);
+        cmd.Parameters.AddWithValue("$id", id);
+        cmd.ExecuteNonQuery();
     }
 
     public int Delete(IEnumerable<long> ids)
@@ -73,9 +124,9 @@ public sealed class SqliteMeasurementRepository : IMeasurementRepository
         {
             using var cmd = c.CreateCommand();
             cmd.Transaction = tx;
-            cmd.CommandText = "DELETE FROM measurements WHERE id = $id;";
+            cmd.CommandText = "DELETE FROM dedup_keys WHERE measurement_id = $id; DELETE FROM measurements WHERE id = $id; SELECT changes();";
             cmd.Parameters.AddWithValue("$id", id);
-            total += cmd.ExecuteNonQuery();
+            total += Convert.ToInt32(cmd.ExecuteScalar(), Inv);
         }
         tx.Commit();
         return total;
@@ -84,9 +135,17 @@ public sealed class SqliteMeasurementRepository : IMeasurementRepository
     public int Clear()
     {
         using var c = _db.Open();
+        using var tx = c.BeginTransaction();
         using var cmd = c.CreateCommand();
-        cmd.CommandText = "DELETE FROM measurements;";
-        return cmd.ExecuteNonQuery();
+        cmd.Transaction = tx;
+        cmd.CommandText = "DELETE FROM dedup_keys; DELETE FROM measurements;";
+        cmd.ExecuteNonQuery();
+        using var n = c.CreateCommand();
+        n.Transaction = tx;
+        n.CommandText = "SELECT changes();";
+        var total = Convert.ToInt32(n.ExecuteScalar(), Inv);
+        tx.Commit();
+        return total;
     }
 
     private static string? Dec(decimal? v) => v?.ToString(Inv);
@@ -94,7 +153,7 @@ public sealed class SqliteMeasurementRepository : IMeasurementRepository
     private static void Bind(SqliteCommand cmd, string name, object? value) =>
         cmd.Parameters.AddWithValue(name, value ?? DBNull.Value);
 
-    private static Measurement Read(SqliteDataReader r)
+    internal static Measurement ReadRow(SqliteDataReader r)
     {
         string? S(string col) => r.IsDBNull(r.GetOrdinal(col)) ? null : r.GetString(r.GetOrdinal(col));
         decimal? D(string col) => S(col) is { } s && decimal.TryParse(s, NumberStyles.Number | NumberStyles.AllowExponent, Inv, out var d) ? d : null;

@@ -35,6 +35,8 @@
   "History.Source": "来源特征",
   "History.Flags": "标记",
   "History.Summary": "显示 {0} / 共 {1} 条（按时间倒序；导出始终包含全部记录）",
+  "History.SummaryWindow": "显示 {0} / 共 {1} 条记录；已加载最新的 {2} 条，更早的请点「加载更多」（导出始终包含全部记录）",
+  "Btn.LoadMore": "加载更多",
   "Set.Language": "语言",
   "Set.Unit": "体重单位",
   "Set.Adapter": "蓝牙适配器",

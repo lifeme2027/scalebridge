@@ -42,7 +42,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private (string Key, object?[] Args)? _notice;
     private (string Key, object?[] Args)? _status;
     private (ConnectionState State, string? Reason, BleErrorKind? Kind) _conn = (ConnectionState.Disconnected, null, null);
+    // 历史：数据库保留全部记录；界面只持有「最新 N 条 + 用户点“加载更多”追加的更旧记录」（N = AppSettings.HistoryWindow）。
+    // 收到新记录时按显示时间增量插入，不重读数据库。_allHistory 始终按显示时间倒序（与仓库一致）。
     private List<HistoryItem> _allHistory = new();
+    private int _totalHistory;
 
     public MainViewModel(IMeasurementRepository repo, ISettingsStore settingsStore, IDialogService dialogs, IUiDispatcher ui,
         IAdapterFactory adapters, Loc loc, string dataDirectory, AppSettings? initialSettings = null, TimeProvider? clock = null)
@@ -92,7 +95,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         ApplyLanguage();
         L.PropertyChanged += OnLocChanged;
-        ReloadHistory();
+        LoadHistory();
         _loading = false;
     }
 
@@ -188,8 +191,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    public string HistorySummary => L.Format("History.Summary", History.Count, _allHistory.Count);
-    public bool HasHistory => _allHistory.Count > 0;
+    public string HistorySummary => HasMoreHistory
+        ? L.Format("History.SummaryWindow", History.Count, _totalHistory, _allHistory.Count)
+        : L.Format("History.Summary", History.Count, _allHistory.Count);
+    public bool HasHistory => _totalHistory > 0;
+    /// <summary>数据库里还有更旧的、尚未加载到界面的记录。</summary>
+    public bool HasMoreHistory => _allHistory.Count < _totalHistory;
 
     // ---- 设置变更 ----
     partial void OnSelectedLanguageChanged(Choice<LanguageSetting> value)
@@ -453,7 +460,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         switch (r.Outcome)
         {
             case IngestOutcome.Saved:
-                ReloadHistory();
+                InsertHistory(r.Measurement);
                 if (r.IsAbnormal) SetNotice("Live.Abnormal");
                 else if (r.DeviceClockSuspect) SetNotice("Live.ClockSuspect");
                 else SetNotice(null);
@@ -490,15 +497,88 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private void ToggleUnit() => SelectedUnit = _unitChoices.First(c => c.Value != Unit);
 
     // ---- 历史 ----
-    private void ReloadHistory()
+    private int HistoryWindow => AppSettings.NormalizeHistoryWindow(_settings.HistoryWindow);
+
+    private HistoryItem NewItem(Measurement m, bool isChecked = false) => new(m, Unit, L) { IsChecked = isChecked };
+
+    private void LoadHistory()
     {
-        var checkedIds = _allHistory.Where(h => h.IsChecked).Select(h => h.Id).ToHashSet();
-        _allHistory = _repo.List()
-            .OrderByDescending(m => m.DisplayTime).ThenByDescending(m => m.Id)
-            .Select(m => new HistoryItem(m, Unit, L) { IsChecked = checkedIds.Contains(m.Id) })
-            .ToList();
+        _totalHistory = _repo.Count();
+        _allHistory = _repo.ListPage(HistoryWindow).Select(m => NewItem(m)).ToList();
         ApplyFilter();
+        NotifyHistoryChanged();
+    }
+
+    private void NotifyHistoryChanged()
+    {
         OnPropertyChanged(nameof(HasHistory));
+        OnPropertyChanged(nameof(HasMoreHistory));
+        OnPropertyChanged(nameof(HistorySummary));
+    }
+
+    /// <summary>a 在倒序列表里应排在 b 之前（显示时间更晚；相同则主键更大）。</summary>
+    private static bool PlacedBefore(Measurement a, Measurement b) =>
+        a.DisplayTime > b.DisplayTime || (a.DisplayTime == b.DisplayTime && a.Id > b.Id);
+
+    /// <summary>倒序列表里 m 应插入的位置（二分，O(log n)）。</summary>
+    private static int InsertIndex(IList<HistoryItem> list, Measurement m)
+    {
+        int lo = 0, hi = list.Count;
+        while (lo < hi)
+        {
+            var mid = (lo + hi) / 2;
+            if (PlacedBefore(list[mid].Measurement, m)) lo = mid + 1; else hi = mid;
+        }
+        return lo;
+    }
+
+    private bool MatchesFilter(HistoryItem h)
+    {
+        var q = FilterText.Trim();
+        return q.Length == 0 || h.SearchText.Contains(q, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>新记录增量插入。比已加载窗口里最旧一条还旧、且库里有未加载记录时，它属于「更旧的未加载部分」，不显示（点加载更多会出现）。</summary>
+    private void InsertHistory(Measurement m)
+    {
+        var hadUnloaded = HasMoreHistory;
+        _totalHistory++;
+        var idx = InsertIndex(_allHistory, m);
+        if (idx == _allHistory.Count && hadUnloaded) { NotifyHistoryChanged(); return; }
+        var item = NewItem(m);
+        _allHistory.Insert(idx, item);
+        if (MatchesFilter(item)) History.Insert(InsertIndex(History, m), item);
+        NotifyHistoryChanged();
+    }
+
+    [RelayCommand]
+    private void LoadMoreHistory()
+    {
+        var more = _repo.ListPage(HistoryWindow, _allHistory.LastOrDefault()?.Measurement);
+        AppendHistory(more);
+    }
+
+    private void AppendHistory(IReadOnlyList<Measurement> more)
+    {
+        foreach (var m in more)
+        {
+            var item = NewItem(m);
+            _allHistory.Add(item);
+            if (MatchesFilter(item)) History.Add(item);
+        }
+        NotifyHistoryChanged();
+    }
+
+    /// <summary>删除后：从界面移除这些行，并用更旧的记录把窗口补满（不重读已加载的部分）。</summary>
+    private void RemoveHistory(ISet<long> ids)
+    {
+        _allHistory.RemoveAll(h => ids.Contains(h.Id));
+        for (var i = History.Count - 1; i >= 0; i--)
+            if (ids.Contains(History[i].Id)) History.RemoveAt(i);
+        _totalHistory = _repo.Count();
+        var missing = HistoryWindow - _allHistory.Count;
+        if (missing > 0 && HasMoreHistory) AppendHistory(_repo.ListPage(missing, _allHistory.LastOrDefault()?.Measurement));
+        NotifyHistoryChanged();
     }
 
     private void ApplyFilter()
@@ -524,19 +604,20 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         if (ids.Count == 0) { SetStatus("Status.NothingSelected"); return; }
         if (!await _dialogs.ConfirmAsync(L["Dlg.DeleteTitle"], L.Format("Dlg.DeleteBody", ids.Count), L["Dlg.Delete"], L["Dlg.Cancel"]).ConfigureAwait(true)) return;
         var n = _repo.Delete(ids);
-        _ingestor.Reload();
-        ReloadHistory();
+        RemoveHistory(ids.ToHashSet());
         SetStatus("Status.Deleted", n);
     }
 
     [RelayCommand]
     public async Task ClearHistoryAsync()
     {
-        if (_allHistory.Count == 0) { SetStatus("Status.HistoryEmpty"); return; }
-        if (!await _dialogs.ConfirmAsync(L["Dlg.ClearTitle"], L.Format("Dlg.ClearBody", _allHistory.Count), L["Dlg.Clear"], L["Dlg.Cancel"]).ConfigureAwait(true)) return;
+        if (_totalHistory == 0) { SetStatus("Status.HistoryEmpty"); return; }
+        if (!await _dialogs.ConfirmAsync(L["Dlg.ClearTitle"], L.Format("Dlg.ClearBody", _totalHistory), L["Dlg.Clear"], L["Dlg.Cancel"]).ConfigureAwait(true)) return;
         var n = _repo.Clear();
-        _ingestor.Reload();
-        ReloadHistory();
+        _allHistory = new();
+        History.Clear();
+        _totalHistory = 0;
+        NotifyHistoryChanged();
         SetStatus("Status.Cleared", n);
     }
 

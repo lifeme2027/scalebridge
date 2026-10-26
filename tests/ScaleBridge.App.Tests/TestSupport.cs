@@ -45,15 +45,20 @@ public sealed class TestApp : IDisposable
     public MainViewModel Vm { get; }
 
     public TestApp(string scenario = "normal-si", LanguageSetting lang = LanguageSetting.En, string adapter = AdapterFactory.FakeId,
-        Func<IBleAdapter>? windowsFactory = null)
+        Func<IBleAdapter>? windowsFactory = null, int historyWindow = AppSettings.DefaultHistoryWindow)
     {
         Directory.CreateDirectory(Dir);
         Db = new SqliteDatabase(Path.Combine(Dir, "t.db"));
         Repo = new SqliteMeasurementRepository(Db);
         Settings = new SqliteSettingsStore(Db);
-        var s = new AppSettings { Language = lang, ScenarioId = scenario, AdapterId = adapter };
+        var s = new AppSettings { Language = lang, ScenarioId = scenario, AdapterId = adapter, HistoryWindow = historyWindow };
         Vm = new MainViewModel(Repo, Settings, Dialogs, Ui, new AdapterFactory(0, windowsFactory), Loc, Dir, s);
     }
+
+    /// <summary>在同一个仓库上新建一个视图模型（模拟重启 / 先用仓库预置数据再打开界面）。调用方负责 Dispose。</summary>
+    public MainViewModel CreateVm(int historyWindow = AppSettings.DefaultHistoryWindow) =>
+        new(Repo, Settings, Dialogs, Ui, new AdapterFactory(0), Loc, Dir,
+            new AppSettings { Language = LanguageSetting.En, HistoryWindow = historyWindow });
 
     public T Read<T>(Func<T> f) => Ui.Read(f);
 

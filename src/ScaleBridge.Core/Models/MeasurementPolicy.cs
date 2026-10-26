@@ -96,27 +96,15 @@ public sealed record IngestResult(IngestOutcome Outcome, Measurement Measurement
 }
 
 /// <summary>
-/// 把收到的测量按 <see cref="MeasurementPolicy"/> 过滤后写入仓库。去重跨连接/跨重启有效（启动时从仓库已有记录建键）。
-/// 删除/清空历史后调用 <see cref="Reload"/> 重建键集合。非线程安全，调用方在同一线程使用。
+/// 把收到的测量按 <see cref="MeasurementPolicy"/> 过滤后写入仓库。去重键由仓库持久化（见 <see cref="IMeasurementRepository.HasDedupKey"/>），
+/// 所以去重跨连接/跨重启有效，构造时不再读取全部历史。删除/清空历史会同时释放对应的键（之后重发同一条数据会再次入库）。
+/// 非线程安全，调用方在同一线程使用。
 /// </summary>
 public sealed class MeasurementIngestor
 {
     private readonly IMeasurementRepository _repo;
-    private readonly Dictionary<string, int> _keys = new(StringComparer.Ordinal);
 
-    public MeasurementIngestor(IMeasurementRepository repo)
-    {
-        _repo = repo;
-        Reload();
-    }
-
-    public void Reload()
-    {
-        _keys.Clear();
-        foreach (var m in _repo.List())
-            if (MeasurementPolicy.DedupKey(m) is { } k)
-                _keys[k] = _keys.GetValueOrDefault(k) + 1;
-    }
+    public MeasurementIngestor(IMeasurementRepository repo) => _repo = repo;
 
     public IngestResult Ingest(Measurement m)
     {
@@ -126,11 +114,10 @@ public sealed class MeasurementIngestor
             return new IngestResult(IngestOutcome.SkippedZeroWeight, m, plaus, suspect);
 
         var key = MeasurementPolicy.DedupKey(m);
-        if (key is not null && _keys.ContainsKey(key))
+        if (key is not null && _repo.HasDedupKey(key))
             return new IngestResult(IngestOutcome.Duplicate, m, plaus, suspect);
 
         var saved = _repo.Add(m);
-        if (key is not null) _keys[key] = 1;
         return new IngestResult(IngestOutcome.Saved, saved, plaus, suspect);
     }
 }
