@@ -55,13 +55,15 @@ public class VendorVectorsTests
         {
             Assert.False(result.IsSuccess, $"{name}: expected rejection");
             Assert.Null(result.Value);
-            Assert.Equal(v["errorCode"]!.GetValue<string>(), result.ErrorCode.ToString());
+            Assert.Equal(Enum.Parse<VendorParseErrorCode>(v["errorCode"]!.GetValue<string>()), result.ErrorCode);
             return;
         }
 
         Assert.True(result.IsSuccess, $"{name}: expected success but got {result.ErrorCode} {result.ErrorMessage}");
-        var expectedWarnings = v["warnings"]!.AsArray().Select(w => w!.GetValue<string>()).ToHashSet(StringComparer.Ordinal);
-        var actualWarnings = result.Warnings.Select(w => w.ToString()).ToHashSet(StringComparer.Ordinal);
+        var expectedWarnings = v["warnings"]!.AsArray()
+            .Select(w => Enum.Parse<VendorParseWarningCode>(w!.GetValue<string>()))
+            .ToHashSet();
+        var actualWarnings = result.Warnings.ToHashSet();
         Assert.True(expectedWarnings.SetEquals(actualWarnings),
             $"{name}: warnings {string.Join(",", actualWarnings)} != {string.Join(",", expectedWarnings)}");
 
@@ -71,9 +73,9 @@ public class VendorVectorsTests
             $"{name}: expect keys [{string.Join(",", expectKeys.OrderBy(k => k, StringComparer.Ordinal))}]");
 
         var reading = result.Value!;
-        Assert.Equal(expect["protocol"]!.GetValue<string>(), reading.Protocol.ToString());
+        Assert.Equal(Enum.Parse<VendorProtocol>(expect["protocol"]!.GetValue<string>()), reading.Protocol);
         Assert.Equal(expect["rawWeight"]!.GetValue<int>(), reading.RawWeight);
-        Assert.Equal(expect["rawUnit"]!.GetValue<string>(), reading.RawUnit.ToString());
+        Assert.Equal(Enum.Parse<VendorWeightUnit>(expect["rawUnit"]!.GetValue<string>()), reading.RawUnit);
         Assert.Equal(ParseDecimal(expect["originalWeight"]!), reading.OriginalWeight);
         Assert.Equal(ParseDecimal(expect["weightKg"]!), reading.WeightKg);
         AssertTimestamp(expect["timestamp"], reading.Timestamp, name);
@@ -90,8 +92,20 @@ public class VendorVectorsTests
             "xiaomi-mi-scale-v1-10" => XiaomiScaleParser.ParseMiScaleFrame(data),
             "xiaomi-body-composition-scale-2-13" => XiaomiScaleParser.ParseBodyCompositionScale2Frame(data),
             "xiaomi-service-data-dispatch" => XiaomiScaleParser.ParseServiceData(ParseUuid16(vector["service"]!.GetValue<string>()), data),
+            "chipsea-okok-v11-broadcast-19" => ChipseaOkokParser.ParseV11Broadcast(data),
+            "chipsea-okok-v20-broadcast-15" => ChipseaOkokParser.ParseV20Broadcast(data, AssumedUnit(vector)),
+            "chipsea-okok-manufacturer-data-dispatch" => ChipseaOkokParser.ParseManufacturerData(data, AssumedUnit(vector)),
             var other => throw new InvalidOperationException($"unknown frameType '{other}' in {vector["name"]}"),
         };
+
+    /// <summary>可选 context.assumedUnit（Kg/Lb/Jin/StoneLb）；缺省为 null。</summary>
+    private static VendorWeightUnit? AssumedUnit(JsonObject vector)
+    {
+        if (vector["context"] is not JsonObject ctx || ctx["assumedUnit"] is not JsonNode node
+            || node.GetValueKind() == JsonValueKind.Null)
+            return null;
+        return Enum.Parse<VendorWeightUnit>(node.GetValue<string>());
+    }
 
     private static ushort ParseUuid16(string hex)
     {
