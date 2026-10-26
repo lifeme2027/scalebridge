@@ -111,7 +111,12 @@ public sealed partial class HistoryItem : ObservableObject
     public string BmiText => DisplayFormat.One(Measurement.Bmi);
     public string FatText => DisplayFormat.One(Measurement.BodyFatPercent, " %");
     public string DeviceText => string.IsNullOrWhiteSpace(Measurement.DeviceName) ? Measurement.DeviceId : Measurement.DeviceName!;
-    public string SourceText => Measurement.Source == MeasurementSource.WeightScale ? "0x2A9D" : "0x2A9C";
+    public string SourceText => Measurement.Source switch
+    {
+        MeasurementSource.WeightScale => "0x2A9D",
+        MeasurementSource.Both => "0x2A9D+0x2A9C",
+        _ => "0x2A9C",
+    };
 
     public string FlagsText
     {
@@ -119,6 +124,8 @@ public sealed partial class HistoryItem : ObservableObject
         {
             var parts = new List<string>();
             if (Measurement.IsDemo) parts.Add(_loc["Tag.Demo"]);
+            if (Measurement.Source == MeasurementSource.Both) parts.Add(_loc["Tag.Merged"]);
+            if (Measurement.PossibleSameAsId is not null) parts.Add(_loc["Tag.PossibleDuplicate"]);
             if (Measurement.IsExperimental) parts.Add(_loc["Tag.Experimental"]);
             if (MeasurementPolicy.IsAbnormal(MeasurementPolicy.ClassifyWeight(Measurement.WeightKg))) parts.Add(_loc["Tag.Abnormal"]);
             if (MeasurementPolicy.IsDeviceClockSuspect(Measurement)) parts.Add(_loc["Tag.ClockSuspect"]);

@@ -552,6 +552,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 else if (r.DeviceClockSuspect) SetNotice("Live.ClockSuspect");
                 else SetNotice(null);
                 break;
+            case IngestOutcome.Merged:
+                ReplaceHistory(r.Measurement);
+                SetNotice("Live.Merged");
+                break;
             case IngestOutcome.Duplicate:
                 SetNotice("Live.Duplicate");
                 break;
@@ -643,6 +647,21 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         NotifyHistoryChanged();
     }
 
+    /// <summary>合并后：用合并结果替换原行（保留勾选状态）。显示时间可能因合并而变，所以按新位置重新插入；原行不在已加载窗口里则什么都不用做。</summary>
+    private void ReplaceHistory(Measurement merged)
+    {
+        var at = _allHistory.FindIndex(h => h.Id == merged.Id);
+        if (at < 0) return;
+        var wasChecked = _allHistory[at].IsChecked;
+        var old = _allHistory[at];
+        _allHistory.RemoveAt(at);
+        History.Remove(old);
+        var item = NewItem(merged, wasChecked);
+        _allHistory.Insert(InsertIndex(_allHistory, merged), item);
+        if (MatchesFilter(item)) History.Insert(InsertIndex(History, merged), item);
+        NotifyHistoryChanged();
+    }
+
     [RelayCommand]
     private void LoadMoreHistory()
     {
@@ -696,6 +715,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         if (ids.Count == 0) { SetStatus("Status.NothingSelected"); return; }
         if (!await _dialogs.ConfirmAsync(L["Dlg.DeleteTitle"], L.Format("Dlg.DeleteBody", ids.Count), L["Dlg.Delete"], L["Dlg.Cancel"]).ConfigureAwait(true)) return;
         var n = _repo.Delete(ids);
+        _ingestor.Reset();
         RemoveHistory(ids.ToHashSet());
         SetStatus("Status.Deleted", n);
     }
@@ -706,6 +726,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         if (_totalHistory == 0) { SetStatus("Status.HistoryEmpty"); return; }
         if (!await _dialogs.ConfirmAsync(L["Dlg.ClearTitle"], L.Format("Dlg.ClearBody", _totalHistory), L["Dlg.Clear"], L["Dlg.Cancel"]).ConfigureAwait(true)) return;
         var n = _repo.Clear();
+        _ingestor.Reset();
         _allHistory = new();
         History.Clear();
         _totalHistory = 0;

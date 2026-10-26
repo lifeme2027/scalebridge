@@ -25,6 +25,20 @@ internal sealed class MemoryRepo : IMeasurementRepository
         Ordered().Where(x => after is null || x.DisplayTime < after.DisplayTime || (x.DisplayTime == after.DisplayTime && x.Id < after.Id))
             .Take(Math.Max(0, limit)).ToList();
 
+    public Measurement? Get(long id) => _items.FirstOrDefault(x => x.Id == id);
+
+    public IReadOnlyList<Measurement> FindByDeviceTime(string deviceId, DateTime deviceTime) =>
+        _items.Where(x => x.DeviceId == deviceId && x.DeviceTimestamp == deviceTime).ToList();
+
+    public Measurement? Replace(Measurement merged, string? additionalDedupKey)
+    {
+        var i = _items.FindIndex(x => x.Id == merged.Id);
+        if (i < 0) return null;
+        _items[i] = merged;
+        if (additionalDedupKey is not null) _keys.TryAdd(additionalDedupKey, merged.Id);
+        return merged;
+    }
+
     public bool HasDedupKey(string key) => _keys.ContainsKey(key);
 
     public int Delete(IEnumerable<long> ids)

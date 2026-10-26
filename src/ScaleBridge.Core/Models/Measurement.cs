@@ -7,6 +7,8 @@ public enum MeasurementSource
     WeightScale = 1,
     /// <summary>Body Composition Measurement 0x2A9C（Body Composition Service 0x181B）。</summary>
     BodyComposition = 2,
+    /// <summary>同一次称重经 0x181D 与 0x181B 各到一包，按 NOTES「解析策略与已知分歧」Q17 的保守规则合并成一条（实验性，未经真机验证）。</summary>
+    Both = 3,
 }
 
 /// <summary>
@@ -53,6 +55,12 @@ public sealed record Measurement
 
     /// <summary>是否为演示数据（Fake 适配器）。演示数据绝不是真实体重。</summary>
     public bool IsDemo { get; init; }
+
+    /// <summary>
+    /// 「可能与该记录是同一次称重」：Q17 规则认为像但不够确定（例如一边缺时间戳、体重不同但时间戳相同），
+    /// 所以没有合并，保留两条并在较晚到的这条上标注指向较早的那条。仅标注，不改变任何数值。
+    /// </summary>
+    public long? PossibleSameAsId { get; init; }
 
     /// <summary>用于列表显示/排序的时间：优先设备时间戳，否则接收时间。</summary>
     public DateTime DisplayTime => DeviceTimestamp ?? ReceivedAt.LocalDateTime;

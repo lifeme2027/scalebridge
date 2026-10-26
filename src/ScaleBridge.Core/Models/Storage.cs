@@ -48,6 +48,18 @@ public interface IMeasurementRepository
     /// <summary>按显示时间倒序（新的在前）返回全部记录。大历史下代价与总条数成正比：界面不要用它，用 <see cref="ListPage"/>；导出才用它。</summary>
     IReadOnlyList<Measurement> List();
 
+    /// <summary>按主键取一条；不存在返回 null。</summary>
+    Measurement? Get(long id);
+
+    /// <summary>同一设备、设备时间戳（到秒）相同的记录（合并候选）。走 (device_id, device_time) 索引。</summary>
+    IReadOnlyList<Measurement> FindByDeviceTime(string deviceId, DateTime deviceTime);
+
+    /// <summary>
+    /// 用合并结果整体替换同主键的记录，并在同一个事务里登记 <paramref name="additionalDedupKey"/>（被合并进来的那一包的 Q13 去重键，
+    /// 重发该包仍被识别为重复）。记录已被删除时返回 null，什么也不改。
+    /// </summary>
+    Measurement? Replace(Measurement merged, string? additionalDedupKey);
+
     /// <summary>总条数（不加载记录本身）。</summary>
     int Count();
 

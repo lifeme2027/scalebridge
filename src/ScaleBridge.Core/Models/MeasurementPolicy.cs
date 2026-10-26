@@ -88,6 +88,8 @@ public enum IngestOutcome
     Duplicate = 2,
     /// <summary>体重为 0，按策略不自动入库。</summary>
     SkippedZeroWeight = 3,
+    /// <summary>与已入库的一条记录（另一个服务来的同一次称重，Q17）合并；<see cref="IngestResult.Measurement"/> 是合并后的那条（主键为原记录的主键）。</summary>
+    Merged = 4,
 }
 
 public sealed record IngestResult(IngestOutcome Outcome, Measurement Measurement, WeightPlausibility Plausibility, bool DeviceClockSuspect)
@@ -98,11 +100,15 @@ public sealed record IngestResult(IngestOutcome Outcome, Measurement Measurement
 /// <summary>
 /// 把收到的测量按 <see cref="MeasurementPolicy"/> 过滤后写入仓库。去重键由仓库持久化（见 <see cref="IMeasurementRepository.HasDedupKey"/>），
 /// 所以去重跨连接/跨重启有效，构造时不再读取全部历史。删除/清空历史会同时释放对应的键（之后重发同一条数据会再次入库）。
-/// 非线程安全，调用方在同一线程使用。
+/// 顺序：零体重不入库 → Q13 去重 → Q17 合并判断（<see cref="MeasurementMerge"/>）→ 新增。非线程安全，调用方在同一线程使用。
 /// </summary>
 public sealed class MeasurementIngestor
 {
+    /// <summary>无时间戳时按接收时间配对用：只记住最近这么多条本 ingestor 写入/合并过的记录（有时间戳的另外按设备+时间戳查库）。</summary>
+    private const int RecentCapacity = 16;
+
     private readonly IMeasurementRepository _repo;
+    private readonly List<Measurement> _recent = new();
 
     public MeasurementIngestor(IMeasurementRepository repo) => _repo = repo;
 
@@ -117,7 +123,48 @@ public sealed class MeasurementIngestor
         if (key is not null && _repo.HasDedupKey(key))
             return new IngestResult(IngestOutcome.Duplicate, m, plaus, suspect);
 
+        // Q17：找「另一个服务来的同一次称重」。恰好一个候选判定为合并才合并；有任何别的相关候选（歧义）或只是「像」→ 保留两条并标注。
+        var related = Candidates(m)
+            .Select(c => (Candidate: c, Decision: MeasurementMerge.Evaluate(c, m)))
+            .Where(x => x.Decision != MergeDecision.Unrelated)
+            .ToList();
+        if (related.Count == 1 && related[0].Decision == MergeDecision.Merge)
+        {
+            var merged = _repo.Replace(MeasurementMerge.Combine(related[0].Candidate, m), key);
+            if (merged is not null)
+            {
+                Remember(merged);
+                return new IngestResult(IngestOutcome.Merged, merged, plaus, suspect);
+            }
+        }
+
+        if (related.Count > 0)
+            m = m with { PossibleSameAsId = related.OrderBy(x => x.Decision == MergeDecision.Merge ? 0 : 1).First().Candidate.Id };
         var saved = _repo.Add(m);
+        Remember(saved);
         return new IngestResult(IngestOutcome.Saved, saved, plaus, suspect);
+    }
+
+    /// <summary>清掉「最近记录」缓存（界面删除/清空历史之后调用；缓存里的记录合并前本来也会重新读库确认还在）。</summary>
+    public void Reset() => _recent.Clear();
+
+    private IEnumerable<Measurement> Candidates(Measurement m)
+    {
+        var seen = new HashSet<long>();
+        var list = new List<Measurement>();
+        void Consider(Measurement? c) { if (c is not null && seen.Add(c.Id)) list.Add(c); }
+        // 缓存里的副本只用来预筛（每次读库都要开一个连接，16 条全读太贵）；通过预筛的才重新读库确认还在（可能已被删除）并以库里的为准。
+        foreach (var r in _recent.ToList())
+            if (MeasurementMerge.Evaluate(r, m) != MergeDecision.Unrelated) Consider(_repo.Get(r.Id));
+        if (m.DeviceTimestamp is { } ts)
+            foreach (var c in _repo.FindByDeviceTime(m.DeviceId, ts)) Consider(c);
+        return list;
+    }
+
+    private void Remember(Measurement saved)
+    {
+        _recent.RemoveAll(x => x.Id == saved.Id);
+        _recent.Add(saved);
+        if (_recent.Count > RecentCapacity) _recent.RemoveAt(0);
     }
 }

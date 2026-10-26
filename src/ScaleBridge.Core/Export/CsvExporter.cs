@@ -69,6 +69,7 @@ public static class CsvExporter
     {
         MeasurementSource.WeightScale => "weight-scale",
         MeasurementSource.BodyComposition => "body-composition",
+        MeasurementSource.Both => "weight-scale+body-composition",
         _ => "unknown",
     };
 

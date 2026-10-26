@@ -9,8 +9,9 @@ public sealed class SqliteDatabase
     /// <summary>
     /// 2：measurements 增加 display_time（排序/分页用，带索引）；新增 dedup_keys（持久化的 Q13 去重键，查询不必读全表）；
     /// 增加 (device_id, device_time) 索引。1 → 2 的迁移见 <see cref="MigrateToV2"/>。
+    /// 3：measurements 增加 possible_same_as_id（Q17「可能重复」标注）。
     /// </summary>
-    public const int SchemaVersion = 2;
+    public const int SchemaVersion = 3;
 
     /// <summary>display_time 列的格式：定长 ISO，字符串顺序即时间顺序。</summary>
     internal const string DisplayTimeFormat = "yyyy-MM-dd'T'HH:mm:ss.fffffff";
@@ -82,6 +83,7 @@ public sealed class SqliteDatabase
             cmd.ExecuteNonQuery();
         }
         if (version < 2) MigrateToV2(c);
+        if (version < 3) MigrateToV3(c);
     }
 
     /// <summary>
@@ -156,7 +158,18 @@ public sealed class SqliteDatabase
         Exec("CREATE INDEX IF NOT EXISTS ix_measurements_display ON measurements(display_time, id);");
         Exec("CREATE INDEX IF NOT EXISTS ix_measurements_device_time ON measurements(device_id, device_time);");
         Exec("CREATE INDEX IF NOT EXISTS ix_dedup_keys_measurement ON dedup_keys(measurement_id);");
-        Exec($"PRAGMA user_version = {SchemaVersion};");
+        Exec("PRAGMA user_version = 2;");
+        tx.Commit();
+    }
+
+    /// <summary>v2 → v3：只加一列（NULL = 没有标注），单个事务。</summary>
+    private static void MigrateToV3(SqliteConnection c)
+    {
+        using var tx = c.BeginTransaction();
+        using var cmd = c.CreateCommand();
+        cmd.Transaction = tx;
+        cmd.CommandText = "ALTER TABLE measurements ADD COLUMN possible_same_as_id INTEGER NULL; PRAGMA user_version = 3;";
+        cmd.ExecuteNonQuery();
         tx.Commit();
     }
 }

@@ -17,15 +17,55 @@ public sealed class SqliteMeasurementRepository : IMeasurementRepository
         using var tx = c.BeginTransaction();
         using var cmd = c.CreateCommand();
         cmd.Transaction = tx;
-        cmd.CommandText = """
-            INSERT INTO measurements (display_time, device_time, received_at, weight_kg, original_weight, original_unit, raw_weight, bmi, height_m,
-              body_fat_percent, muscle_percent, muscle_mass_kg, fat_free_mass_kg, soft_lean_mass_kg, body_water_mass_kg,
-              basal_metabolism_kj, impedance_ohm, user_id, device_id, device_name, source, experimental, demo)
-            VALUES ($display_time, $device_time, $received_at, $weight_kg, $original_weight, $original_unit, $raw_weight, $bmi, $height_m,
-              $body_fat, $muscle_pct, $muscle_mass, $fat_free, $soft_lean, $body_water,
-              $basal, $impedance, $user_id, $device_id, $device_name, $source, $experimental, $demo);
+        cmd.CommandText = $"""
+            INSERT INTO measurements ({Columns})
+            VALUES ({Params});
             SELECT last_insert_rowid();
             """;
+        BindAll(cmd, m);
+        var id = Convert.ToInt64(cmd.ExecuteScalar(), Inv);
+        if (MeasurementPolicy.DedupKey(m) is { } key) PutKey(c, tx, key, id);
+        tx.Commit();
+        return m with { Id = id };
+    }
+
+    public Measurement? Replace(Measurement merged, string? additionalDedupKey)
+    {
+        using var c = _db.Open();
+        using var tx = c.BeginTransaction();
+        using var cmd = c.CreateCommand();
+        cmd.Transaction = tx;
+        cmd.CommandText = $"UPDATE measurements SET {SetList} WHERE id = $id;";
+        BindAll(cmd, merged);
+        cmd.Parameters.AddWithValue("$id", merged.Id);
+        if (cmd.ExecuteNonQuery() == 0) return null;
+        if (additionalDedupKey is not null) PutKey(c, tx, additionalDedupKey, merged.Id);
+        tx.Commit();
+        return merged;
+    }
+
+    public Measurement? Get(long id) =>
+        Query("SELECT * FROM measurements WHERE id = $id;", cmd => cmd.Parameters.AddWithValue("$id", id)).FirstOrDefault();
+
+    public IReadOnlyList<Measurement> FindByDeviceTime(string deviceId, DateTime deviceTime) =>
+        Query("SELECT * FROM measurements WHERE device_id = $d AND device_time = $t ORDER BY id;", cmd =>
+        {
+            cmd.Parameters.AddWithValue("$d", deviceId);
+            cmd.Parameters.AddWithValue("$t", deviceTime.ToString("yyyy-MM-dd'T'HH:mm:ss", Inv));
+        });
+
+    private static readonly string[] ColumnNames =
+    {
+        "display_time", "device_time", "received_at", "weight_kg", "original_weight", "original_unit", "raw_weight", "bmi", "height_m",
+        "body_fat_percent", "muscle_percent", "muscle_mass_kg", "fat_free_mass_kg", "soft_lean_mass_kg", "body_water_mass_kg",
+        "basal_metabolism_kj", "impedance_ohm", "user_id", "device_id", "device_name", "source", "experimental", "demo", "possible_same_as_id",
+    };
+    private static readonly string Columns = string.Join(", ", ColumnNames);
+    private static readonly string Params = string.Join(", ", ColumnNames.Select(n => "$" + n));
+    private static readonly string SetList = string.Join(", ", ColumnNames.Select(n => $"{n} = ${n}"));
+
+    private static void BindAll(SqliteCommand cmd, Measurement m)
+    {
         Bind(cmd, "$display_time", m.DisplayTime.ToString(SqliteDatabase.DisplayTimeFormat, Inv));
         Bind(cmd, "$device_time", m.DeviceTimestamp?.ToString("yyyy-MM-dd'T'HH:mm:ss", Inv));
         Bind(cmd, "$received_at", m.ReceivedAt.ToString("o", Inv));
@@ -35,24 +75,21 @@ public sealed class SqliteMeasurementRepository : IMeasurementRepository
         Bind(cmd, "$raw_weight", m.RawWeight is { } rw ? (long)rw : null);
         Bind(cmd, "$bmi", Dec(m.Bmi));
         Bind(cmd, "$height_m", Dec(m.HeightMeters));
-        Bind(cmd, "$body_fat", Dec(m.BodyFatPercent));
-        Bind(cmd, "$muscle_pct", Dec(m.MusclePercent));
-        Bind(cmd, "$muscle_mass", Dec(m.MuscleMassKg));
-        Bind(cmd, "$fat_free", Dec(m.FatFreeMassKg));
-        Bind(cmd, "$soft_lean", Dec(m.SoftLeanMassKg));
-        Bind(cmd, "$body_water", Dec(m.BodyWaterMassKg));
-        Bind(cmd, "$basal", m.BasalMetabolismKj is { } b ? (long)b : null);
-        Bind(cmd, "$impedance", Dec(m.ImpedanceOhm));
+        Bind(cmd, "$body_fat_percent", Dec(m.BodyFatPercent));
+        Bind(cmd, "$muscle_percent", Dec(m.MusclePercent));
+        Bind(cmd, "$muscle_mass_kg", Dec(m.MuscleMassKg));
+        Bind(cmd, "$fat_free_mass_kg", Dec(m.FatFreeMassKg));
+        Bind(cmd, "$soft_lean_mass_kg", Dec(m.SoftLeanMassKg));
+        Bind(cmd, "$body_water_mass_kg", Dec(m.BodyWaterMassKg));
+        Bind(cmd, "$basal_metabolism_kj", m.BasalMetabolismKj is { } b ? (long)b : null);
+        Bind(cmd, "$impedance_ohm", Dec(m.ImpedanceOhm));
         Bind(cmd, "$user_id", m.UserId is { } uid ? (long)uid : null);
         Bind(cmd, "$device_id", m.DeviceId);
         Bind(cmd, "$device_name", m.DeviceName);
         Bind(cmd, "$source", (long)m.Source);
         Bind(cmd, "$experimental", m.IsExperimental ? 1L : 0L);
         Bind(cmd, "$demo", m.IsDemo ? 1L : 0L);
-        var id = Convert.ToInt64(cmd.ExecuteScalar(), Inv);
-        if (MeasurementPolicy.DedupKey(m) is { } key) PutKey(c, tx, key, id);
-        tx.Commit();
-        return m with { Id = id };
+        Bind(cmd, "$possible_same_as_id", m.PossibleSameAsId);
     }
 
     public IReadOnlyList<Measurement> List() => Query("SELECT * FROM measurements ORDER BY display_time DESC, id DESC;", null);
@@ -153,6 +190,13 @@ public sealed class SqliteMeasurementRepository : IMeasurementRepository
     private static void Bind(SqliteCommand cmd, string name, object? value) =>
         cmd.Parameters.AddWithValue(name, value ?? DBNull.Value);
 
+    private static bool HasColumn(SqliteDataReader r, string name)
+    {
+        for (var i = 0; i < r.FieldCount; i++)
+            if (string.Equals(r.GetName(i), name, StringComparison.Ordinal)) return true;
+        return false;
+    }
+
     internal static Measurement ReadRow(SqliteDataReader r)
     {
         string? S(string col) => r.IsDBNull(r.GetOrdinal(col)) ? null : r.GetString(r.GetOrdinal(col));
@@ -185,6 +229,8 @@ public sealed class SqliteMeasurementRepository : IMeasurementRepository
             Source = (MeasurementSource)(L("source") ?? 1),
             IsExperimental = (L("experimental") ?? 1) != 0,
             IsDemo = (L("demo") ?? 0) != 0,
+            // v1→v2 迁移读行时这一列还不存在
+            PossibleSameAsId = HasColumn(r, "possible_same_as_id") ? L("possible_same_as_id") : null,
         };
     }
 }

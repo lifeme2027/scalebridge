@@ -117,3 +117,58 @@ public class HistoryWindowTests
         Assert.Equal(6, vm.History.Count);
     }
 }
+
+/// <summary>SB1-M02：同一次称重的两包合并后，历史列表里仍是一行（原位置更新），并带上「已合并/可能重复」标记。</summary>
+public class HistoryMergeTests
+{
+    private static readonly DateTime Stamp = new(2026, 10, 26, 8, 0, 0);
+    private static readonly MethodInfo OnMeasurement =
+        typeof(MainViewModel).GetMethod("OnMeasurement", BindingFlags.Instance | BindingFlags.NonPublic)!;
+
+    private static Measurement Packet(MeasurementSource s, decimal kg = 70m, double sec = 0) => new()
+    {
+        Source = s, DeviceId = "DE:MO:00:00:00:01", DeviceTimestamp = Stamp, ReceivedAt = new DateTimeOffset(Stamp, TimeSpan.FromHours(8)).AddSeconds(sec),
+        WeightKg = kg, OriginalWeight = kg, OriginalUnit = UnitSystem.Si, RawWeight = (int)(kg * 200),
+        BodyFatPercent = s == MeasurementSource.BodyComposition ? 21.5m : null,
+    };
+
+    private static void Receive(MainViewModel vm, Measurement m) => OnMeasurement.Invoke(vm, new object[] { m });
+
+    [Fact]
+    public void Merged_packets_show_as_one_history_row_keeping_the_checkbox_and_marking_the_source()
+    {
+        using var t = new TestApp();
+        using var vm = t.CreateVm(100);
+        Receive(vm, Packet(MeasurementSource.WeightScale));
+        Assert.Single(vm.History);
+        var id = vm.History[0].Id;
+        vm.History[0].IsChecked = true;
+
+        Receive(vm, Packet(MeasurementSource.BodyComposition, sec: 0.2));
+        Assert.Single(vm.History);                                  // 没有出现第二行，体重也只算一次
+        Assert.Equal(1, t.Repo.Count());
+        Assert.Equal(id, vm.History[0].Id);
+        Assert.True(vm.History[0].IsChecked);
+        Assert.Equal("0x2A9D+0x2A9C", vm.History[0].SourceText);
+        Assert.Equal(21.5m, vm.History[0].Measurement.BodyFatPercent);
+        Assert.Contains("181D+181B", vm.History[0].FlagsText);
+
+        // 重发其中一包：重复，不新增
+        Receive(vm, Packet(MeasurementSource.WeightScale, sec: 20));
+        Assert.Single(vm.History);
+    }
+
+    [Fact]
+    public void Uncertain_pairs_stay_as_two_rows_and_the_later_one_is_marked_as_a_possible_duplicate()
+    {
+        using var t = new TestApp();
+        using var vm = t.CreateVm(100);
+        Receive(vm, Packet(MeasurementSource.WeightScale, 70m));
+        Receive(vm, Packet(MeasurementSource.BodyComposition, 70.5m, sec: 0.2));   // 同一时间戳、体重不同
+        Assert.Equal(2, vm.History.Count);
+        var marked = vm.History.Single(h => h.Measurement.PossibleSameAsId is not null);
+        Assert.Equal(MeasurementSource.BodyComposition, marked.Measurement.Source);
+        Assert.Contains("Possible duplicate", marked.FlagsText, StringComparison.Ordinal);
+        Assert.DoesNotContain("181D+181B", marked.FlagsText);
+    }
+}

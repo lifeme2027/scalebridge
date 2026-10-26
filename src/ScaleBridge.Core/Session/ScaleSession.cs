@@ -18,7 +18,7 @@ public sealed record SessionIssue(SessionIssueKind Kind, Guid Characteristic, Pa
 /// 一次与一台设备的会话：连接 → 发现服务 → 订阅 0x2A9D / 0x2A9C 的 indicate → 解析 → 产出 <see cref="Measurement"/>。
 /// 与 UI/线程无关：事件在后台线程触发，调用方自行切回 UI 线程。
 /// <see cref="RunAsync"/> 在「用户取消」或「连接结束（失败/掉线）」时返回，只有未预期的程序错误才会抛出。
-/// 注意：WSS(0x181D) 与 BCS(0x181B) 的测量分别产出独立记录，本阶段不做合并（见 NOTES）。
+/// 注意：WSS(0x181D) 与 BCS(0x181B) 的每个包在这里各产出一条独立的测量事件；同一次称重的合并发生在入库阶段（MeasurementIngestor，规则见 NOTES Q17）。
 /// </summary>
 public sealed class ScaleSession
 {
