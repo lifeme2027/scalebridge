@@ -13,7 +13,7 @@ internal static class Program
     {
         Options = CommandLineOptions.Parse(args);
         // Windows 下 WinExe 没有控制台：从命令行启动时接上父进程的控制台，--help / --list-scenarios / --smoke 的输出才看得到
-        if (OperatingSystem.IsWindows() && (Options.Help || Options.ListScenarios || Options.Smoke || Options.Error is not null || Options.Scenario is not null))
+        if (OperatingSystem.IsWindows() && (Options.Help || Options.Version || Options.ListScenarios || Options.Smoke || Options.Error is not null || Options.Scenario is not null))
             AttachConsole(ParentProcess);
         if (Options.Error is not null)
         {
@@ -21,6 +21,7 @@ internal static class Program
             Console.Error.WriteLine(CommandLineOptions.UsageText);
             return 2;
         }
+        if (Options.Version) { Console.WriteLine(AppInfo.VersionText()); return 0; }
         if (Options.Help) { Console.WriteLine(CommandLineOptions.UsageText); return 0; }
         if (Options.ListScenarios)
         {

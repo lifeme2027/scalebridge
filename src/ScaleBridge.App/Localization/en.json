@@ -95,5 +95,6 @@
   "Dlg.ExportTitle": "Export history",
   "Set.AdapterReal": "Experimental (implemented from the spec only, not verified on real hardware): real Bluetooth needs a Bluetooth adapter that is turned on. Some scales must first be paired in the system \"Settings > Bluetooth & devices\"; if connecting fails, switch to the demo data.",
   "Banner.RealBle": "Experimental (implemented from the spec only, not verified on real hardware): the real Windows Bluetooth adapter is active. It was written only from Microsoft documentation and Bluetooth SIG specifications; the author has no Bluetooth hardware and it has never been run on a real Windows PC or a real scale, so it may fail to find or connect to devices. Switch to the demo data for a reliable experience.",
-  "Status.AdapterUnsupported": "This adapter is not available on this system. Switch to the demo data in Settings."
+  "Status.AdapterUnsupported": "This adapter is not available on this system. Switch to the demo data in Settings.",
+  "Set.About": "About: ScaleBridge {0}, build commit {1}"
 }

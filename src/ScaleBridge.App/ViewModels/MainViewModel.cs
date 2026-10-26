@@ -98,6 +98,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     public Loc L { get; }
     public string DataDirectory { get; }
+    /// <summary>「关于」一行：版本与构建提交（没有注入提交时是 unknown，与 --version 一致）。</summary>
+    public string AboutText => L.Format("Set.About", AppInfo.Version, AppInfo.Commit);
     public IReadOnlyList<Choice<LanguageSetting>> LanguageChoices { get; }
     public IReadOnlyList<Choice<WeightUnit>> UnitChoices { get; }
     public IReadOnlyList<Choice<string>> AdapterChoices { get; }
@@ -279,7 +281,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         foreach (var h in _allHistory) h.Refresh(Unit);
         foreach (var n in new[]
         {
-            nameof(ConnectionText), nameof(StatusText), nameof(LiveNotice), nameof(LiveWeightText), nameof(LiveUnitText),
+            nameof(ConnectionText), nameof(StatusText), nameof(AboutText), nameof(LiveNotice), nameof(LiveWeightText), nameof(LiveUnitText),
             nameof(LiveBmiText), nameof(LiveBodyFatText), nameof(LiveDetailText), nameof(HistorySummary), nameof(ScenarioDescription),
             nameof(ShowLiveBmi), nameof(ShowLiveBodyFat),
         }) OnPropertyChanged(n);

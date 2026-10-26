@@ -130,6 +130,7 @@
             <TextBlock TextWrapping="Wrap" Text="{loc:T Set.Privacy}" />
             <TextBlock TextWrapping="Wrap" Classes="muted" Text="{Binding DataDirectory, StringFormat='{}{0}'}" />
             <TextBlock TextWrapping="Wrap" Classes="muted" Text="{loc:T Set.Keys}" />
+            <TextBlock TextWrapping="Wrap" Classes="muted" Text="{Binding AboutText}" />
           </StackPanel>
         </ScrollViewer>
       </TabItem>

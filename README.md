@@ -62,6 +62,7 @@ Windows（PowerShell）与 Linux 用法相同；发布包里直接运行 `ScaleB
 | `--fast` | 回放不等待（演示/截图用） |
 | `--lang zh\|en` | 覆盖语言；默认跟随系统，可在界面里随时切换 |
 | `--autoplay` / `--tab 0-3` | 启动后自动 扫描→连接，并停在指定页（设备/实时/历史/设置）；演示与截图辅助 |
+| `--version` | 打印版本与构建提交 SHA（两行：`ScaleBridge 0.1.0` / `commit: <sha>`）后退出。SHA 由构建时的 git 检出自动写入程序集；没有注入（例如从没有 `.git` 的源码压缩包构建）时打印 `commit: unknown`，不会伪造。同样的信息也显示在「设置」页底部 |
 | `--smoke` | 无人值守自检：扫描→连接→收到数据→写入历史，打印 `SCALEBRIDGE_SMOKE_OK` 后退出（CI 用） |
 | 环境变量 `SCALEBRIDGE_DATA_DIR` | 改数据目录（默认见 [PRIVACY.md](PRIVACY.md)） |
 

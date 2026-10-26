@@ -10,7 +10,7 @@ public class CommandLineOptionsTests
     {
         var o = CommandLineOptions.Parse(Array.Empty<string>());
         Assert.Null(o.Scenario); Assert.Null(o.Error); Assert.Null(o.Language); Assert.Null(o.Tab);
-        Assert.False(o.Fast); Assert.False(o.Smoke); Assert.False(o.Help); Assert.False(o.ListScenarios); Assert.False(o.Autoplay);
+        Assert.False(o.Fast); Assert.False(o.Smoke); Assert.False(o.Help); Assert.False(o.ListScenarios); Assert.False(o.Autoplay); Assert.False(o.Version);
     }
 
     [Fact]
@@ -43,7 +43,7 @@ public class CommandLineOptionsTests
     [Fact]
     public void UsageMentionsEveryOption()
     {
-        foreach (var opt in new[] { "--scenario", "--list-scenarios", "--fast", "--smoke", "--autoplay", "--tab", "--lang", "--help", "SCALEBRIDGE_DATA_DIR" })
+        foreach (var opt in new[] { "--scenario", "--list-scenarios", "--fast", "--smoke", "--autoplay", "--tab", "--lang", "--version", "--help", "SCALEBRIDGE_DATA_DIR" })
             Assert.Contains(opt, CommandLineOptions.UsageText);
     }
 
@@ -54,4 +54,7 @@ public class CommandLineOptionsTests
         foreach (var id in new[] { "normal-si", "imperial", "timestamp-user-bmi-height", "body-composition", "invalid-0xffff", "truncated-packet", "mid-connection-disconnect", "multi-device", "reconnect" })
             Assert.Contains(id, ids);
     }
+
+    [Fact]
+    public void VersionFlagIsParsedAlone() => Assert.True(CommandLineOptions.Parse(new[] { "--version" }) is { Version: true, Error: null });
 }
