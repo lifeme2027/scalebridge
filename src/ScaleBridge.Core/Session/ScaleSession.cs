@@ -76,6 +76,9 @@ public sealed class ScaleSession
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct);
             var loops = subs.Select(s => Task.Run(() => PumpAsync(conn, s.Service, s.Char, linked.Token), CancellationToken.None)).ToList();
             var first = await Task.WhenAny(loops).ConfigureAwait(false);
+            // 一路订阅结束（对端断开）时，另一路特征上已经收到、还在缓冲里的通知要先处理完，不能随手取消把它们丢掉。
+            // 用户主动取消（ct）时没有这个问题：linked 随 ct 一起取消，立即退出。
+            if (!ct.IsCancellationRequested) await DrainSiblingsAsync(loops, ct).ConfigureAwait(false);
             linked.Cancel();
             try { await first.ConfigureAwait(false); }
             catch (OperationCanceledException) when (ct.IsCancellationRequested) { }
@@ -104,6 +107,29 @@ public sealed class ScaleSession
                 try { await conn.DisposeAsync().ConfigureAwait(false); } catch { /* 释放失败不影响结果 */ }
             }
         }
+    }
+
+    /// <summary>另一路订阅流不会自己结束（连接实际还活着）时，最多再等这么久，之后照常判定为断开。</summary>
+    internal static readonly TimeSpan DrainGrace = TimeSpan.FromMilliseconds(1500);
+
+    private async Task DrainSiblingsAsync(IReadOnlyList<Task> loops, CancellationToken ct)
+    {
+        var pending = loops.Where(l => !l.IsCompleted).ToList();
+        if (pending.Count == 0) return;
+        using var grace = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        var timer = Task.Delay(DrainGrace, _clock, grace.Token);
+        var all = Task.WhenAll(pending.Select(AwaitQuietlyAsync));
+        try { await Task.WhenAny(all, timer).ConfigureAwait(false); }
+        catch (OperationCanceledException) { }
+        grace.Cancel();
+        try { await timer.ConfigureAwait(false); } catch (OperationCanceledException) { }
+    }
+
+    private static async Task AwaitQuietlyAsync(Task t)
+    {
+        try { await t.ConfigureAwait(false); }
+        catch (OperationCanceledException) { }
+        catch (BleException) { }
     }
 
     private static bool CanSubscribe(IReadOnlyList<GattServiceInfo> services, Guid service, Guid characteristic)
