@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Tmds.DBus.Protocol" Version="0.95.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ScaleBridge.Core\ScaleBridge.Core.csproj" />
     <InternalsVisibleTo Include="ScaleBridge.Linux.Tests" />
   </ItemGroup>

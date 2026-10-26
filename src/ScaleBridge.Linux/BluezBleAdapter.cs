@@ -18,6 +18,18 @@ public sealed class BluezBleAdapter : IBleAdapter
     private readonly string? _preferredAdapter;
     private readonly bool _platformSupported;
 
+    /// <summary>
+    /// 使用系统总线上的真实 BlueZ（实验性，未真机验证）。
+    /// </summary>
+    /// <param name="preferredAdapter">首选适配器名，例如 "hci0"；为空则取第一个可用适配器。</param>
+    public BluezBleAdapter(string? preferredAdapter = null)
+        : this(RealBusFactory, null, preferredAdapter)
+    {
+    }
+
+    private static async Task<IBluezBus> RealBusFactory(CancellationToken ct) =>
+        await TmdsBluezBus.ConnectAsync(null, ct).ConfigureAwait(false);
+
     internal BluezBleAdapter(
         Func<CancellationToken, Task<IBluezBus>> busFactory,
         TimeProvider? time = null,
