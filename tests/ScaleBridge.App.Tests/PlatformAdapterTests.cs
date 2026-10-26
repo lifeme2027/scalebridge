@@ -225,7 +225,10 @@ public class PlatformAdapterTests
         await t.Vm.StartScanAsync();
         await t.Vm.ScanTask;
         await t.UntilAsync(() => !t.Vm.IsScanning, "scan stopped");
-        Assert.Contains("boom", t.Read(() => t.Vm.StatusText));
+        var text = t.Read(() => t.Vm.StatusText);
+        Assert.Equal(t.Loc.Format("Status.ScanFailed", t.Loc["Err.Other"]), text); // 正文用词典里的文字，原始原因只在悬停提示里
+        Assert.DoesNotContain("boom", text);
+        Assert.Contains("boom", t.Read(() => t.Vm.StatusDetail)!);
     }
 
     [Fact]

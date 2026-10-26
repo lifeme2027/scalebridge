@@ -41,6 +41,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private int _sessionGeneration;
     private (string Key, object?[] Args)? _notice;
     private (string Key, object?[] Args)? _status;
+    private int _sessionMeasurements;
+    private int _scanSeen;
     private (ConnectionState State, string? Reason, BleErrorKind? Kind) _conn = (ConnectionState.Disconnected, null, null);
     // 历史：数据库保留全部记录；界面只持有「最新 N 条 + 用户点“加载更多”追加的更旧记录」（N = AppSettings.HistoryWindow）。
     // 收到新记录时按显示时间增量插入，不重读数据库。_allHistory 始终按显示时间倒序（与仓库一致）。
@@ -48,8 +50,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private int _totalHistory;
 
     public MainViewModel(IMeasurementRepository repo, ISettingsStore settingsStore, IDialogService dialogs, IUiDispatcher ui,
-        IAdapterFactory adapters, Loc loc, string dataDirectory, AppSettings? initialSettings = null, TimeProvider? clock = null)
+        IAdapterFactory adapters, Loc loc, string dataDirectory, AppSettings? initialSettings = null, TimeProvider? clock = null,
+        TimeSpan? scanTimeout = null)
     {
+        ScanTimeout = scanTimeout ?? DefaultScanTimeout;
         _repo = repo;
         _settingsStore = settingsStore;
         _dialogs = dialogs;
@@ -98,6 +102,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         LoadHistory();
         _loading = false;
     }
+
+    /// <summary>扫描默认最长持续时间；到点自动停止并给出结果提示（找到 N 台 / 未发现设备）。</summary>
+    public static readonly TimeSpan DefaultScanTimeout = TimeSpan.FromSeconds(30);
+
+    /// <summary>本次运行的扫描超时；<see cref="TimeSpan.Zero"/>（或更小）表示不限时，一直扫到用户停止。</summary>
+    public TimeSpan ScanTimeout { get; }
 
     public Loc L { get; }
     public string DataDirectory { get; }
@@ -152,13 +162,42 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 _ => L["Conn.Disconnected"],
             };
             if (_conn.State != ConnectionState.Dropped) return name;
-            var kind = _conn.Kind is { } k ? L["Err." + k] : "";
-            var reason = string.IsNullOrWhiteSpace(_conn.Reason) ? "" : _conn.Reason!;
-            return $"{name}{(L.IsChinese ? "：" : ": ")}{kind}{(kind.Length > 0 && reason.Length > 0 ? " — " : "")}{reason}";
+            // 断开原因只用词典里的文字（Err.<Kind>），整句同一种语言；设备/系统给出的原始英文原因放在 ConnectionDetail（悬停提示），不拼进这句话。
+            var kind = L["Err." + (_conn.Kind ?? BleErrorKind.Other)];
+            return $"{name}{(L.IsChinese ? "：" : ": ")}{kind}";
         }
     }
 
-    public string StatusText => _status is { } s ? L.Format(s.Key, s.Args) : "";
+    /// <summary>断开的原始技术原因（来自设备或系统，语言不受控），仅作悬停提示，null 表示没有。</summary>
+    public string? ConnectionDetail =>
+        _conn.State == ConnectionState.Dropped && !string.IsNullOrWhiteSpace(_conn.Reason) ? L.Format("Conn.Detail", _conn.Reason) : null;
+
+    /// <summary>
+    /// 状态栏文字。优先显示一次性消息（导出结果、错误等，连接状态一变化就清掉）；没有消息时完全由当前连接/扫描状态推出，
+    /// 所以不可能出现「已连接」而实际已断开的情况。
+    /// </summary>
+    public string StatusText
+    {
+        get
+        {
+            if (_status is { } st) return L.Format(st.Key, st.Args.Select(a => a is BleErrorKind k ? L["Err." + k] : a).ToArray());
+            if (IsConnecting) return L["Conn.Connecting"];
+            if (IsScanning) return L["Status.Scanning"];
+            return _conn.State switch
+            {
+                ConnectionState.Connected => _sessionMeasurements == 0 ? L["Status.Connected"] : L.Format("Status.Receiving", _sessionMeasurements),
+                ConnectionState.Dropped => L["Status.Dropped"],
+                _ => "",
+            };
+        }
+    }
+
+    /// <summary>扫描失败时的原始技术原因（语言不受控），仅作悬停提示。</summary>
+    public string? StatusDetail => _statusDetail is { Length: > 0 } d ? L.Format("Conn.Detail", d) : null;
+    private string? _statusDetail;
+
+    /// <summary>上一次扫描正常结束且一台设备都没发现：设备页显示「未发现设备」提示和「重新扫描」。</summary>
+    public bool ScanNoDevice { get; private set; }
     public string LiveNotice => _notice is { } n ? L.Format(n.Key, n.Args) : "";
     public bool HasLiveNotice => _notice is not null;
 
@@ -167,10 +206,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public bool LiveIsDemo => LastMeasurement?.IsDemo == true;
     public bool HasLive => LastMeasurement is not null;
 
-    public string LiveBmiText => LastMeasurement?.Bmi is null ? "" : $"BMI {DisplayFormat.One(LastMeasurement.Bmi)}";
-    public string LiveBodyFatText => LastMeasurement?.BodyFatPercent is null ? "" : $"{L["Live.BodyFat"]} {DisplayFormat.One(LastMeasurement.BodyFatPercent, " %")}";
-    public bool ShowLiveBmi => ShowBmi && LiveBmiText.Length > 0;
-    public bool ShowLiveBodyFat => ShowBodyFat && LiveBodyFatText.Length > 0;
+    // 有读数时，缺失的字段一律显示「—」，而不是整项消失；还没有读数时显示等待提示。
+    public string LiveBmiText => LastMeasurement is null ? "" : $"BMI {DisplayFormat.One(LastMeasurement.Bmi)}";
+    public string LiveBodyFatText => LastMeasurement is null ? "" : $"{L["Live.BodyFat"]} {DisplayFormat.One(LastMeasurement.BodyFatPercent, " %")}";
+    public bool ShowLiveBmi => ShowBmi && HasLive;
+    public bool ShowLiveBodyFat => ShowBodyFat && HasLive;
 
     public string LiveDetailText
     {
@@ -178,16 +218,22 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             var m = LastMeasurement;
             if (m is null) return L["Live.Waiting"];
-            var parts = new List<string> { DisplayFormat.Time(m.DisplayTime) };
-            parts.Add(string.IsNullOrWhiteSpace(m.DeviceName) ? m.DeviceId : m.DeviceName!);
-            if (m.UserId is { } u) parts.Add($"{L["Live.User"]} {u}");
-            if (m.HeightMeters is { } h) parts.Add($"{L["Live.Height"]} {decimal.Round(h, 3, MidpointRounding.AwayFromZero).ToString("0.###", CultureInfo.InvariantCulture)} m");
-            if (m.MusclePercent is { } mp) parts.Add($"{L["Live.Muscle"]} {DisplayFormat.One(mp, " %")}");
-            if (m.BodyWaterMassKg is { } w) parts.Add($"{L["Live.Water"]} {DisplayFormat.One(w, " kg")}");
-            if (m.FatFreeMassKg is { } ffm) parts.Add($"{L["Live.FatFree"]} {DisplayFormat.One(ffm, " kg")}");
-            if (m.BasalMetabolismKj is { } bmr) parts.Add($"{L["Live.Bmr"]} {bmr} kJ");
-            if (m.ImpedanceOhm is { } z) parts.Add($"{L["Live.Impedance"]} {DisplayFormat.One(z, " Ω")}");
-            return string.Join("  ·  ", parts);
+            const string Dash = "—";
+            var height = m.HeightMeters is { } h
+                ? decimal.Round(h, 3, MidpointRounding.AwayFromZero).ToString("0.###", CultureInfo.InvariantCulture) + " m"
+                : Dash;
+            return string.Join("  ·  ", new[]
+            {
+                DisplayFormat.Time(m.DisplayTime),
+                string.IsNullOrWhiteSpace(m.DeviceName) ? m.DeviceId : m.DeviceName!,
+                $"{L["Live.User"]} {(m.UserId is { } u ? u.ToString(CultureInfo.InvariantCulture) : Dash)}",
+                $"{L["Live.Height"]} {height}",
+                $"{L["Live.Muscle"]} {DisplayFormat.One(m.MusclePercent, " %")}",
+                $"{L["Live.Water"]} {DisplayFormat.One(m.BodyWaterMassKg, " kg")}",
+                $"{L["Live.FatFree"]} {DisplayFormat.One(m.FatFreeMassKg, " kg")}",
+                $"{L["Live.Bmr"]} {(m.BasalMetabolismKj is { } bmr ? bmr.ToString(CultureInfo.InvariantCulture) + " kJ" : Dash)}",
+                $"{L["Live.Impedance"]} {DisplayFormat.One(m.ImpedanceOhm, " Ω")}",
+            });
         }
     }
 
@@ -232,7 +278,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     partial void OnShowBmiChanged(bool value) { OnPropertyChanged(nameof(ShowLiveBmi)); PersistSettings(); }
     partial void OnShowBodyFatChanged(bool value) { OnPropertyChanged(nameof(ShowLiveBodyFat)); PersistSettings(); }
     partial void OnFilterTextChanged(string value) => ApplyFilter();
-    partial void OnIsScanningChanged(bool value) => OnPropertyChanged(nameof(CanScan));
+    partial void OnIsScanningChanged(bool value) { OnPropertyChanged(nameof(CanScan)); OnPropertyChanged(nameof(StatusText)); }
     partial void OnSelectedDeviceChanged(DeviceItem? value) => OnPropertyChanged(nameof(CanConnect));
 
     partial void OnLastMeasurementChanged(Measurement? value)
@@ -288,7 +334,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         foreach (var h in _allHistory) h.Refresh(Unit);
         foreach (var n in new[]
         {
-            nameof(ConnectionText), nameof(StatusText), nameof(AboutText), nameof(LiveNotice), nameof(LiveWeightText), nameof(LiveUnitText),
+            nameof(ConnectionText), nameof(ConnectionDetail), nameof(StatusText), nameof(StatusDetail), nameof(AboutText), nameof(LiveNotice), nameof(LiveWeightText), nameof(LiveUnitText),
             nameof(LiveBmiText), nameof(LiveBodyFatText), nameof(LiveDetailText), nameof(HistorySummary), nameof(ScenarioDescription),
             nameof(ShowLiveBmi), nameof(ShowLiveBodyFat),
         }) OnPropertyChanged(n);
@@ -316,6 +362,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         LastMeasurement = null;
         SetNotice(null);
         SetStatus(null);
+        SetScanNoDevice(false);
     }
 
     /// <summary>开始扫描（立即返回，扫描在后台跑；用 <see cref="StopScan"/> 停止）。</summary>
@@ -327,7 +374,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         if (adapter is null) { SetStatus("Status.AdapterUnsupported"); return; }
         BleAvailability availability;
         try { availability = await adapter.GetAvailabilityAsync().ConfigureAwait(true); }
-        catch (BleException ex) { SetStatus("Status.ScanFailed", ex.Message); return; }
+        catch (BleException ex) { SetStatusWithDetail("Status.ScanFailed", ex.Message, ex.Kind); return; }
         if (availability != BleAvailability.Available)
         {
             SetStatus(availability switch
@@ -340,9 +387,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
         if (IsScanning) return;
         var cts = new CancellationTokenSource();
+        if (ScanTimeout > TimeSpan.Zero) cts.CancelAfter(ScanTimeout);
         _scanCts = cts;
+        _scanSeen = 0;
+        SetScanNoDevice(false);
+        SetStatus(null);
         IsScanning = true;
-        SetStatus("Status.Scanning");
         _scanTask = Task.Run(() => ScanLoopAsync(adapter, cts));
     }
 
@@ -352,6 +402,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     private async Task ScanLoopAsync(IBleAdapter adapter, CancellationTokenSource cts)
     {
+        var failed = false;
         try
         {
             var opts = new ScanOptions { ServiceFilter = DeviceClassifier.StandardServiceFilter };
@@ -361,21 +412,51 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         catch (OperationCanceledException) { }
         catch (BleException ex)
         {
-            _ui.Post(() => SetStatus(ex.Kind switch
+            failed = true;
+            _ui.Post(() => SetStatusWithDetail(ex.Kind switch
             {
                 BleErrorKind.PermissionDenied => "Status.BlePermission",
                 BleErrorKind.BluetoothUnavailable => "Status.BleUnavailable",
                 _ => "Status.ScanFailed",
-            }, ex.Message));
+            }, ex.Message, ex.Kind));
         }
         finally
         {
-            _ui.Post(() => { if (ReferenceEquals(_scanCts, cts)) { _scanCts = null; IsScanning = false; } cts.Dispose(); });
+            _ui.Post(() =>
+            {
+                // _scanCts 仍是这一次：说明不是用户点了停止，而是到时间了（或适配器自己扫完了）→ 给出结果提示。
+                if (ReferenceEquals(_scanCts, cts))
+                {
+                    _scanCts = null;
+                    IsScanning = false;
+                    if (!failed) OnScanFinished();
+                }
+                cts.Dispose();
+            });
         }
+    }
+
+    private void OnScanFinished()
+    {
+        if (_scanSeen == 0)
+        {
+            SetScanNoDevice(true);
+            SetStatus("Status.NoDeviceFound");
+        }
+        else SetStatus("Status.ScanFinished", _scanSeen);
+    }
+
+    private void SetScanNoDevice(bool value)
+    {
+        if (ScanNoDevice == value) return;
+        ScanNoDevice = value;
+        OnPropertyChanged(nameof(ScanNoDevice));
     }
 
     private void OnAdvertised(AdvertisedDevice ad)
     {
+        _scanSeen++;
+        SetScanNoDevice(false);
         var existing = Devices.FirstOrDefault(d => d.Id == ad.Id);
         if (existing is null) Devices.Add(new DeviceItem(ad, L));
         else existing.Update(ad);
@@ -389,7 +470,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         _scanCts = null;
         IsScanning = false;
         try { cts.Cancel(); } catch (ObjectDisposedException) { }
-        if (_status?.Key == "Status.Scanning") SetStatus("Status.ScanStopped");
+        SetStatus("Status.ScanStopped");
     }
 
     // ---- 连接 ----
@@ -406,6 +487,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         var cts = new CancellationTokenSource();
         _sessionCts = cts;
         SetNotice(null);
+        _sessionMeasurements = 0;
         session.StateChanged += (_, c) => _ui.Post(() => { if (gen == _sessionGeneration) OnConnectionChanged(c); });
         session.MeasurementReceived += (_, m) => _ui.Post(() => { if (gen == _sessionGeneration) OnMeasurement(m); });
         session.IssueRaised += (_, i) => _ui.Post(() => { if (gen == _sessionGeneration) OnIssue(i); });
@@ -440,22 +522,27 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private void OnConnectionChanged(ConnectionStateChange c)
     {
         SetConnection((c.State, c.Reason, c.ErrorKind));
-        if (c.State == ConnectionState.Connected) SetStatus("Status.Connected");
         if (c.State is ConnectionState.Dropped or ConnectionState.Disconnected) _sessionCts = null;
     }
 
     private void SetConnection((ConnectionState State, string? Reason, BleErrorKind? Kind) c)
     {
         _conn = c;
+        // 连接状态一变，之前的一次性状态消息（含上一次连接遗留的）就过期了；状态栏改由连接状态本身推出。
+        _status = null;
+        _statusDetail = null;
         foreach (var n in new[]
         {
-            nameof(ConnectionState), nameof(IsConnected), nameof(IsConnecting), nameof(IsSessionActive), nameof(CanConnect), nameof(ConnectionText),
+            nameof(ConnectionState), nameof(IsConnected), nameof(IsConnecting), nameof(IsSessionActive), nameof(CanConnect),
+            nameof(ConnectionText), nameof(ConnectionDetail), nameof(StatusText), nameof(StatusDetail),
         }) OnPropertyChanged(n);
     }
 
     private void OnMeasurement(Measurement m)
     {
         var r = _ingestor.Ingest(m);
+        _sessionMeasurements++;
+        OnPropertyChanged(nameof(StatusText));
         LastMeasurement = r.Measurement;
         switch (r.Outcome)
         {
@@ -487,10 +574,15 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(HasLiveNotice));
     }
 
-    private void SetStatus(string? key, params object?[] args)
+    private void SetStatus(string? key, params object?[] args) => SetStatusWithDetail(key, null, args);
+
+    /// <summary>设一条状态消息，并附带原始技术原因（只用于悬停提示，不进正文）。</summary>
+    private void SetStatusWithDetail(string? key, string? detail, params object?[] args)
     {
         _status = key is null ? null : (key, args);
+        _statusDetail = key is null ? null : detail;
         OnPropertyChanged(nameof(StatusText));
+        OnPropertyChanged(nameof(StatusDetail));
     }
 
     [RelayCommand]

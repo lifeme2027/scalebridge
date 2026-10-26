@@ -12,8 +12,8 @@
   <DockPanel>
     <Border DockPanel.Dock="Bottom" Padding="12,6" BorderThickness="0,1,0,0" BorderBrush="#40808080">
       <Grid ColumnDefinitions="*,Auto">
-        <TextBlock Grid.Column="0" Text="{Binding StatusText}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-        <TextBlock Grid.Column="1" Text="{Binding ConnectionText}" TextTrimming="CharacterEllipsis" MaxWidth="460" Margin="12,0,0,0" VerticalAlignment="Center" />
+        <TextBlock Grid.Column="0" Text="{Binding StatusText}" ToolTip.Tip="{Binding StatusDetail}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+        <TextBlock Grid.Column="1" Text="{Binding ConnectionText}" ToolTip.Tip="{Binding ConnectionDetail}" TextTrimming="CharacterEllipsis" MaxWidth="460" Margin="12,0,0,0" VerticalAlignment="Center" />
       </Grid>
     </Border>
     <StackPanel DockPanel.Dock="Top">
@@ -30,15 +30,21 @@
     <TabControl SelectedIndex="{Binding SelectedTab, Mode=TwoWay}">
       <!-- 设备 -->
       <TabItem Header="{loc:T Tab.Devices}">
-        <Grid RowDefinitions="Auto,Auto,*" Margin="12">
+        <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="12">
           <WrapPanel Grid.Row="0">
             <Button Margin="0,0,8,8" Content="{loc:T Btn.Scan}" Command="{Binding StartScanCommand}" IsEnabled="{Binding CanScan}" />
             <Button Margin="0,0,8,8" Content="{loc:T Btn.StopScan}" Command="{Binding StopScanCommand}" IsEnabled="{Binding IsScanning}" />
             <Button Margin="0,0,8,8" Content="{loc:T Btn.Connect}" Command="{Binding ConnectCommand}" IsEnabled="{Binding CanConnect}" />
             <Button Margin="0,0,8,8" Content="{loc:T Btn.Disconnect}" Command="{Binding DisconnectCommand}" IsEnabled="{Binding IsSessionActive}" />
           </WrapPanel>
-          <TextBlock Grid.Row="1" Margin="0,0,0,8" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Text="{Binding ConnectionText}" />
-          <DataGrid Grid.Row="2" ItemsSource="{Binding Devices}" SelectedItem="{Binding SelectedDevice, Mode=TwoWay}"
+          <TextBlock Grid.Row="1" Margin="0,0,0,8" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Text="{Binding ConnectionText}" ToolTip.Tip="{Binding ConnectionDetail}" />
+          <Border Grid.Row="2" Margin="0,0,0,8" Padding="12,8" CornerRadius="4" Background="#FFF4CE" IsVisible="{Binding ScanNoDevice}">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+              <TextBlock Foreground="#5C4400" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="640" Text="{loc:T Devices.NoDeviceHint}" />
+              <Button VerticalAlignment="Center" Content="{loc:T Btn.ScanAgain}" Command="{Binding StartScanCommand}" IsEnabled="{Binding CanScan}" />
+            </StackPanel>
+          </Border>
+          <DataGrid Grid.Row="3" ItemsSource="{Binding Devices}" SelectedItem="{Binding SelectedDevice, Mode=TwoWay}"
                     AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" CanUserResizeColumns="True">
             <DataGrid.Columns>
               <DataGridTextColumn Header="{loc:T Col.Name}" Binding="{Binding NameText}" Width="2*" />

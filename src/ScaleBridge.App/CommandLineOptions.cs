@@ -1,3 +1,5 @@
+using ScaleBridge.App.ViewModels;
+
 namespace ScaleBridge.App;
 
 /// <summary>
@@ -15,6 +17,8 @@ public sealed record CommandLineOptions
     public bool Version { get; init; }
     public bool Autoplay { get; init; }
     public int? Tab { get; init; }
+    /// <summary>扫描超时（秒）。null = 用默认值；0 = 不限时。</summary>
+    public int? ScanTimeoutSeconds { get; init; }
     public string? Language { get; init; }
     public string? Error { get; init; }
 
@@ -26,10 +30,11 @@ public sealed record CommandLineOptions
         "  --smoke            unattended self-check, prints SCALEBRIDGE_SMOKE_OK and exits\n" +
         "  --autoplay         after start, scan + connect the first demo device automatically (keeps running)\n" +
         "  --tab 0-3          start on this tab (0 devices, 1 live, 2 history, 3 settings)\n" +
+        "  --scan-timeout <s> stop scanning after this many seconds (default 30, 3 with --fast; 0 = never)\n" +
         "  --lang zh|en       override UI language\n" +
         "  --version          print version and build commit (unknown when not injected) and exit\n" +
         "  --help             this text\n" +
-        "Env: SCALEBRIDGE_DATA_DIR overrides the data directory.";
+        "Env: SCALEBRIDGE_DATA_DIR overrides the data directory; SCALEBRIDGE_SCAN_TIMEOUT sets the scan timeout in seconds.";
 
     public static CommandLineOptions Parse(IReadOnlyList<string> args)
     {
@@ -53,6 +58,11 @@ public sealed record CommandLineOptions
                     o = o with { Tab = tab };
                     i++;
                     break;
+                case "--scan-timeout":
+                    if (i + 1 >= args.Count || !TryParseSeconds(args[i + 1], out var secs)) return o with { Error = "--scan-timeout needs a whole number of seconds, 0..3600 (0 = never)" };
+                    o = o with { ScanTimeoutSeconds = secs };
+                    i++;
+                    break;
                 case "--fast": o = o with { Fast = true }; break;
                 case "--smoke": o = o with { Smoke = true }; break;
                 case "--version": o = o with { Version = true }; break;
@@ -61,5 +71,19 @@ public sealed record CommandLineOptions
             }
         }
         return o;
+    }
+
+    private static bool TryParseSeconds(string text, out int seconds) =>
+        int.TryParse(text, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out seconds) && seconds <= 3600;
+
+    /// <summary>
+    /// 扫描超时的取值顺序：命令行 <c>--scan-timeout</c> → 环境变量 <c>SCALEBRIDGE_SCAN_TIMEOUT</c>（秒，非法值忽略）→ 默认
+    /// （30 秒；演示加速模式 <c>--fast/--smoke/--autoplay</c> 下 3 秒）。0 表示不限时。
+    /// </summary>
+    public TimeSpan ResolveScanTimeout(string? envValue)
+    {
+        if (ScanTimeoutSeconds is { } s) return TimeSpan.FromSeconds(s);
+        if (TryParseSeconds(envValue?.Trim() ?? "", out var e)) return TimeSpan.FromSeconds(e);
+        return Fast || Smoke || Autoplay ? TimeSpan.FromSeconds(3) : MainViewModel.DefaultScanTimeout;
     }
 }

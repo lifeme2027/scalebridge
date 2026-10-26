@@ -98,5 +98,12 @@
   "Set.AdapterReal": "Experimental (implemented from the spec only, not verified on real hardware): real Bluetooth needs a Bluetooth adapter that is turned on. Some scales must first be paired in the system \"Settings > Bluetooth & devices\"; if connecting fails, switch to the demo data.",
   "Banner.RealBle": "Experimental (implemented from the spec only, not verified on real hardware): the real Windows Bluetooth adapter is active. It was written only from Microsoft documentation and Bluetooth SIG specifications; the author has no Bluetooth hardware and it has never been run on a real Windows PC or a real scale, so it may fail to find or connect to devices. Switch to the demo data for a reliable experience.",
   "Status.AdapterUnsupported": "This adapter is not available on this system. Switch to the demo data in Settings.",
-  "Set.About": "About: ScaleBridge {0}, build commit {1}"
+  "Set.About": "About: ScaleBridge {0}, build commit {1}",
+  "Status.NoDeviceFound": "No device found. Make sure the scale is powered on and in range, then scan again.",
+  "Status.ScanFinished": "Scan finished: found {0} device(s).",
+  "Status.Receiving": "Connected, receiving data ({0} received in this connection).",
+  "Status.Dropped": "Connection lost. Select the device and press Connect to reconnect.",
+  "Conn.Detail": "Technical detail: {0}",
+  "Btn.ScanAgain": "Scan again",
+  "Devices.NoDeviceHint": "No device found. Make sure the scale is powered on, awake and within range (some scales must be stepped on first), then scan again."
 }

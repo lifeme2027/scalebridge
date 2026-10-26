@@ -61,6 +61,7 @@ Windows（PowerShell）与 Linux 用法相同；发布包里直接运行 `ScaleB
 | `--list-scenarios` | 打印场景并退出 |
 | `--fast` | 回放不等待（演示/截图用） |
 | `--lang zh\|en` | 覆盖语言；默认跟随系统，可在界面里随时切换 |
+| `--scan-timeout <秒>` | 扫描最长持续时间，到点自动停止并提示「发现 N 台」或「未发现设备」（可点「重新扫描」）。默认 30 秒（`--fast`/`--smoke`/`--autoplay` 下 3 秒）；`0` = 不限时。也可用环境变量 `SCALEBRIDGE_SCAN_TIMEOUT`（秒），命令行优先 |
 | `--autoplay` / `--tab 0-3` | 启动后自动 扫描→连接，并停在指定页（设备/实时/历史/设置）；演示与截图辅助 |
 | `--version` | 打印版本与构建提交 SHA（两行：`ScaleBridge 0.1.0` / `commit: <sha>`）后退出。SHA 由构建时的 git 检出自动写入程序集；没有注入（例如从没有 `.git` 的源码压缩包构建）时打印 `commit: unknown`，不会伪造。同样的信息也显示在「设置」页底部 |
 | `--smoke` | 无人值守自检：扫描→连接→收到数据→写入历史，打印 `SCALEBRIDGE_SMOKE_OK` 后退出（CI 用） |

@@ -30,7 +30,8 @@ public class App : Application
             var window = new MainWindow();
             var vm = new MainViewModel(
                 new SqliteMeasurementRepository(db), settingsStore, new AvaloniaDialogService(() => window), new AvaloniaDispatcher(),
-                new AdapterFactory(opts.Fast || opts.Smoke || opts.Autoplay ? 0.1 : 1.0, PlatformAdapters.WindowsFactory()), Loc.Instance, AppPaths.DataDirectory, settings);
+                new AdapterFactory(opts.Fast || opts.Smoke || opts.Autoplay ? 0.1 : 1.0, PlatformAdapters.WindowsFactory()), Loc.Instance, AppPaths.DataDirectory, settings,
+                scanTimeout: opts.ResolveScanTimeout(Environment.GetEnvironmentVariable("SCALEBRIDGE_SCAN_TIMEOUT")));
             if (opts.Tab is { } tab) vm.SelectedTab = tab;
             window.DataContext = vm;
             desktop.MainWindow = window;

@@ -119,8 +119,8 @@ public class MainViewModelFlowTests
         await t.ScanAndConnectAsync();
         await t.UntilAsync(() => t.Vm.ConnectionState == ConnectionState.Dropped, "dropped");
         var text = t.Read(() => t.Vm.ConnectionText);
-        Assert.Contains("Connection dropped", text);
-        Assert.Contains("Device powered off (demo)", text);
+        Assert.Equal(t.Loc["Conn.Dropped"] + ": " + t.Loc["Err.DeviceDisconnected"], text);
+        Assert.DoesNotContain("powered off", text); // 设备给出的原始英文原因不进正文（见 MainViewModelStatusTests）
         Assert.Single(t.Repo.List());
         Assert.False(t.Read(() => t.Vm.IsSessionActive));
         Assert.True(t.Read(() => t.Vm.CanConnect), "a dropped connection can be retried");
