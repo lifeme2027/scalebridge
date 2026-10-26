@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>ScaleBridge.Core</RootNamespace>
+    <AssemblyName>ScaleBridge.Core</AssemblyName>
+    <!-- Core 保持纯 C#：不依赖任何蓝牙库或第三方包；警告一律当作错误 -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+</Project>
