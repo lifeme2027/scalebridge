@@ -1,0 +1,66 @@
+{
+  "schema": "scalebridge-scenario/1",
+  "id": "reconnect",
+  "demo": true,
+  "title": {
+    "zh": "断线重连",
+    "en": "Reconnect after drop"
+  },
+  "description": {
+    "zh": "第一次连接收到一条后掉线；再次点击连接（重连）后继续收到数据。",
+    "en": "First connection drops after one weight; connecting again (reconnect) yields more data."
+  },
+  "devices": [
+    {
+      "id": "DE:MO:00:00:00:0B",
+      "name": "演示体重秤 K",
+      "rssi": -54,
+      "appearAfterMs": 0,
+      "services": [
+        "181D"
+      ],
+      "manufacturerData": {},
+      "features": {
+        "2A9E": "BF010000"
+      },
+      "connections": [
+        {
+          "connectDelayMs": 400,
+          "events": [
+            {
+              "delayMs": 800,
+              "type": "indicate",
+              "characteristic": "2A9D",
+              "hex": "00B036",
+              "expect": "ok"
+            },
+            {
+              "delayMs": 1500,
+              "type": "disconnect",
+              "reason": "Connection lost (demo)"
+            }
+          ]
+        },
+        {
+          "connectDelayMs": 600,
+          "events": [
+            {
+              "delayMs": 800,
+              "type": "indicate",
+              "characteristic": "2A9D",
+              "hex": "000037",
+              "expect": "ok"
+            },
+            {
+              "delayMs": 1500,
+              "type": "indicate",
+              "characteristic": "2A9D",
+              "hex": "00EC36",
+              "expect": "ok"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
