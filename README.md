@@ -2,7 +2,7 @@
 
 跨平台桌面蓝牙体重秤接收器：**不需要手机 App**，在 Windows 和 Linux 上直接发现体重秤、连接、实时接收体重并在本机显示，可导出 CSV / JSON。
 
-> **状态：阶段 1（开发中）。** 目前只有 Core 协议解析、演示用的 Fake 适配器、界面、导出与 CI/打包；
+> **状态：阶段 1。** 已有 Core 协议解析、演示用的 Fake 适配器、Avalonia 界面、SQLite 历史、CSV/JSON 导出与 CI/打包；
 > **还没有真实蓝牙适配器**（Windows / Linux 适配器属于阶段 2），所以现在**不能连接真实体重秤**。
 
 ## 诚实声明
@@ -17,7 +17,7 @@
 ## 纯本地、无遥测
 
 * 程序不发起任何网络请求，没有遥测、统计或更新检查。
-* 历史记录和设置保存在本机应用数据目录的 SQLite 文件里；详见 [PRIVACY.md](PRIVACY.md)（随首个 UI 提交加入）。
+* 历史记录和设置保存在本机应用数据目录的 SQLite 文件里；详见 [PRIVACY.md](PRIVACY.md)。
 
 ## 技术栈与结构
 
@@ -25,14 +25,56 @@
 
 ```
 src/ScaleBridge.Core          纯 C#（net8.0）：协议解析、数据模型、导出、IBleAdapter 抽象；不依赖任何蓝牙库
-src/ScaleBridge.Ble.Fake      演示数据适配器（脚本回放，供界面演示与无硬件的 CI 端到端测试）
-src/ScaleBridge.App           Avalonia 桌面界面
-tests/ScaleBridge.Core.Tests  xUnit
+src/ScaleBridge.Ble.Fake      演示数据适配器（9 个脚本场景回放，供界面演示与无硬件的 CI 端到端测试）
+src/ScaleBridge.Data          SQLite 历史与设置（本地文件，无网络）
+src/ScaleBridge.App           Avalonia 桌面界面（程序集名 ScaleBridge；中/英文运行时切换）
+src/ScaleBridge.Ble.Windows   阶段 2 占位说明（WinRT 适配器尚未实现，见其 README）
+src/ScaleBridge.Linux         BlueZ 适配器的探索性脚手架（他人加入，阶段 2；未接入界面，实验性）
+tests/ScaleBridge.Core.Tests  xUnit：协议字节向量、导出、诚实标注守卫
+tests/ScaleBridge.Data.Tests  xUnit：SQLite 仓库
+tests/ScaleBridge.Fake.Tests  xUnit：9 个演示场景的回放
+tests/ScaleBridge.App.Tests   xUnit：本地化与 ViewModel 全流程（扫描→连接→接收→历史→导出，使用 Fake）
 tools/ParseCli                命令行解析工具（引用 Core；不参与发布打包）
 shared-vectors/               与语言无关的 GATT 字节向量 JSON（见其 README）
 ```
 
 协议信息来源与实现取舍见 [NOTES.md](NOTES.md)。
+
+## 运行桌面程序（目前只有「演示数据」）
+
+```bash
+dotnet run --project src/ScaleBridge.App                          # 默认：Fake 适配器 + 系统语言
+dotnet run --project src/ScaleBridge.App -- --list-scenarios      # 列出演示场景
+dotnet run --project src/ScaleBridge.App -- --scenario reconnect --lang zh
+```
+
+Windows（PowerShell）与 Linux 用法相同；发布包里直接运行 `ScaleBridge.exe` / `./ScaleBridge` 并带同样的参数。
+**界面上所有来自 Fake 的读数都带「演示数据」标记，并常驻「实验性（仅按规范实现，未真机验证）」提示；它们不是真实体重。**
+
+| 参数 | 作用 |
+|---|---|
+| `--scenario <id>` | 选演示场景（也可在「设置」页选）：`normal-si`、`imperial`、`body-composition`、`timestamp-user-bmi-height`、`invalid-0xffff`、`truncated-packet`、`mid-connection-disconnect`、`reconnect`、`multi-device` |
+| `--list-scenarios` | 打印场景并退出 |
+| `--fast` | 回放不等待（演示/截图用） |
+| `--lang zh\|en` | 覆盖语言；默认跟随系统，可在界面里随时切换 |
+| `--autoplay` / `--tab 0-3` | 启动后自动 扫描→连接，并停在指定页（设备/实时/历史/设置）；演示与截图辅助 |
+| `--smoke` | 无人值守自检：扫描→连接→收到数据→写入历史，打印 `SCALEBRIDGE_SMOKE_OK` 后退出（CI 用） |
+| 环境变量 `SCALEBRIDGE_DATA_DIR` | 改数据目录（默认见 [PRIVACY.md](PRIVACY.md)） |
+
+键盘：`F5` 开始扫描，`Esc` 停止扫描，`Ctrl+1..4` 切换页签；按钮与表格也可以用 Tab 与方向键操作。
+导出：CSV 为 UTF-8（带 BOM）+ CRLF，以 `=` `+` `-` `@` 开头的文本前面补 `'` 防公式注入；JSON 带 `format` 与 `version` 字段。
+「设置」里选 Windows / Linux 适配器会显示「此适配器属于阶段 2，尚未实现」，不会扫描。
+
+已知限制（阶段 1）：Weight Scale 与 Body Composition 的记录**不会合并**成一条；没有历史条数上限或接收节流；
+BCS 多包重组尚未实现，见 [NOTES.md](NOTES.md)。
+
+## 打包与 CI
+
+* `.github/workflows/ci.yml`：Ubuntu + Windows 构建并跑全部测试；Ubuntu 上另有 xvfb 下的应用启动冒烟（9 个场景各启动一次）。
+* `.github/workflows/release.yml`：手动触发或推送 `v*` 标签时，为 `win-x64`、`linux-x64` 发布**自包含单文件**
+  （内含 .NET 运行时，不需要另装；体积较大）并作为 Actions 构件上传（`ScaleBridge-win-x64.zip`、`ScaleBridge-linux-x64.tar.gz`）。
+  **该工作流只产出构件，不会创建 GitHub Release。**
+* 当前没有代码签名；Windows 可能出现 SmartScreen 提示。
 
 ## 构建与测试
 
