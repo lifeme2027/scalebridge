@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    name: 构建与测试 (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore
+        run: dotnet restore ScaleBridge.sln
+      - name: Build
+        run: dotnet build ScaleBridge.sln -c Release --no-restore
+      - name: Test（含 shared-vectors 字节向量与 Fake 端到端，无需任何蓝牙硬件）
+        run: dotnet test ScaleBridge.sln -c Release --no-build --logger "trx;LogFileName=test-results.trx"
+      - name: 上传测试结果
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.os }}
+          path: "**/TestResults/*.trx"
+          if-no-files-found: ignore
