@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>ScaleBridge.Linux</RootNamespace>
+    <AssemblyName>ScaleBridge.Linux</AssemblyName>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ScaleBridge.Core\ScaleBridge.Core.csproj" />
+    <InternalsVisibleTo Include="ScaleBridge.Linux.Tests" />
+  </ItemGroup>
+</Project>
