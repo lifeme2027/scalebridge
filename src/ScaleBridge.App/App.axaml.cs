@@ -36,6 +36,9 @@ public class App : Application
             window.DataContext = vm;
             desktop.MainWindow = window;
             desktop.Exit += (_, _) => vm.Dispose();
+            // SIGTERM/SIGINT 之前会直接杀死进程（退出码 143/130，不走 Exit，设备连接不收尾）；现在走正常关闭，退出码 0。
+            var signals = TerminationSignals.Register(() => Dispatcher.UIThread.Post(() => desktop.Shutdown(0)));
+            desktop.Exit += (_, _) => signals.Dispose();
 
             if (opts.Autoplay)
                 window.Opened += (_, _) => DispatcherTimer.RunOnce(async () => await SmokeAsync(vm, keepRunning: true), TimeSpan.FromSeconds(1));
