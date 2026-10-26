@@ -1,0 +1,18 @@
+{
+  "name": "scalebridge-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "ScaleBridge Web：静态单页（零运行时依赖）。实验性——仅按 Bluetooth SIG 规范实现，未真机验证。",
+  "license": "MIT",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "node --test test/",
+    "build": "node scripts/build.mjs",
+    "serve": "node scripts/serve.mjs",
+    "sync": "node scripts/sync-to-site.mjs"
+  },
+  "devDependencies": {
+    "fake-indexeddb": "^6.0.0"
+  }
+}
