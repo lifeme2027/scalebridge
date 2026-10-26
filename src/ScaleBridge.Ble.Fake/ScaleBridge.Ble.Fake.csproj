@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>ScaleBridge.Ble.Fake</RootNamespace>
+    <AssemblyName>ScaleBridge.Ble.Fake</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ScaleBridge.Core\ScaleBridge.Core.csproj" />
+    <EmbeddedResource Include="Scenarios\*.json" LogicalName="Scenarios/%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

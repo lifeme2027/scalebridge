@@ -11,6 +11,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{4EF5E472
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScaleBridge.Core.Tests", "tests\ScaleBridge.Core.Tests\ScaleBridge.Core.Tests.csproj", "{B67F2D7A-9FBA-41D1-AC88-7389C64698E5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScaleBridge.Ble.Fake", "src\ScaleBridge.Ble.Fake\ScaleBridge.Ble.Fake.csproj", "{9FA04B52-0C68-4C40-BFFD-0DCD205B03F0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -28,9 +30,14 @@ Global
 		{B67F2D7A-9FBA-41D1-AC88-7389C64698E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B67F2D7A-9FBA-41D1-AC88-7389C64698E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B67F2D7A-9FBA-41D1-AC88-7389C64698E5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9FA04B52-0C68-4C40-BFFD-0DCD205B03F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9FA04B52-0C68-4C40-BFFD-0DCD205B03F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9FA04B52-0C68-4C40-BFFD-0DCD205B03F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9FA04B52-0C68-4C40-BFFD-0DCD205B03F0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{FCE2832D-D338-4DC3-B7C6-30C4E45B07FA} = {22A03731-217A-40C2-8F93-8E1684A62B1C}
 		{B67F2D7A-9FBA-41D1-AC88-7389C64698E5} = {4EF5E472-CD64-49CA-A45B-4907034C5403}
+		{9FA04B52-0C68-4C40-BFFD-0DCD205B03F0} = {22A03731-217A-40C2-8F93-8E1684A62B1C}
 	EndGlobalSection
 EndGlobal
