@@ -1,0 +1,135 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="using:ScaleBridge.App.Localization"
+        x:Class="ScaleBridge.App.Views.MainWindow"
+        Title="{loc:T App.Title}"
+        Width="1000" Height="660" MinWidth="720" MinHeight="520">
+  <Window.Resources>
+    <DataTemplate x:Key="ChoiceTemplate">
+      <TextBlock Text="{Binding Text}" TextTrimming="CharacterEllipsis" />
+    </DataTemplate>
+  </Window.Resources>
+  <DockPanel>
+    <Border DockPanel.Dock="Bottom" Padding="12,6" BorderThickness="0,1,0,0" BorderBrush="#40808080">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Grid.Column="0" Text="{Binding StatusText}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+        <TextBlock Grid.Column="1" Text="{Binding ConnectionText}" TextTrimming="CharacterEllipsis" MaxWidth="460" Margin="12,0,0,0" VerticalAlignment="Center" />
+      </Grid>
+    </Border>
+    <StackPanel DockPanel.Dock="Top">
+      <Border Background="#FFF4CE" Padding="12,6" IsVisible="{Binding IsDemoActive}">
+        <TextBlock Foreground="#5C4400" TextWrapping="Wrap" Text="{loc:T Banner.Demo}" />
+      </Border>
+      <Border Background="#E6F0FA" Padding="12,6">
+        <TextBlock Foreground="#14365A" TextWrapping="Wrap" Text="{loc:T Banner.Experimental}" />
+      </Border>
+    </StackPanel>
+    <TabControl SelectedIndex="{Binding SelectedTab, Mode=TwoWay}">
+      <!-- 设备 -->
+      <TabItem Header="{loc:T Tab.Devices}">
+        <Grid RowDefinitions="Auto,Auto,*" Margin="12">
+          <WrapPanel Grid.Row="0">
+            <Button Margin="0,0,8,8" Content="{loc:T Btn.Scan}" Command="{Binding StartScanCommand}" IsEnabled="{Binding CanScan}" />
+            <Button Margin="0,0,8,8" Content="{loc:T Btn.StopScan}" Command="{Binding StopScanCommand}" IsEnabled="{Binding IsScanning}" />
+            <Button Margin="0,0,8,8" Content="{loc:T Btn.Connect}" Command="{Binding ConnectCommand}" IsEnabled="{Binding CanConnect}" />
+            <Button Margin="0,0,8,8" Content="{loc:T Btn.Disconnect}" Command="{Binding DisconnectCommand}" IsEnabled="{Binding IsSessionActive}" />
+          </WrapPanel>
+          <TextBlock Grid.Row="1" Margin="0,0,0,8" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Text="{Binding ConnectionText}" />
+          <DataGrid Grid.Row="2" ItemsSource="{Binding Devices}" SelectedItem="{Binding SelectedDevice, Mode=TwoWay}"
+                    AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" CanUserResizeColumns="True">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="{loc:T Col.Name}" Binding="{Binding NameText}" Width="2*" />
+              <DataGridTextColumn Header="{loc:T Col.Rssi}" Binding="{Binding RssiText}" Width="Auto" />
+              <DataGridTextColumn Header="{loc:T Col.Protocol}" Binding="{Binding ProtocolText}" Width="3*" />
+              <DataGridTextColumn Header="{loc:T Col.Tags}" Binding="{Binding TagText}" Width="3*" />
+              <DataGridTextColumn Header="{loc:T Col.DeviceId}" Binding="{Binding Id}" Width="2*" />
+            </DataGrid.Columns>
+          </DataGrid>
+        </Grid>
+      </TabItem>
+
+      <!-- 实时 -->
+      <TabItem Header="{loc:T Tab.Live}">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+          <StackPanel Margin="24" Spacing="10" HorizontalAlignment="Center" MaxWidth="900">
+            <Border HorizontalAlignment="Center" Background="#FFF4CE" CornerRadius="4" Padding="10,2" IsVisible="{Binding LiveIsDemo}">
+              <TextBlock Foreground="#5C4400" FontWeight="SemiBold" Text="{loc:T Tag.Demo}" />
+            </Border>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="12">
+              <TextBlock FontSize="96" FontWeight="Bold" Text="{Binding LiveWeightText}" />
+              <TextBlock FontSize="36" VerticalAlignment="Bottom" Margin="0,0,0,16" Text="{Binding LiveUnitText}" />
+            </StackPanel>
+            <Button HorizontalAlignment="Center" Content="{loc:T Btn.ToggleUnit}" Command="{Binding ToggleUnitCommand}" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="32">
+              <TextBlock FontSize="24" IsVisible="{Binding ShowLiveBmi}" Text="{Binding LiveBmiText}" />
+              <TextBlock FontSize="24" IsVisible="{Binding ShowLiveBodyFat}" Text="{Binding LiveBodyFatText}" />
+            </StackPanel>
+            <TextBlock HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Classes="muted" Text="{Binding LiveDetailText}" />
+            <Border Background="#FDE7E9" Padding="12,8" CornerRadius="4" IsVisible="{Binding HasLiveNotice}">
+              <TextBlock Foreground="#8A1C24" TextWrapping="Wrap" Text="{Binding LiveNotice}" />
+            </Border>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="16">
+              <CheckBox IsChecked="{Binding ShowBmi, Mode=TwoWay}" Content="{loc:T Opt.ShowBmi}" />
+              <CheckBox IsChecked="{Binding ShowBodyFat, Mode=TwoWay}" Content="{loc:T Opt.ShowBodyFat}" />
+            </StackPanel>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- 历史 -->
+      <TabItem Header="{loc:T Tab.History}">
+        <Grid RowDefinitions="Auto,Auto,*" Margin="12">
+          <WrapPanel Grid.Row="0">
+            <TextBox Width="260" Margin="0,0,8,8" Watermark="{loc:T History.FilterHint}" Text="{Binding FilterText, Mode=TwoWay}" />
+            <Button Margin="0,0,8,8" Content="{loc:T Btn.SelectAll}" Command="{Binding SelectAllVisibleCommand}" />
+            <Button Margin="0,0,8,8" Content="{loc:T Btn.DeleteSelected}" Command="{Binding DeleteSelectedCommand}" />
+            <Button Margin="0,0,8,8" Content="{loc:T Btn.Clear}" Command="{Binding ClearHistoryCommand}" />
+            <Button Margin="0,0,8,8" Content="{loc:T Btn.ExportCsv}" Command="{Binding ExportCsvCommand}" />
+            <Button Margin="0,0,8,8" Content="{loc:T Btn.ExportJson}" Command="{Binding ExportJsonCommand}" />
+          </WrapPanel>
+          <TextBlock Grid.Row="1" Margin="0,0,0,8" Classes="muted" TextTrimming="CharacterEllipsis" Text="{Binding HistorySummary}" />
+          <DataGrid Grid.Row="2" ItemsSource="{Binding History}" AutoGenerateColumns="False" IsReadOnly="False"
+                    SelectionMode="Extended" CanUserResizeColumns="True" CanUserSortColumns="False">
+            <DataGrid.Columns>
+              <DataGridCheckBoxColumn Header="" Binding="{Binding IsChecked, Mode=TwoWay}" Width="Auto" />
+              <DataGridTextColumn Header="{loc:T History.Time}" Binding="{Binding TimeText}" IsReadOnly="True" Width="Auto" />
+              <DataGridTextColumn Header="{loc:T History.Weight}" Binding="{Binding WeightText}" IsReadOnly="True" Width="Auto" MinWidth="110" />
+              <DataGridTextColumn Header="BMI" Binding="{Binding BmiText}" IsReadOnly="True" Width="Auto" />
+              <DataGridTextColumn Header="{loc:T History.Fat}" Binding="{Binding FatText}" IsReadOnly="True" Width="Auto" />
+              <DataGridTextColumn Header="{loc:T History.Device}" Binding="{Binding DeviceText}" IsReadOnly="True" Width="2*" />
+              <DataGridTextColumn Header="{loc:T History.Source}" Binding="{Binding SourceText}" IsReadOnly="True" Width="Auto" />
+              <DataGridTextColumn Header="{loc:T History.Flags}" Binding="{Binding FlagsText}" IsReadOnly="True" Width="3*" />
+            </DataGrid.Columns>
+          </DataGrid>
+        </Grid>
+      </TabItem>
+
+      <!-- 设置 -->
+      <TabItem Header="{loc:T Tab.Settings}">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+          <StackPanel Margin="24" Spacing="10" MaxWidth="640" HorizontalAlignment="Left">
+            <TextBlock Classes="h" Text="{loc:T Tab.Settings}" />
+            <TextBlock Text="{loc:T Set.Language}" />
+            <ComboBox MinWidth="260" ItemsSource="{Binding LanguageChoices}" SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}" ItemTemplate="{StaticResource ChoiceTemplate}" />
+            <TextBlock Text="{loc:T Set.Unit}" />
+            <ComboBox MinWidth="260" ItemsSource="{Binding UnitChoices}" SelectedItem="{Binding SelectedUnit, Mode=TwoWay}" ItemTemplate="{StaticResource ChoiceTemplate}" />
+            <TextBlock Text="{loc:T Set.Adapter}" />
+            <ComboBox MinWidth="260" ItemsSource="{Binding AdapterChoices}" SelectedItem="{Binding SelectedAdapter, Mode=TwoWay}" ItemTemplate="{StaticResource ChoiceTemplate}" />
+            <TextBlock TextWrapping="Wrap" Foreground="#8A1C24" IsVisible="{Binding AdapterIsStage2}" Text="{loc:T Set.AdapterStage2}" />
+            <StackPanel Spacing="10" IsVisible="{Binding IsFakeAdapterSelected}">
+              <TextBlock Text="{loc:T Set.Scenario}" />
+              <ComboBox MinWidth="260" ItemsSource="{Binding ScenarioChoices}" SelectedItem="{Binding SelectedScenario, Mode=TwoWay}" ItemTemplate="{StaticResource ChoiceTemplate}" />
+              <TextBlock TextWrapping="Wrap" Classes="muted" Text="{Binding ScenarioDescription}" />
+            </StackPanel>
+            <CheckBox IsChecked="{Binding ShowBmi, Mode=TwoWay}" Content="{loc:T Opt.ShowBmi}" />
+            <CheckBox IsChecked="{Binding ShowBodyFat, Mode=TwoWay}" Content="{loc:T Opt.ShowBodyFat}" />
+            <Separator />
+            <TextBlock TextWrapping="Wrap" Text="{loc:T Set.Privacy}" />
+            <TextBlock TextWrapping="Wrap" Classes="muted" Text="{Binding DataDirectory, StringFormat='{}{0}'}" />
+            <TextBlock TextWrapping="Wrap" Classes="muted" Text="{loc:T Set.Keys}" />
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+    </TabControl>
+  </DockPanel>
+</Window>
