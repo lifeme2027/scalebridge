@@ -1,6 +1,7 @@
 using System.Text.Json.Nodes;
 using ScaleBridge.Core.Protocol;
 using ScaleBridge.Core.Tests.Support;
+using ScaleBridge.ParseCli;
 
 namespace ScaleBridge.Core.Tests;
 
