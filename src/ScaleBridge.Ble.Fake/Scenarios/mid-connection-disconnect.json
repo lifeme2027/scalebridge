@@ -1,0 +1,47 @@
+{
+  "schema": "scalebridge-scenario/1",
+  "id": "mid-connection-disconnect",
+  "demo": true,
+  "title": {
+    "zh": "连接中途掉线",
+    "en": "Disconnect mid-connection"
+  },
+  "description": {
+    "zh": "收到一条体重后设备掉线，界面应显示「已掉线」及原因。",
+    "en": "The device drops after one weight; the UI must show 'Dropped' with the reason."
+  },
+  "devices": [
+    {
+      "id": "DE:MO:00:00:00:07",
+      "name": "演示体重秤 G",
+      "rssi": -66,
+      "appearAfterMs": 0,
+      "services": [
+        "181D"
+      ],
+      "manufacturerData": {},
+      "features": {
+        "2A9E": "BF010000"
+      },
+      "connections": [
+        {
+          "connectDelayMs": 400,
+          "events": [
+            {
+              "delayMs": 800,
+              "type": "indicate",
+              "characteristic": "2A9D",
+              "hex": "00B036",
+              "expect": "ok"
+            },
+            {
+              "delayMs": 1500,
+              "type": "disconnect",
+              "reason": "Device powered off (demo)"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

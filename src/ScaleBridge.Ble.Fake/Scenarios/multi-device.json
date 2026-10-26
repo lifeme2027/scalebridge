@@ -1,0 +1,103 @@
+{
+  "schema": "scalebridge-scenario/1",
+  "id": "multi-device",
+  "demo": true,
+  "title": {
+    "zh": "多设备扫描",
+    "en": "Multiple devices"
+  },
+  "description": {
+    "zh": "扫描到三台设备（两台体重秤、一台体脂秤），信号强度不同、先后出现。",
+    "en": "Three devices appear one after another (two scales, one body-composition scale) with different RSSI."
+  },
+  "devices": [
+    {
+      "id": "DE:MO:00:00:00:08",
+      "name": "演示体重秤 H",
+      "rssi": -48,
+      "appearAfterMs": 0,
+      "services": [
+        "181D"
+      ],
+      "manufacturerData": {},
+      "features": {
+        "2A9E": "BF010000"
+      },
+      "connections": [
+        {
+          "connectDelayMs": 400,
+          "events": [
+            {
+              "delayMs": 800,
+              "type": "indicate",
+              "characteristic": "2A9D",
+              "hex": "00B036",
+              "expect": "ok"
+            },
+            {
+              "delayMs": 1500,
+              "type": "indicate",
+              "characteristic": "2A9D",
+              "hex": "00D836",
+              "expect": "ok"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "DE:MO:00:00:00:09",
+      "name": "演示体重秤 I",
+      "rssi": -63,
+      "appearAfterMs": 700,
+      "services": [
+        "181D"
+      ],
+      "manufacturerData": {},
+      "features": {
+        "2A9E": "BF010000"
+      },
+      "connections": [
+        {
+          "connectDelayMs": 400,
+          "events": [
+            {
+              "delayMs": 800,
+              "type": "indicate",
+              "characteristic": "2A9D",
+              "hex": "01483C",
+              "expect": "ok"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "DE:MO:00:00:00:0A",
+      "name": "演示体脂秤 J",
+      "rssi": -77,
+      "appearAfterMs": 1500,
+      "services": [
+        "181B"
+      ],
+      "manufacturerData": {},
+      "features": {
+        "2A9B": "FFBF0100"
+      },
+      "connections": [
+        {
+          "connectDelayMs": 400,
+          "events": [
+            {
+              "delayMs": 800,
+              "type": "indicate",
+              "characteristic": "2A9C",
+              "hex": "0004DC00983A",
+              "expect": "ok"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

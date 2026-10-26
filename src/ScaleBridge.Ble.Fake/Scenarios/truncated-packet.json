@@ -1,0 +1,58 @@
+{
+  "schema": "scalebridge-scenario/1",
+  "id": "truncated-packet",
+  "demo": true,
+  "title": {
+    "zh": "截断数据包",
+    "en": "Truncated packets"
+  },
+  "description": {
+    "zh": "先收到两个坏包（过短、被截断），再收到正常包；坏包只报告，不崩溃。",
+    "en": "Two broken packets (too short, truncated) followed by a good one; they are reported, never crash."
+  },
+  "devices": [
+    {
+      "id": "DE:MO:00:00:00:06",
+      "name": "演示体重秤 F",
+      "rssi": -63,
+      "appearAfterMs": 0,
+      "services": [
+        "181D"
+      ],
+      "manufacturerData": {},
+      "features": {
+        "2A9E": "BF010000"
+      },
+      "connections": [
+        {
+          "connectDelayMs": 400,
+          "events": [
+            {
+              "delayMs": 800,
+              "type": "indicate",
+              "characteristic": "2A9D",
+              "hex": "0E",
+              "expect": "error:TooShort",
+              "note": "only the flags byte"
+            },
+            {
+              "delayMs": 1200,
+              "type": "indicate",
+              "characteristic": "2A9D",
+              "hex": "0E9001",
+              "expect": "error:Truncated",
+              "note": "flags declare timestamp/user/BMI+height but only the weight is present"
+            },
+            {
+              "delayMs": 1500,
+              "type": "indicate",
+              "characteristic": "2A9D",
+              "hex": "000E38",
+              "expect": "ok"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

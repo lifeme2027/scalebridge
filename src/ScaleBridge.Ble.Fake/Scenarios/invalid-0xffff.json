@@ -1,0 +1,50 @@
+{
+  "schema": "scalebridge-scenario/1",
+  "id": "invalid-0xffff",
+  "demo": true,
+  "title": {
+    "zh": "无效值 0xFFFF",
+    "en": "Invalid value 0xFFFF"
+  },
+  "description": {
+    "zh": "第一条体重为 0xFFFF（测量不成功），应被报告而不保存；随后一条正常。",
+    "en": "First weight is 0xFFFF (measurement unsuccessful): reported, not stored; then a normal one."
+  },
+  "devices": [
+    {
+      "id": "DE:MO:00:00:00:05",
+      "name": "演示体重秤 E",
+      "rssi": -61,
+      "appearAfterMs": 0,
+      "services": [
+        "181D"
+      ],
+      "manufacturerData": {},
+      "features": {
+        "2A9E": "BF010000"
+      },
+      "connections": [
+        {
+          "connectDelayMs": 400,
+          "events": [
+            {
+              "delayMs": 800,
+              "type": "indicate",
+              "characteristic": "2A9D",
+              "hex": "00FFFF",
+              "expect": "unsuccessful",
+              "note": "weight 0xFFFF = measurement unsuccessful"
+            },
+            {
+              "delayMs": 1500,
+              "type": "indicate",
+              "characteristic": "2A9D",
+              "hex": "008237",
+              "expect": "ok"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
