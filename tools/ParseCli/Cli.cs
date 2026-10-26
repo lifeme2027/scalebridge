@@ -94,6 +94,12 @@ public static class Cli
             if (useStdin) return RunStdin(stdin, stdout, stderr, service, characteristic, details);
             return RunFiles(files, compare, details, opts, stdout, stderr);
         }
+        catch (UnauthorizedAccessException e)
+        {
+            // 没有读取权限（或路径是目录/被系统拒绝）：友好提示 + 退出码 2，而不是未处理异常。
+            stderr.WriteLine("error: cannot read the input (permission denied or not a regular file): " + e.Message);
+            return 2;
+        }
         catch (Exception e) when (e is ArgumentException or FormatException or NotSupportedException or IOException or JsonException)
         {
             stderr.WriteLine("error: " + e.Message);
@@ -149,6 +155,8 @@ public static class Cli
 
         foreach (var file in files)
         {
+            if (Directory.Exists(file))
+                throw new ArgumentException($"--vectors expects a vectors .json file, but '{file}' is a directory (e.g. pass shared-vectors/weight-scale.json; repeat --vectors for several files)");
             var doc = JsonNode.Parse(File.ReadAllText(file))?.AsObject() ?? throw new FormatException($"{file}: not a JSON object");
             if (doc["format"]?.GetValue<string>() != "scalebridge-vectors/1")
                 throw new FormatException($"{file}: format must be \"scalebridge-vectors/1\"");

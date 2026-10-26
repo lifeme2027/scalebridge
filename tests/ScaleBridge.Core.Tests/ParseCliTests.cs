@@ -305,4 +305,57 @@ public class ParseCliTests
             finally { File.Delete(tmp); }
         }
     }
+
+    // ---- SB1 复测：--vectors 传目录 / 无权限 → 友好错误 + 非零退出码，不抛未处理异常 ----
+
+    [Fact]
+    public void Vectors_given_a_directory_is_a_friendly_error_with_exit_code_2()
+    {
+        var (code, output, err) = Run(null, "--vectors", VectorsDir());
+        Assert.Equal(2, code);
+        Assert.Equal("", output);
+        Assert.StartsWith("error: ", err);
+        Assert.Contains("directory", err);
+        Assert.DoesNotContain("UnauthorizedAccessException", err);
+        Assert.DoesNotContain(" at ", err);   // 没有堆栈
+    }
+
+    [Fact]
+    public void Vectors_given_a_directory_with_compare_or_among_several_files_also_fails_cleanly()
+    {
+        var good = Path.Combine(VectorsDir(), "weight-scale.json");
+        Assert.Equal(2, Run(null, "--vectors", VectorsDir(), "--compare").Code);
+        var (code, output, err) = Run(null, "--vectors", good, "--vectors", VectorsDir());
+        Assert.Equal(2, code);
+        Assert.Equal("", output);                 // 不输出半截结果
+        Assert.Contains("directory", err);
+    }
+
+    [Fact]
+    public void Vectors_missing_file_is_exit_code_2()
+    {
+        var (code, output, err) = Run(null, "--vectors", Path.Combine(Path.GetTempPath(), $"sb-nope-{Guid.NewGuid():N}.json"));
+        Assert.Equal(2, code);
+        Assert.Equal("", output);
+        Assert.StartsWith("error: ", err);
+    }
+
+    [Fact]
+    public void Vectors_unreadable_file_is_exit_code_2_not_an_unhandled_exception()
+    {
+        if (OperatingSystem.IsWindows()) return;   // 用 Unix 权限位构造
+        var path = Path.Combine(Path.GetTempPath(), $"sb-noperm-{Guid.NewGuid():N}.json");
+        File.WriteAllText(path, "{}");
+        try
+        {
+            File.SetUnixFileMode(path, UnixFileMode.None);
+            try { using var _ = File.OpenRead(path); return; }   // root 等不受权限位限制的环境：无法构造该场景，跳过
+            catch (UnauthorizedAccessException) { }
+            var (code, output, err) = Run(null, "--vectors", path);
+            Assert.Equal(2, code);
+            Assert.Equal("", output);
+            Assert.StartsWith("error: ", err);
+        }
+        finally { File.Delete(path); }
+    }
 }
