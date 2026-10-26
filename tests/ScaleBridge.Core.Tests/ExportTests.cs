@@ -145,6 +145,73 @@ public class ExportTests
         Assert.Equal(0, doc.RootElement.GetProperty("measurements").GetArrayLength());
     }
 
+    // ---- 「可能重复」标记（SB1 复测 N2）----
+
+    private static string[] CsvRow(string csv, int row) =>
+        csv.TrimStart('\uFEFF').Split("\r\n", StringSplitOptions.RemoveEmptyEntries)[row].Split(',');
+
+    [Fact]
+    public void Csv_possible_duplicate_columns_are_appended_at_the_end_and_old_columns_keep_their_order()
+    {
+        var h = CsvExporter.Header;
+        Assert.Equal(new[] { "record_id", "possible_duplicate", "possible_same_as" }, h.Skip(h.Length - 3).ToArray());
+        Assert.Equal(new[] { "device_time", "received_time", "weight_kg" }, h.Take(3).ToArray());
+        Assert.Equal(new[] { "source", "experimental", "demo" }, h.Skip(h.Length - 6).Take(3).ToArray()); // 旧的最后三列位置不变（只是后面多了三列）
+        Assert.Equal(22 + 3, h.Length);
+    }
+
+    [Fact]
+    public void Csv_marks_possible_duplicates_and_points_to_the_earlier_record()
+    {
+        var first = Sample() with { Id = 7 };
+        var second = Sample() with { Id = 9, ReceivedAt = first.ReceivedAt.AddSeconds(1), DeviceTimestamp = null, Source = MeasurementSource.BodyComposition, PossibleSameAsId = 7 };
+        var csv = CsvExporter.ToCsv(new[] { second, first });
+        var i = Array.IndexOf(CsvExporter.Header, "possible_duplicate");
+        var rows = new[] { CsvRow(csv, 1), CsvRow(csv, 2) };
+        var a = rows.Single(r => r[Array.IndexOf(CsvExporter.Header, "record_id")] == "7");
+        var b = rows.Single(r => r[Array.IndexOf(CsvExporter.Header, "record_id")] == "9");
+        Assert.Equal("false", a[i]); Assert.Equal("", a[i + 1]);
+        Assert.Equal("true", b[i]);  Assert.Equal("7", b[i + 1]);
+    }
+
+    [Fact]
+    public void Csv_possible_same_as_is_blank_when_the_target_is_not_in_the_export_but_the_flag_stays_true()
+    {
+        var orphan = Sample() with { Id = 9, PossibleSameAsId = 7 };   // 7 已被删除
+        var row = CsvRow(CsvExporter.ToCsv(new[] { orphan }), 1);
+        var i = Array.IndexOf(CsvExporter.Header, "possible_duplicate");
+        Assert.Equal("true", row[i]);
+        Assert.Equal("", row[i + 1]);
+        Assert.Equal(CsvExporter.Header.Length, row.Length);
+    }
+
+    [Fact]
+    public void Json_has_possible_duplicate_fields_and_keeps_version_1()
+    {
+        var first = Sample() with { Id = 7 };
+        var second = Sample() with { Id = 9, ReceivedAt = first.ReceivedAt.AddSeconds(1), Source = MeasurementSource.BodyComposition, PossibleSameAsId = 7 };
+        var orphan = Sample() with { Id = 11, ReceivedAt = first.ReceivedAt.AddSeconds(2), PossibleSameAsId = 3 };
+        using var doc = JsonDocument.Parse(JsonExporter.ToJson(new[] { first, second, orphan }, DateTimeOffset.UnixEpoch));
+        Assert.Equal(1, doc.RootElement.GetProperty("version").GetInt32());   // 只追加字段：版本不变（见 JsonExporter 注释与 NOTES）
+        var ms = doc.RootElement.GetProperty("measurements").EnumerateArray().ToDictionary(e => e.GetProperty("recordId").GetInt32());
+        Assert.False(ms[7].GetProperty("possibleDuplicate").GetBoolean());
+        Assert.Equal(JsonValueKind.Null, ms[7].GetProperty("possibleSameAs").ValueKind);
+        Assert.True(ms[9].GetProperty("possibleDuplicate").GetBoolean());
+        Assert.Equal(7, ms[9].GetProperty("possibleSameAs").GetInt32());
+        Assert.True(ms[11].GetProperty("possibleDuplicate").GetBoolean());
+        Assert.Equal(JsonValueKind.Null, ms[11].GetProperty("possibleSameAs").ValueKind);
+    }
+
+    [Fact]
+    public void Possible_duplicate_flag_does_not_change_any_measured_value_in_exports()
+    {
+        var plain = Sample() with { Id = 5 };
+        var marked = plain with { PossibleSameAsId = 4 };
+        var a = CsvRow(CsvExporter.ToCsv(new[] { plain }), 1).Take(22);
+        var b = CsvRow(CsvExporter.ToCsv(new[] { marked }), 1).Take(22);
+        Assert.Equal(a, b);
+    }
+
     [Fact]
     public void Json_file_is_utf8_without_bom()
     {

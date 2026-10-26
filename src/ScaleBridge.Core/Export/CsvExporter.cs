@@ -16,6 +16,8 @@ public static class CsvExporter
         "bmi", "height_m", "body_fat_percent", "muscle_percent", "muscle_mass_kg", "fat_free_mass_kg",
         "soft_lean_mass_kg", "body_water_mass_kg", "basal_metabolism_kj", "impedance_ohm", "user_id",
         "device_id", "device_name", "source", "experimental", "demo",
+        // 以下三列追加在末尾（只追加、不改既有列的顺序与含义，旧读取方按列名取值不受影响）。
+        "record_id", "possible_duplicate", "possible_same_as",
     };
 
     private static bool IsTrigger(char c) => c is '=' or '+' or '-' or '@' or '\t' or '\r';
@@ -39,7 +41,9 @@ public static class CsvExporter
     {
         var sb = new StringBuilder("\uFEFF");
         sb.Append(string.Join(",", Header)).Append("\r\n");
-        foreach (var m in measurements.OrderBy(x => x.DisplayTime).ThenBy(x => x.Id))
+        var list = measurements.OrderBy(x => x.DisplayTime).ThenBy(x => x.Id).ToList();
+        var ids = PossibleSameAs.IdSet(list);
+        foreach (var m in list)
         {
             string[] cols =
             {
@@ -55,6 +59,9 @@ public static class CsvExporter
                 SourceName(m.Source),
                 m.IsExperimental ? "true" : "false",
                 m.IsDemo ? "true" : "false",
+                m.Id.ToString(CultureInfo.InvariantCulture),
+                m.PossibleSameAsId is not null ? "true" : "false",
+                Num(PossibleSameAs.Target(m, ids)),
             };
             sb.Append(string.Join(",", cols.Select(Escape))).Append("\r\n");
         }
@@ -74,5 +81,6 @@ public static class CsvExporter
     };
 
     private static string Num(decimal? v) => v?.ToString(CultureInfo.InvariantCulture) ?? "";
+    private static string Num(long? v) => v?.ToString(CultureInfo.InvariantCulture) ?? "";
     private static string Num(int? v) => v?.ToString(CultureInfo.InvariantCulture) ?? "";
 }

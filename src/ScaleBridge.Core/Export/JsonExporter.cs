@@ -7,7 +7,9 @@ namespace ScaleBridge.Core.Export;
 
 /// <summary>
 /// JSON 导出，带版本字段：<c>{"format":"scalebridge-export","version":1,...}</c>。
-/// 小数用 JSON number 精确写出（decimal，不经过 double）；没有值的字段写 null。
+/// 版本约定：<c>version</c> 只在「破坏性变更」（删除/改名/改变既有字段含义）时递增；只追加字段不递增（读取方应忽略未知字段，
+/// 桌面与 web 的导入都是这样做的；web 导入会拒绝比自己更新的 version）。<c>recordId</c> / <c>possibleDuplicate</c> / <c>possibleSameAs</c>
+/// 是追加字段，所以 version 仍为 1。小数用 JSON number 精确写出（decimal，不经过 double）；没有值的字段写 null。
 /// </summary>
 public static class JsonExporter
 {
@@ -27,7 +29,8 @@ public static class JsonExporter
             w.WriteString("note", "Experimental: parsed per Bluetooth SIG spec only, not verified on real hardware. Records with demo=true are demo data, not real weights.");
             w.WriteNumber("count", list.Count);
             w.WriteStartArray("measurements");
-            foreach (var m in list) Write(w, m);
+            var ids = PossibleSameAs.IdSet(list);
+            foreach (var m in list) Write(w, m, ids);
             w.WriteEndArray();
             w.WriteEndObject();
         }
@@ -37,7 +40,7 @@ public static class JsonExporter
     public static void WriteFile(string path, IEnumerable<Measurement> measurements, DateTimeOffset exportedAt) =>
         File.WriteAllText(path, ToJson(measurements, exportedAt), new UTF8Encoding(false));
 
-    private static void Write(Utf8JsonWriter w, Measurement m)
+    private static void Write(Utf8JsonWriter w, Measurement m, HashSet<long> ids)
     {
         w.WriteStartObject();
         Str(w, "deviceTime", m.DeviceTimestamp?.ToString("yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture));
@@ -62,6 +65,10 @@ public static class JsonExporter
         w.WriteString("source", CsvExporter.SourceName(m.Source));
         w.WriteBoolean("experimental", m.IsExperimental);
         w.WriteBoolean("demo", m.IsDemo);
+        w.WriteNumber("recordId", m.Id);
+        w.WriteBoolean("possibleDuplicate", m.PossibleSameAsId is not null);
+        var target = PossibleSameAs.Target(m, ids);
+        if (target is null) w.WriteNull("possibleSameAs"); else w.WriteNumber("possibleSameAs", target.Value);
         w.WriteEndObject();
     }
 

@@ -148,7 +148,12 @@
 * **合并结果**：保留先到那条的主键；两边的字段互补（同名字段此时必然相等或一边为空，所以不覆盖任何已有值）；`Source=Both`（界面显示 `0x2A9D+0x2A9C`
   与「已合并」标记，CSV/JSON 的 `source` 为 `weight-scale+body-composition`）；接收时间取较早的；实验性/演示标记取并集。BCS 先于 WSS 到达同样处理。
 * **标注**：`PossibleSameAsId` 只是写在较晚到的那条上的指针（数据库列 `possible_same_as_id`，schema v3），不改变任何数值；界面显示「可能与较早一条重复」。
-  **不导出**（CSV/JSON 没有新增列，避免改变导出格式），也不会事后回头给较早那条加标记。
+  **会导出**（SB1 复测 N2）：CSV 末尾追加三列 `record_id`、`possible_duplicate`、`possible_same_as`（既有 22 列的顺序与含义不变），JSON 每条追加
+  `recordId`、`possibleDuplicate`、`possibleSameAs`。`possible_duplicate` = 该条带有指针；`possible_same_as` = 被指向那条的 `record_id`（**本机数据库主键**，
+  只在同一数据库的导出之间有意义，不是跨设备稳定标识）；被指向的记录已被删除（不在本次导出里）时留空/null，但 `possible_duplicate` 仍为 true（与界面一致）。
+  **版本约定**：JSON `version` 只在破坏性变更（删除/改名/改变既有字段含义）时递增，只追加字段不递增，读取方须忽略未知字段（web 导入即如此，并拒绝比自己更新的 `version`，
+  所以若这里改成 2，现有 web 导入会拒收桌面导出——因此保持 1）。CSV 无版本号，同样只追加列；web 导入按列名取值，会把多出的列计为 unknownColumns 并忽略。
+  不会事后回头给较早那条加标记。
 * **候选来源**：有设备时间戳的按 (device_id, device_time) 索引查库，所以乱序/迟到的配对也能找到；没有时间戳的只在本次运行最近写入的 16 条里找。
 * **去重键**：合并时把被并入那一包的 Q13 键也登记到持久化的键表里，之后任一包重发（包括重启后）仍是 Duplicate；删除/清空历史时键随记录释放。
 * **限制**：不回头合并升级前已经入库的旧「两行」；没有时间戳的配对不跨重启；2 秒窗口是经验值。
