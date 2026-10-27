@@ -109,6 +109,7 @@ export default {
   'ingest.duplicate': 'Identical to a saved record (same device timestamp and values); not saved again.',
   'src.weight-scale': 'Weight scale 0x2A9D',
   'src.body-composition': 'Body composition 0x2A9C',
+  'src.weight-scale+body-composition': 'Weight scale 0x2A9D + body composition 0x2A9C (merged)',
 
   'history.heading': 'History',
   'history.caption': 'Measurement history',

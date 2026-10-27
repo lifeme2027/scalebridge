@@ -147,6 +147,7 @@
 
 * **合并结果**：保留先到那条的主键；两边的字段互补（同名字段此时必然相等或一边为空，所以不覆盖任何已有值）；`Source=Both`（界面显示 `0x2A9D+0x2A9C`
   与「已合并」标记，CSV/JSON 的 `source` 为 `weight-scale+body-composition`）；接收时间取较早的；实验性/演示标记取并集。BCS 先于 WSS 到达同样处理。
+  Web 导入（`web/src/core/import.js`）接受这个合并来源值（SB1 复测 N5，原先被当「来源无效」拒收）：原样保留、原样再导出，界面显示「体重秤 0x2A9D + 体成分 0x2A9C（已合并）」；Web 自己不做合并，也不会产生该值。其它任何 source 取值仍被拒收。夹具 `web/test/fixtures/desktop-export-merged.{csv,json}` 由桌面 C# 导出器实际生成。
 * **标注**：`PossibleSameAsId` 只是写在较晚到的那条上的指针（数据库列 `possible_same_as_id`，schema v3），不改变任何数值；界面显示「可能与较早一条重复」。
   **会导出**（SB1 复测 N2）：CSV 末尾追加三列 `record_id`、`possible_duplicate`、`possible_same_as`（既有 22 列的顺序与含义不变），JSON 每条追加
   `recordId`、`possibleDuplicate`、`possibleSameAs`。`possible_duplicate` = 该条带有指针；`possible_same_as` = 被指向那条的 `record_id`（**本机数据库主键**，

@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { WEB_DIR } from '../testlib/helpers.js';
 import { toCsv, toJson, guardText, unguardText, escapeCsv, CSV_HEADER, exportFileName } from '../src/core/export.js';
 import { importCsv, importJson, importAuto, parseCsvRows, parseJsonExact } from '../src/core/import.js';
-import { fromWeightScale, fromBodyComposition, formatReceivedTime, recordSignature } from '../src/core/measurement.js';
+import { fromWeightScale, fromBodyComposition, formatReceivedTime, recordSignature, SOURCES, MERGED_SOURCE } from '../src/core/measurement.js';
 import { parseWeightMeasurement, parseBodyCompositionMeasurement } from '../src/core/protocol.js';
 import { parseHex } from '../src/core/bytes.js';
 
@@ -57,6 +57,47 @@ test('桌面（C# CsvExporter / JsonExporter）生成的夹具：Web 能导入�
   assert.deepEqual(b.records.map((r) => r.deviceId), ["=cmd|' /C calc'!A0", 'AA:BB:CC:DD:EE:FF', "'@odd", 'line\nbreak,名称']);
 });
 
+test('桌面导出的「已合并」行（source=weight-scale+body-composition）：CSV/JSON 都能完整导入，不再被当「来源无效」拒收', () => {
+  // 夹具由桌面 C# CsvExporter / JsonExporter 实际生成（3 行：WSS、BCS、已合并；含追加列 record_id / possible_*，Web 按列名取值并忽略）
+  const a = importCsv(fx('desktop-export-merged.csv')), b = importJson(fx('desktop-export-merged.json'));
+  assert.equal(a.ok, true); assert.equal(b.ok, true);
+  assert.equal(a.total, 3); assert.equal(b.total, 3);
+  assert.deepEqual(a.rejected, []); assert.deepEqual(b.rejected, []);
+  assert.equal(a.records.length, 3); assert.equal(b.records.length, 3);
+  assert.deepEqual(a.records, b.records, 'CSV 与 JSON 导入结果相同');
+  assert.deepEqual(a.records.map((r) => r.source), ['weight-scale', 'body-composition', MERGED_SOURCE]);
+  const merged = a.records[2];
+  assert.equal(merged.bodyFatPercent, '18.7'); assert.equal(merged.bmi, '22.5'); assert.equal(merged.weightKg, '69.35');
+  // 再导出保留来源值（不被写成 unknown），并且再导入无损、幂等
+  for (const [name, text] of [['csv', toCsv(a.records)], ['json', toJson(a.records)]]) {
+    assert.ok(text.includes(MERGED_SOURCE), name);
+    assert.ok(!text.includes('unknown'), name);
+    const r = importAuto(text);
+    assert.equal(r.records.length, 3, name); assert.deepEqual(r.rejected, []);
+    assert.deepEqual(r.records.map(recordSignature).sort(), a.records.map(recordSignature).sort(), name);
+    assert.equal(importAuto(text, r.records).duplicates, 3);
+  }
+  // 已合并行与同时间的单源行是不同记录（来源参与签名）
+  assert.notEqual(recordSignature(merged), recordSignature({ ...merged, source: 'weight-scale' }));
+});
+
+test('真正非法的 source 仍被拒收（CSV 与 JSON），白名单只多了已合并这一个值', () => {
+  assert.deepEqual([...SOURCES], ['weight-scale', 'body-composition', 'weight-scale+body-composition']);
+  const bad = ['x', '', 'unknown', 'weight-scale+', '+body-composition', 'body-composition+weight-scale', 'weight-scale+weight-scale',
+    'weight-scale + body-composition', 'WEIGHT-SCALE+BODY-COMPOSITION', 'weight-scale+body-composition+weight-scale', ' weight-scale+body-composition'];
+  const header = CSV_HEADER.join(',');
+  const csvRow = (source) => CSV_HEADER.map((h) => ({ received_time: '2026-10-26T08:30:09+08:00', weight_kg: '70.000', device_id: 'd', source, experimental: 'true', demo: 'false' })[h] ?? '').join(',');
+  const csv = importCsv([header, csvRow('weight-scale+body-composition'), ...bad.map(csvRow)].join('\r\n'));
+  assert.equal(csv.records.length, 1);
+  assert.deepEqual(csv.rejected.map((x) => x.error), bad.map(() => 'badSource'));
+  const doc = JSON.parse(fx('desktop-export-merged.json'));
+  const row = doc.measurements[2];
+  doc.measurements = [row, ...bad.map((source, i) => ({ ...row, source, receivedTime: `2026-10-27T08:30:${String(i).padStart(2, '0')}+08:00` })), { ...row, source: null }];
+  const js = importJson(JSON.stringify(doc));
+  assert.equal(js.records.length, 1);
+  assert.deepEqual(js.rejected.map((x) => x.error), [...bad, null].map(() => 'badSource'));
+});
+
 test('Web 导出 → Web 导入：无损往返；再次导入全部判重（幂等）', () => {
   const recs = [
     wsm('0E 2E 36 EA 07 0A 1A 0C 1E 05 01 FA 00 A1 02'),
@@ -64,6 +105,7 @@ test('Web 导出 → Web 导入：无损往返；再次导入全部判重（幂�
     bcm('00 04 BB 00 1E 36'), // 体成分：体脂 18.7 %，体重 69.270 kg
   ];
   recs.push({ ...recs[0], deviceId: "'=x", deviceName: null, demo: true });
+  recs.push({ ...recs[2], source: MERGED_SOURCE, deviceId: 'merged-dev' }); // 桌面「已合并」来源
   for (const [name, text] of [['csv', toCsv(recs)], ['json', toJson(recs)]]) {
     const r = importAuto(text);
     assert.equal(r.ok, true, name);

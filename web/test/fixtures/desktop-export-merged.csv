@@ -1,0 +1,4 @@
+﻿device_time,received_time,weight_kg,weight_original,original_unit,raw_weight,bmi,height_m,body_fat_percent,muscle_percent,muscle_mass_kg,fat_free_mass_kg,soft_lean_mass_kg,body_water_mass_kg,basal_metabolism_kj,impedance_ohm,user_id,device_id,device_name,source,experimental,demo,record_id,possible_duplicate,possible_same_as
+2026-10-26T07:30:00,2026-10-26T07:30:00+08:00,69.350,69.350,kg,13870,22.5,1.755,,,,,,,,,1,AA:BB:CC:DD:EE:FF,Mi Scale,weight-scale,true,false,1,false,
+2026-10-26T07:40:00,2026-10-26T07:40:00+08:00,69.35,69.35,kg,13870,,,18.7,,28.5,,,,,500.5,1,AA:BB:CC:DD:EE:FF,Mi Scale,body-composition,true,false,2,false,
+2026-10-26T08:00:00,2026-10-26T08:00:00+08:00,69.35,69.35,kg,13870,22.5,1.755,18.7,,28.5,,,,,500.5,1,AA:BB:CC:DD:EE:FF,Mi Scale,weight-scale+body-composition,true,false,3,false,

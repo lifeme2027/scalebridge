@@ -3,7 +3,10 @@
 
 import { trimFraction } from './decimal.js';
 
-export const SOURCES = ['weight-scale', 'body-composition'];
+// 'weight-scale+body-composition' 只会出现在桌面版导出的「已合并」行里（同一次称重的 0x181D 与 0x181B 两包合成一行）；
+// Web 版自己不合并、不会产生该值，但导入时必须接受（并原样保留、原样再导出）。
+export const MERGED_SOURCE = 'weight-scale+body-composition';
+export const SOURCES = ['weight-scale', 'body-composition', MERGED_SOURCE];
 
 /** [CSV 列名, JSON/记录键, 类型]——顺序即导出顺序（与桌面 CsvExporter.Header / JsonExporter 一致）。 */
 export const FIELDS = Object.freeze([

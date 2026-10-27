@@ -54,7 +54,12 @@
                   <TextBlock Text="{Binding NameText}" TextWrapping="Wrap" VerticalAlignment="Center" Margin="12,4" />
                 </DataTemplate>
               </DataGridTemplateColumn>
-              <DataGridTextColumn Header="{loc:T Col.Rssi}" Binding="{Binding RssiText}" Width="Auto" />
+              <!-- 信号列（如「-100 dBm」）：原先是 Width=Auto 的纯文本列，720×520 中文下被挤成「-100 dB」；给最小宽度并允许换行。 -->
+              <DataGridTemplateColumn Header="{loc:T Col.Rssi}" Width="Auto" MinWidth="100">
+                <DataTemplate x:DataType="vm:DeviceItem">
+                  <TextBlock Text="{Binding RssiText}" TextWrapping="Wrap" VerticalAlignment="Center" Margin="12,4" />
+                </DataTemplate>
+              </DataGridTemplateColumn>
               <!-- 协议 / 标记 / 设备标识：给足最小宽度并允许换行，720×520 下中文也不被截成「Body Composition 0x」「DE:MO:00:00:」。
                    设备标识（蓝牙地址 / 平台 id）可能无空格地很长，所以用 Wrap + 最小宽度双保险；整表仍可横向滚动。 -->
               <DataGridTemplateColumn Header="{loc:T Col.Protocol}" Width="*" MinWidth="130">

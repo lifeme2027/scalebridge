@@ -109,6 +109,7 @@ export default {
   'ingest.duplicate': '与已保存的记录完全相同（同一设备时间戳与数值），未重复保存。',
   'src.weight-scale': '体重秤 0x2A9D',
   'src.body-composition': '体成分 0x2A9C',
+  'src.weight-scale+body-composition': '体重秤 0x2A9D + 体成分 0x2A9C（已合并）',
 
   'history.heading': '历史记录',
   'history.caption': '测量历史记录',
