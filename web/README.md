@@ -61,7 +61,7 @@ CI：`.github/workflows/web.yml`（独立于 .NET 的 ci.yml）：`npm ci`、`np
 
 ### 同步到站点
 
-站点是 ASP.NET Core 项目 composehk/consumption-tracker-web，静态文件放在 `src/ConsumptionTracker.Web/wwwroot/box`（提交进该仓库，这样它的 CI 能过、发布包自带 /box）：
+站点是 ASP.NET Core 项目 lifeme2027/consumption-tracker-web，静态文件放在 `src/ConsumptionTracker.Web/wwwroot/box`（提交进该仓库，这样它的 CI 能过、发布包自带 /box）：
 
 ```bash
 node scripts/sync-to-site.mjs <站点仓库路径>            # 构建并覆盖 wwwroot/box

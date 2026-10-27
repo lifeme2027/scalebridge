@@ -84,7 +84,7 @@ export function build({ srcDir = join(WEB, 'src'), outDir = join(WEB, 'dist'), c
     writeFileSync(p, body);
     manifest.push({ path: out, sha256: sha(body), bytes: Buffer.byteLength(body) });
   }
-  const info = { name: pkg.name, version: pkg.version, commit, source: 'https://github.com/composehk/scalebridge/tree/main/web', files: manifest };
+  const info = { name: pkg.name, version: pkg.version, commit, source: 'https://github.com/lifeme2027/scalebridge/tree/main/web', files: manifest };
   writeFileSync(join(outDir, 'build-info.json'), JSON.stringify(info, null, 2) + '\n');
   verify(outDir);
   return { outDir, files: manifest.length + 1, commit };
